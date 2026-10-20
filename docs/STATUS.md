@@ -49,5 +49,8 @@
   umgeleitet, und PowerPoint sah den Ordner dort nicht. Der Selbsttest arbeitet deshalb unter
   `%TEMP%`.
 - PowerPoint ohne Lizenz: lässt sich auf dem Test-PC nicht nachstellen.
-- Sichtprüfung durch die Nutzerin auf den drei Bildschirmen.
+- **20.10.2026** – Sichtprüfung durch die Nutzerin (eigenständige Version aus `publish`, per
+  Doppelklick gestartet). Erster Versuch: Die Bildschirm-Auswahl war weiß auf weiß (behoben,
+  ComboBox dunkel). Außerdem kamen Fehlermeldungen bzw. ein „Pixelgewitter“ am unteren
+  Bildschirmrand. Ursache noch offen, Fotos und `montro.log` folgen beim nächsten Test.
 - Eintrag in der Projekttabelle von `Sassisasah/Developer-Setup` (`README.md`).

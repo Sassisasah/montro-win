@@ -15,3 +15,4 @@
 - Behoben: Taskleiste lag auf Nebenbildschirmen über der Show.
 - Behoben: Monitore hießen „Generic PnP Monitor“, jetzt mit echtem Namen (z. B. „Verbatim MT15“).
 - Behoben: Umlaute im Log wurden in Windows PowerShell falsch angezeigt.
+- Behoben: Die Bildschirm-Auswahl im Testfenster war weiß auf weiß (ComboBox jetzt dunkel).
