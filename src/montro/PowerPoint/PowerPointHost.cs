@@ -212,12 +212,18 @@ public sealed class PowerPointHost
         if (w == null) throw new PowerPointException("Keine Bildschirmpräsentation aktiv.");
         IntPtr hwnd = ShowWindowHandle(w);
         if (hwnd == IntPtr.Zero) DebugLog.Write("Lage: Fenster der Bildschirmpräsentation nicht gefunden – nur Lage in Punkt möglich");
-        var target = m.Bounds;
+        // 1 Pixel niedriger als der Bildschirm: Ein Fenster, das den Monitor exakt füllt, gibt
+        // Windows im Vollbild-Direktmodus aus (Independent Flip). Auf dem Test-PC (AMD Vega 8,
+        // Verbatim MT15 per USB-C) kam dann auf den externen Monitoren nur Schwarz oder ein
+        // kaputtes Hintergrundbild an – auch mit PowerPoint allein. Die fehlende Zeile unten
+        // ist schwarz und fällt nicht auf.
+        var b = m.Bounds;
+        var target = new PixelRect(b.X, b.Y, b.Width, b.Height - 1);
         var before = Monitors.WindowRect(hwnd);
         uint sysDpi = Monitors.SystemDpi();
         double f = 72.0 / sysDpi;
 
-        if (before is not { } b0 || !b0.RoughlyEquals(target))
+        if (before is not { } b0 || !b0.RoughlyEquals(target, 0))
         {
             TrySet("Lage in Punkt", () =>
             {
@@ -234,13 +240,13 @@ public sealed class PowerPointHost
         {
             Thread.Sleep(attempt == 0 ? 150 : 120);
             actual = Monitors.WindowRect(hwnd);
-            if (actual is { } cur && cur.RoughlyEquals(target)) break;
+            if (actual is { } cur && cur.RoughlyEquals(target, 0)) break;
             if (attempt == 4) break;
             DebugLog.Write($"Lage: Soll {target}, Ist {actual?.ToString() ?? "unbekannt"} – Korrektur {attempt + 1}/4");
             Monitors.MoveWindow(hwnd, target);
             corrections++;
         }
-        bool ok = actual is { } fin && fin.RoughlyEquals(target);
+        bool ok = actual is { } fin && fin.RoughlyEquals(target, 0);
         // Über alles legen: sonst bleibt auf Nebenbildschirmen die Taskleiste über der Show sichtbar
         // (PowerPoint läuft im Hintergrund, Windows blendet die Taskleiste nur für das aktive Vollbildfenster aus)
         bool topmost = hwnd != IntPtr.Zero && Monitors.MoveWindow(hwnd, target, topmost: true);

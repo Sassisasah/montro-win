@@ -19,3 +19,5 @@
 - Behoben: „Show starten“ ein zweites Mal schlug fehl („Object does not exist“), weil PowerPoint
   die Präsentation mit dem Show-Ende schließt. montro öffnet sie jetzt neu.
 - Neu: Selbsttest mit eigener Präsentation (`--datei`).
+- Behoben: Auf den externen Monitoren (Verbatim MT15 per USB-C) kam nur Schwarz oder ein
+  kaputtes Hintergrundbild an. Das Show-Fenster ist jetzt 1 Pixel niedriger als der Bildschirm.

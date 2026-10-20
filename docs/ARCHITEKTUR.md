@@ -114,6 +114,13 @@ Mac-App (Screenshots vom 20.10.2026).
   `%LOCALAPPDATA%` umgeleitet. PowerPoint läuft als eigener Prozess außerhalb davon und sieht
   dort angelegte Ordner nicht („Pfad nicht gefunden“ beim Speichern, Export und Öffnen).
   `%TEMP%` und `Dokumente` sind nicht betroffen. Der Selbsttest arbeitet deshalb unter `%TEMP%`.
+- **Show-Fenster 1 Pixel niedriger als der Bildschirm:** Ein Fenster, das den Monitor exakt
+  füllt, gibt Windows im Vollbild-Direktmodus aus (Independent Flip). Auf dem Test-PC (AMD
+  Radeon Vega 8, Verbatim MT15 per USB-C, 150 %) kam dann auf den externen Monitoren nur
+  Schwarz, eine kaputte Taskleiste oder ein zerstückeltes Hintergrundbild an, **auch mit
+  PowerPoint allein** (F5). Bildschirmfotos (DWM) zeigten trotzdem die Folie. Mit 1 Pixel
+  weniger Höhe kam das Bild an (Test „C/D“ am 20.10.2026). Die fehlende Zeile unten ist schwarz.
+  Für das spätere Publikumsfenster (Meilenstein 4) gilt dasselbe.
 - **Präsentation verschwindet mit dem Show-Ende:** Eine mit `WithWindow:false` geöffnete
   Präsentation schließt PowerPoint selbst, sobald ihre Show beendet wird. Danach liefert jeder
   Zugriff „Object does not exist“ (0x80048010). montro prüft vor Show-Start und Export, ob die

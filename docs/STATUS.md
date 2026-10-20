@@ -58,6 +58,12 @@
     gezeichnet. Solange er offen war, meldete montro „PowerPoint antwortet nicht … Dialog
     offen?“. Inhalt des Dialogs noch unbekannt; vermutlich hat er die Show pausiert.
   - Nachgestellt mit derselben Datei (`--selbsttest --datei …`, 15 Folien, 720×405 pt): auf
-    allen drei Bildschirmen je zweimal gestartet, Lage ok, Show läuft, Bild korrekt. 12 von 12 ok.
-  - Nächster Schritt: Test der Nutzerin mit der neuen Version wiederholen.
+    allen drei Bildschirmen je zweimal gestartet, Lage ok, Show läuft, Bildschirmfoto korrekt.
+  - **Aber:** Auf den Verbatims selbst kam nur Schwarz, eine kaputte Taskleiste oder ein
+    zerstückeltes Hintergrundbild an – auch mit PowerPoint allein. Die Bildschirmfotos (DWM)
+    zeigten die Folie, sie prüfen also nicht, was der Monitor wirklich anzeigt.
+  - Test C/D auf Verbatim 2: Show-Fenster 1 Pixel niedriger → Bild kommt an; exakt
+    bildschirmfüllend → kein Bild. montro legt das Fenster jetzt 1 Pixel niedriger.
+  - Nächster Schritt: Test der Nutzerin mit dieser Version.
+- Der Selbsttest kann nicht sehen, was ein Monitor wirklich anzeigt. Sichtprüfung bleibt nötig.
 - Eintrag in der Projekttabelle von `Sassisasah/Developer-Setup` (`README.md`).
