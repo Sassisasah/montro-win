@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <AssemblyName>montro</AssemblyName>
+    <RootNamespace>Montro</RootNamespace>
+    <!-- Version kommt aus CHANGELOG.md (oberster Eintrag); Build-Nummer später = Anzahl Commits -->
+    <Version>0.1.0</Version>
+    <Product>montro</Product>
+    <Company>movidal</Company>
+    <Authors>Sarah-Mathias Andrae</Authors>
+    <Copyright>© movidal</Copyright>
+    <Description>montro – Präsentations-Player für Bühne und Regie, funktioniert mit Microsoft PowerPoint</Description>
+    <!-- erlaubt das Kompilieren auch außerhalb von Windows (z. B. Prüf-Builds) -->
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <SatelliteResourceLanguages>de</SatelliteResourceLanguages>
+  </PropertyGroup>
+
+</Project>

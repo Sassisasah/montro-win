@@ -1,0 +1,22 @@
+<Window x:Class="Montro.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="montro"
+        Width="760" Height="460" MinWidth="560" MinHeight="380"
+        WindowStartupLocation="CenterScreen"
+        Style="{StaticResource Brand.Window}">
+    <Grid Margin="40">
+        <StackPanel VerticalAlignment="Center">
+            <TextBlock Text="montro" FontSize="48" FontWeight="Light" />
+            <TextBlock Text="für Windows · funktioniert mit Microsoft PowerPoint"
+                       Foreground="{StaticResource Brand.SecondaryText}" FontSize="15" Margin="0,0,0,28" />
+            <TextBlock TextWrapping="Wrap" Margin="0,0,0,24" Foreground="{StaticResource Brand.SecondaryText}"
+                       Text="Meilenstein 1: PowerPoint-Kern. Playlist, Inspector, Referent*innenansicht, Fernsteuerung (Companion) und Verbund mit dem Mac folgen." />
+            <WrapPanel>
+                <Button Content="PowerPoint testen …" Style="{StaticResource Brand.AccentButton}" Click="OnTestPowerPoint" />
+                <Button Content="Log-Ordner öffnen" Click="OnOpenLog" />
+            </WrapPanel>
+            <TextBlock x:Name="VersionLine" Margin="0,28,0,0" Foreground="{StaticResource Brand.SecondaryText}" FontSize="11" />
+        </StackPanel>
+    </Grid>
+</Window>
