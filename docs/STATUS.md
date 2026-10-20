@@ -66,4 +66,7 @@
     bildschirmfüllend → kein Bild. montro legt das Fenster jetzt 1 Pixel niedriger.
   - Nächster Schritt: Test der Nutzerin mit dieser Version.
 - Der Selbsttest kann nicht sehen, was ein Monitor wirklich anzeigt. Sichtprüfung bleibt nötig.
+- **20.10.2026** – Während einer Pause schaltete Windows die Bildschirme ab, die Verbatims
+  meldeten sich ab („No signal“). Für Meilenstein 4: Abschaltung während einer Show verhindern
+  (`SetThreadExecutionState(ES_DISPLAY_REQUIRED)`).
 - Eintrag in der Projekttabelle von `Sassisasah/Developer-Setup` (`README.md`).

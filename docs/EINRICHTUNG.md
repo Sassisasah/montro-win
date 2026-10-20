@@ -29,6 +29,10 @@ Getestet wird mit dem Laptop und zwei externen Bildschirmen (Publikum, Referent*
 - Hauptbildschirm bleibt der Laptop.
 - Unterschiedliche Skalierung je Bildschirm ist erlaubt. montro rechnet pro Monitor
   (DPI-Modus PerMonitorV2).
+- **Bildschirm-Abschaltung:** Schaltet Windows die Bildschirme wegen Inaktivität ab, melden sich
+  USB-C-Monitore (z. B. Verbatim MT15) ganz ab und zeigen „No signal“. Auf Show-Rechnern unter
+  Einstellungen › System › Energie „Bildschirm ausschalten“ auf „Nie“ stellen. montro soll das
+  ab Meilenstein 4 während einer Show selbst verhindern (`SetThreadExecutionState`).
 
 ## Show-Rechner
 
