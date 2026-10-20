@@ -114,6 +114,10 @@ Mac-App (Screenshots vom 20.10.2026).
   `%LOCALAPPDATA%` umgeleitet. PowerPoint läuft als eigener Prozess außerhalb davon und sieht
   dort angelegte Ordner nicht („Pfad nicht gefunden“ beim Speichern, Export und Öffnen).
   `%TEMP%` und `Dokumente` sind nicht betroffen. Der Selbsttest arbeitet deshalb unter `%TEMP%`.
+- **Präsentation verschwindet mit dem Show-Ende:** Eine mit `WithWindow:false` geöffnete
+  Präsentation schließt PowerPoint selbst, sobald ihre Show beendet wird. Danach liefert jeder
+  Zugriff „Object does not exist“ (0x80048010). montro prüft vor Show-Start und Export, ob die
+  Präsentation noch lebt, und öffnet sie sonst still neu.
 - **Datei aus dem Internet:** Per Automation öffnet PowerPoint 365 Dateien mit
   Zone.Identifier (ZoneId=3) direkt, ohne Geschützte Ansicht. Der Hinweis in EINRICHTUNG.md gilt
   für Dateien, die jemand vorher selbst in PowerPoint geöffnet hat.

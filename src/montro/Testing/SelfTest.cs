@@ -30,6 +30,7 @@ public sealed class SelfTest
     private readonly string deck;
     private readonly int kioskMinutes;
     private string powerPointVersion = "?";
+    private string? userFile;
 
     private SelfTest(int kioskMinutes)
     {
@@ -47,7 +48,8 @@ public sealed class SelfTest
         int minutes = 0;
         int k = Array.IndexOf(args, "--kiosk-minuten");
         if (k >= 0 && k + 1 < args.Length) int.TryParse(args[k + 1], out minutes);
-        var t = new SelfTest(minutes);
+        int f = Array.IndexOf(args, "--datei");
+        var t = new SelfTest(minutes) { userFile = f >= 0 && f + 1 < args.Length ? Path.GetFullPath(args[f + 1]) : null };
         return await t.Run();
     }
 
@@ -67,6 +69,13 @@ public sealed class SelfTest
                 return -1;
             }
             powerPointVersion = await host.ConnectAsync();
+            if (userFile != null)
+            {
+                // nur die eigene Präsentation auf jedem Bildschirm, ohne die übrigen Blöcke
+                foreach (var m in monitors)
+                    await Step($"{Path.GetFileName(userFile)} auf {Area(m)}", () => UserFileRun(m, userFile));
+                return results.Count(r => r.Outcome == Outcome.Fehler);
+            }
             await helper.CreateDeckAsync(deck);
             Add("Vorbereitung", "Testpräsentation erzeugt", Outcome.Info, "6 Folien, 3 und 5 ausgeblendet, Folie 2 mit 2 Klick-Animationen");
 
@@ -174,6 +183,31 @@ public sealed class SelfTest
         await Task.Delay(Settle);
         int left = await helper.CountShowsAsync();
         Check(a, "Show beenden", left == 0, $"{left} Show(s) laufen noch");
+    }
+
+    /// <summary>Eigene Präsentation (--datei): starten, platzieren, Foto, weiter, Foto, zweimal hintereinander.</summary>
+    private async Task UserFileRun(MonitorInfo m, string file)
+    {
+        string a = $"{Path.GetFileName(file)} auf {Area(m)}";
+        var open = await host.OpenAsync(file, withWindow: false);
+        var map = open.Slides;
+        Add(a, "Öffnen", Outcome.Info, $"{map}, {open.SlideWidthPt:0}×{open.SlideHeightPt:0} pt");
+        for (int round = 1; round <= 2; round++)
+        {
+            await host.StartShowAsync(new ShowOptions(Kiosk: false, Target: m, PreselectMonitorInRegistry: false));
+            var place = await host.PlaceAsync(m);
+            Check(a, $"Start {round}: Lage", place.Ok, place.Detail);
+            await Task.Delay(1500);
+            var s = await host.ReadStateAsync();
+            Check(a, $"Start {round}: Show läuft", s.HasShow && s.RunState == SlideShowRunState.Running, Describe(s, map));
+            Shot(m, $"datei-bildschirm{m.Number}-start{round}.png");
+            await host.NextAsync();
+            await Task.Delay(1500);
+            s = await host.ReadStateAsync();
+            Add(a, $"Start {round}: Weiter", Outcome.Info, Describe(s, map));
+            Shot(m, $"datei-bildschirm{m.Number}-start{round}-weiter.png");
+            // Start 2 ohne Beenden dazwischen: so wie im Testfenster „Show starten“ erneut drücken
+        }
     }
 
     private async Task KioskRun(MonitorInfo m)

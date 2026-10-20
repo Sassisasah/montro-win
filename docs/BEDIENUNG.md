@@ -39,7 +39,11 @@ Taskleiste.
 ```powershell
 montro.exe --selbsttest                    # etwa 1 Minute
 montro.exe --selbsttest --kiosk-minuten 6  # zusätzlich: Kiosk 6 min ohne Eingabe stehen lassen
+montro.exe --selbsttest --datei "C:\Pfad\Vortrag.pptx"  # eigene Präsentation auf jedem Bildschirm
 ```
+
+Mit `--datei` startet montro nur die angegebene Präsentation auf jedem Bildschirm, zweimal
+hintereinander ohne Beenden dazwischen, prüft Lage und Zustand und macht Bildschirmfotos.
 
 montro startet dabei ohne Hauptfenster. Der Selbsttest erzeugt in PowerPoint eine
 Testpräsentation (6 Folien, Folie 3 und 5 ausgeblendet und rot, Folie 2 mit zwei

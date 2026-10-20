@@ -38,6 +38,7 @@ public sealed class PowerPointHost
     private dynamic? pres;
     private bool ownsPres;
     private string? presPath;
+    private bool presWithWindow;
     private IntPtr onTopHwnd;   // platziertes Show-Fenster, das über der Taskleiste bleiben soll
     // ------------------------------
 
@@ -144,6 +145,7 @@ public sealed class PowerPointHost
             }
         }
         presPath = full;
+        presWithWindow = withWindow;
         if (Safe(() => (int)a.ProtectedViewWindows.Count, 0) > 0)
             DebugLog.Write("PowerPoint: Achtung – mindestens eine Datei ist in der Geschützten Ansicht offen");
 
@@ -171,10 +173,11 @@ public sealed class PowerPointHost
         StopPolling();
         var state = await sta.Run(() =>
         {
-            if (pres == null) throw new PowerPointException("Keine Präsentation geöffnet.");
+            if (pres == null && presPath == null) throw new PowerPointException("Keine Präsentation geöffnet.");
             ExitAllShowsInternal();
+            EnsurePresentationInternal();
 
-            dynamic ss = pres.SlideShowSettings;
+            dynamic ss = pres!.SlideShowSettings;
             int want = o.Kiosk ? PpShowTypeKiosk : PpShowTypeSpeaker;
             // Jede Einstellung einzeln: unlizenziertes PowerPoint (Nur-Lesen) lehnt Änderungen ab,
             // die Show soll trotzdem starten (Lehre aus Mac 0.27).
@@ -308,8 +311,8 @@ public sealed class PowerPointHost
         Directory.CreateDirectory(dir);
         var (count, width, height) = await sta.Run(() =>
         {
-            if (pres == null) throw new PowerPointException("Keine Präsentation geöffnet.");
-            dynamic pr = pres;
+            EnsurePresentationInternal();
+            dynamic pr = pres!;
             int n = (int)pr.Slides.Count;
             double sw = Safe(() => (double)pr.PageSetup.SlideWidth, 960.0);
             double sh = Safe(() => (double)pr.PageSetup.SlideHeight, 540.0);
@@ -514,9 +517,38 @@ public sealed class PowerPointHost
         return closed;
     }
 
+    private bool PresentationAlive()
+    {
+        if (pres == null) return false;
+        dynamic p = pres;
+        try
+        {
+            _ = (string)p.Name;
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Eine ohne Fenster geöffnete Präsentation schließt PowerPoint von selbst, sobald ihre Show
+    /// endet (danach „Object does not exist“, 0x80048010). Dann still neu öffnen.
+    /// </summary>
+    private void EnsurePresentationInternal()
+    {
+        if (PresentationAlive()) return;
+        if (presPath == null) throw new PowerPointException("Keine Präsentation geöffnet.");
+        dynamic a = App();
+        DebugLog.Write("PowerPoint: Präsentation wurde mit dem Show-Ende geschlossen – öffne sie neu");
+        pres = a.Presentations.Open(presPath, MsoTrue, MsoFalse, presWithWindow ? MsoTrue : MsoFalse);
+        ownsPres = true;
+    }
+
     private void CloseInternal()
     {
-        if (pres != null && ownsPres)
+        if (pres != null && ownsPres && PresentationAlive())
         {
             try
             {

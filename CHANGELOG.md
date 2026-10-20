@@ -16,3 +16,6 @@
 - Behoben: Monitore hießen „Generic PnP Monitor“, jetzt mit echtem Namen (z. B. „Verbatim MT15“).
 - Behoben: Umlaute im Log wurden in Windows PowerShell falsch angezeigt.
 - Behoben: Die Bildschirm-Auswahl im Testfenster war weiß auf weiß (ComboBox jetzt dunkel).
+- Behoben: „Show starten“ ein zweites Mal schlug fehl („Object does not exist“), weil PowerPoint
+  die Präsentation mit dem Show-Ende schließt. montro öffnet sie jetzt neu.
+- Neu: Selbsttest mit eigener Präsentation (`--datei`).

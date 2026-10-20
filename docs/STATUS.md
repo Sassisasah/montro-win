@@ -51,6 +51,13 @@
 - PowerPoint ohne Lizenz: lässt sich auf dem Test-PC nicht nachstellen.
 - **20.10.2026** – Sichtprüfung durch die Nutzerin (eigenständige Version aus `publish`, per
   Doppelklick gestartet). Erster Versuch: Die Bildschirm-Auswahl war weiß auf weiß (behoben,
-  ComboBox dunkel). Außerdem kamen Fehlermeldungen bzw. ein „Pixelgewitter“ am unteren
-  Bildschirmrand. Ursache noch offen, Fotos und `montro.log` folgen beim nächsten Test.
+  ComboBox dunkel). Laut Fotos und Log:
+  - Erster Start auf Verbatim 2 lief (Lage ok), Zustand aber „pausiert“ und kein Bild sichtbar.
+  - Zweites „Show starten“: „Object does not exist“ – behoben (Präsentation wird neu geöffnet).
+  - Das „Pixelgewitter“ war ein PowerPoint-Dialog auf dem Verbatim (150 %), unleserlich
+    gezeichnet. Solange er offen war, meldete montro „PowerPoint antwortet nicht … Dialog
+    offen?“. Inhalt des Dialogs noch unbekannt; vermutlich hat er die Show pausiert.
+  - Nachgestellt mit derselben Datei (`--selbsttest --datei …`, 15 Folien, 720×405 pt): auf
+    allen drei Bildschirmen je zweimal gestartet, Lage ok, Show läuft, Bild korrekt. 12 von 12 ok.
+  - Nächster Schritt: Test der Nutzerin mit der neuen Version wiederholen.
 - Eintrag in der Projekttabelle von `Sassisasah/Developer-Setup` (`README.md`).
