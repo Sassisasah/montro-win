@@ -8,8 +8,10 @@
   - Test-PC: Windows 11 Pro (Build 26200), Microsoft PowerPoint 16.0 (Microsoft 365,
     Build 19929), .NET-Laufzeit 10.0.13 (montro für .NET 8, gestartet mit
     `DOTNET_ROLL_FORWARD=Major`).
-  - Bildschirme: Laptop 1920×1080 (Hauptbildschirm) und zwei Verbatim MT15 mit je 1920×1080,
-    alle drei bei diesem Lauf mit 100 % Skalierung.
+  - Bildschirme: Laptop 1920×1080 (Hauptbildschirm) und zwei Verbatim MT15 mit je 1920×1080.
+    Geprüft mit allen drei auf 100 % und mit **gemischter Skalierung** (Laptop 100 %, Verbatims
+    150 %): Lage in beiden Fällen ohne Korrektur exakt, Fenster-DPI 144 auf den Verbatims.
+  - Build auf GitHub Actions grün (Lauf 39466002669).
   - Geprüft auf **jedem der drei Bildschirme**: Öffnen ohne Dokumentfenster, Show-Typ Referent
     mit ausgeschalteter PowerPoint-Referentenansicht, Lage gemessen und per Bildschirmfoto
     (Folie füllt den Bildschirm bis in die Ecken), Weiter mit zwei Klick-Animationen, Weiter
@@ -41,9 +43,6 @@
 
 ## Offen
 
-- **20.10.2026** – Selbsttest mit **unterschiedlicher Skalierung** wiederholen (Verbatims auf
-  150 %, Laptop auf 100 %). Beim ersten Start standen die Verbatims auf 150 %, beim Testlauf
-  meldete Windows 100 %.
 - **20.10.2026** – Von Hand prüfen (montro per Doppelklick starten, nicht aus der
   Claude-Sitzung): Testfenster › „Vorschaubilder exportieren“ schreibt nach
   `%LOCALAPPDATA%\montro\thumbs\test`. In der Claude-Sitzung werden Schreibzugriffe auf AppData
