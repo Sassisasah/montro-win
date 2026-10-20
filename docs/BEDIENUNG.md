@@ -30,3 +30,26 @@ Hauptfenster › **PowerPoint testen …** öffnet ein Testfenster für den Powe
 Die Statuszeile zeigt Folie x von n, den PowerPoint-Index, den Klick in der Folie und den Zustand
 (läuft / schwarz / Ende). Darunter steht das Log. Dasselbe Log liegt unter
 `%LOCALAPPDATA%\montro\montro.log`.
+
+Das Show-Fenster liegt nach dem Platzieren über allen anderen Fenstern, auch über der
+Taskleiste.
+
+## Selbsttest
+
+```powershell
+montro.exe --selbsttest                    # etwa 1 Minute
+montro.exe --selbsttest --kiosk-minuten 6  # zusätzlich: Kiosk 6 min ohne Eingabe stehen lassen
+```
+
+montro startet dabei ohne Hauptfenster. Der Selbsttest erzeugt in PowerPoint eine
+Testpräsentation (6 Folien, Folie 3 und 5 ausgeblendet und rot, Folie 2 mit zwei
+Klick-Animationen) und prüft damit **auf jedem angeschlossenen Bildschirm**: Öffnen, Show
+starten, Lage (gemessen und per Bildschirmfoto), Weiter/Zurück/Gehe zu, Schwarz, Endbildschirm
+und Beenden. Danach kommen Kiosk-Modus, verwaiste Shows, PNG-Export, ein offener Dialog in
+PowerPoint und eine Datei „aus dem Internet“.
+
+- Läuft schon eine Bildschirmpräsentation, startet der Selbsttest nicht.
+- Während des Tests wechseln die Bildschirme. Maus und Tastatur bitte nicht benutzen.
+- Ergebnis: `%TEMP%\montro-selbsttest\<Datum-Zeit>\bericht.md` mit allen Prüfungen, dazu die
+  Bildschirmfotos und die Testpräsentation. Der Rückgabewert ist die Zahl der Fehler (0 = alles
+  ok, -1 = abgebrochen).

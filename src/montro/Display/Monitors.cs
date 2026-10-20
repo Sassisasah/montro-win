@@ -61,6 +61,7 @@ public static class Monitors
             .ThenBy(r => r.mi.rcMonitor.Top)
             .ToList();
 
+        var edidNames = EdidNames();
         var result = new List<MonitorInfo>();
         for (var i = 0; i < ordered.Count; i++)
         {
@@ -68,13 +69,60 @@ public static class Monitors
             result.Add(new MonitorInfo(
                 i + 1,
                 mi.szDevice,
-                FriendlyName(mi.szDevice),
+                edidNames.TryGetValue(mi.szDevice, out var edid) ? edid : FriendlyName(mi.szDevice),
                 PixelRect.From(mi.rcMonitor),
                 PixelRect.From(mi.rcWork),
                 (mi.dwFlags & Native.MONITORINFOF_PRIMARY) != 0,
                 dpi));
         }
         return result;
+    }
+
+    /// <summary>
+    /// GDI-Gerätename (\\.\DISPLAY2) → Monitorname aus den EDID-Daten (z. B. „Verbatim MT15“).
+    /// EnumDisplayDevices liefert dafür oft nur „Generic PnP Monitor“. Leer, wenn die API scheitert.
+    /// </summary>
+    private static Dictionary<string, string> EdidNames()
+    {
+        var names = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        try
+        {
+            if (Native.GetDisplayConfigBufferSizes(Native.QDC_ONLY_ACTIVE_PATHS, out var np, out var nm) != 0) return names;
+            var paths = new Native.DISPLAYCONFIG_PATH_INFO[np];
+            var modes = new Native.DISPLAYCONFIG_MODE_INFO[nm];
+            if (Native.QueryDisplayConfig(Native.QDC_ONLY_ACTIVE_PATHS, ref np, paths, ref nm, modes, IntPtr.Zero) != 0) return names;
+            for (var i = 0; i < np; i++)
+            {
+                var p = paths[i];
+                var source = new Native.DISPLAYCONFIG_SOURCE_DEVICE_NAME
+                {
+                    header = new Native.DISPLAYCONFIG_DEVICE_INFO_HEADER
+                    {
+                        type = Native.DISPLAYCONFIG_DEVICE_INFO_GET_SOURCE_NAME,
+                        size = (uint)System.Runtime.InteropServices.Marshal.SizeOf<Native.DISPLAYCONFIG_SOURCE_DEVICE_NAME>(),
+                        adapterId = p.sourceInfo.adapterId,
+                        id = p.sourceInfo.id,
+                    },
+                };
+                var target = new Native.DISPLAYCONFIG_TARGET_DEVICE_NAME
+                {
+                    header = new Native.DISPLAYCONFIG_DEVICE_INFO_HEADER
+                    {
+                        type = Native.DISPLAYCONFIG_DEVICE_INFO_GET_TARGET_NAME,
+                        size = (uint)System.Runtime.InteropServices.Marshal.SizeOf<Native.DISPLAYCONFIG_TARGET_DEVICE_NAME>(),
+                        adapterId = p.targetInfo.adapterId,
+                        id = p.targetInfo.id,
+                    },
+                };
+                if (Native.DisplayConfigGetDeviceInfo(ref source) != 0 || Native.DisplayConfigGetDeviceInfo(ref target) != 0) continue;
+                var name = target.monitorFriendlyDeviceName?.Trim();
+                // Bei Duplizieren hängen mehrere Monitore an einer Quelle – den ersten Namen behalten
+                if (!string.IsNullOrEmpty(name) && !names.ContainsKey(source.viewGdiDeviceName))
+                    names[source.viewGdiDeviceName] = name;
+            }
+        }
+        catch { }
+        return names;
     }
 
     private static string FriendlyName(string device)
@@ -96,10 +144,43 @@ public static class Monitors
         return Native.GetWindowRect(hwnd, out var r) ? PixelRect.From(r) : null;
     }
 
-    /// <summary>Fenster auf eine Lage setzen (physische Pixel), ohne es zu aktivieren.</summary>
-    public static bool MoveWindow(IntPtr hwnd, PixelRect r) =>
-        Native.SetWindowPos(hwnd, IntPtr.Zero, r.X, r.Y, r.Width, r.Height,
-            Native.SWP_NOZORDER | Native.SWP_NOACTIVATE | Native.SWP_NOOWNERZORDER);
+    /// <summary>Fenster auf eine Lage setzen (physische Pixel), ohne es zu aktivieren; optional über alle anderen.</summary>
+    public static bool MoveWindow(IntPtr hwnd, PixelRect r, bool topmost = false) =>
+        Native.SetWindowPos(hwnd, topmost ? Native.HWND_TOPMOST : IntPtr.Zero, r.X, r.Y, r.Width, r.Height,
+            (topmost ? 0 : Native.SWP_NOZORDER) | Native.SWP_NOACTIVATE | Native.SWP_NOOWNERZORDER);
+
+    /// <summary>Fenster wieder ganz nach oben (topmost) holen, ohne Lage, Größe oder Fokus zu ändern.</summary>
+    public static bool BringToTop(IntPtr hwnd) =>
+        Native.IsWindow(hwnd) && Native.SetWindowPos(hwnd, Native.HWND_TOPMOST, 0, 0, 0, 0,
+            Native.SWP_NOMOVE | Native.SWP_NOSIZE | Native.SWP_NOACTIVATE | Native.SWP_NOOWNERZORDER);
+
+    /// <summary>
+    /// Sichtbares Hauptfenster eines Prozesses (Name ohne .exe) mit dieser Fensterklasse, dessen
+    /// Titel <paramref name="titleContains"/> enthält (leer = egal). Zero = nicht gefunden.
+    /// </summary>
+    public static IntPtr FindProcessWindow(string processName, string className, string titleContains)
+    {
+        var pids = System.Diagnostics.Process.GetProcessesByName(processName).Select(p => (uint)p.Id).ToHashSet();
+        IntPtr found = IntPtr.Zero, fallback = IntPtr.Zero;
+        Native.EnumWindows((h, _) =>
+        {
+            Native.GetWindowThreadProcessId(h, out var pid);
+            if (!pids.Contains(pid) || !Native.IsWindowVisible(h)) return true;
+            var cls = new System.Text.StringBuilder(64);
+            Native.GetClassName(h, cls, cls.Capacity);
+            if (cls.ToString() != className) return true;
+            var title = new System.Text.StringBuilder(512);
+            Native.GetWindowText(h, title, title.Capacity);
+            if (titleContains.Length == 0 || title.ToString().Contains(titleContains, StringComparison.OrdinalIgnoreCase))
+            {
+                found = h;
+                return false;
+            }
+            if (fallback == IntPtr.Zero) fallback = h;
+            return true;
+        }, IntPtr.Zero);
+        return found != IntPtr.Zero ? found : fallback;
+    }
 
     public static uint SystemDpi()
     {

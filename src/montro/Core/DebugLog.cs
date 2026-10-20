@@ -9,6 +9,7 @@ public static class DebugLog
     private const long MaxBytes = 2 * 1024 * 1024;
     private static readonly object Gate = new();
     private static readonly LinkedList<string> Recent = new();
+    private static readonly System.Text.Encoding Utf8WithBom = new System.Text.UTF8Encoding(true);
 
     /// <summary>Neue Zeile (wird auf dem Thread des Schreibers ausgelöst).</summary>
     public static event Action<string>? LineWritten;
@@ -30,7 +31,8 @@ public static class DebugLog
                     File.Copy(path, path + ".1", overwrite: true);
                     File.WriteAllText(path, "");
                 }
-                File.AppendAllText(path, line + Environment.NewLine);
+                // UTF-8 mit BOM: sonst zeigen Windows PowerShell 5.1 und manche Editoren Umlaute falsch
+                File.AppendAllText(path, line + Environment.NewLine, Utf8WithBom);
             }
             catch
             {

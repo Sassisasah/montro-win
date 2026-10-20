@@ -8,6 +8,8 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <LangVersion>latest</LangVersion>
     <ApplicationManifest>app.manifest</ApplicationManifest>
+    <!-- App-Symbol = Mac-Symbol (Resources/AppIcon.iconset im Repo Sassisasah/montro), 16–256 px -->
+    <ApplicationIcon>Resources\montro.ico</ApplicationIcon>
     <AssemblyName>montro</AssemblyName>
     <RootNamespace>Montro</RootNamespace>
     <!-- Version kommt aus CHANGELOG.md (oberster Eintrag); Build-Nummer später = Anzahl Commits -->

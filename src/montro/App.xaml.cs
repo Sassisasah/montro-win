@@ -17,7 +17,17 @@ public partial class App : Application
             DebugLog.Write($"Unbeobachteter Fehler: {args.Exception.GetBaseException().Message}");
             args.SetObserved();
         };
+        if (e.Args.Contains("--selbsttest"))
+        {
+            // Ohne Hauptfenster: Selbsttest laufen lassen, Bericht schreiben, beenden
+            ShutdownMode = ShutdownMode.OnExplicitShutdown;
+            base.OnStartup(e);
+            Dispatcher.InvokeAsync(async () => Shutdown(await Testing.SelfTest.RunAsync(e.Args)));
+            return;
+        }
         base.OnStartup(e);
+        // Hauptfenster hier statt per StartupUri, damit der Selbsttest ohne Fenster starten kann
+        new MainWindow().Show();
     }
 
     private static void OnUnhandled(object sender, DispatcherUnhandledExceptionEventArgs e)

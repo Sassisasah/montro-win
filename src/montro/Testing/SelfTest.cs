@@ -1,0 +1,382 @@
+using System.Diagnostics;
+using System.Text;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using Montro.Core;
+using Montro.Display;
+using Montro.PowerPoint;
+
+namespace Montro.Testing;
+
+/// <summary>
+/// Selbsttest des PowerPoint-Kerns: <c>montro.exe --selbsttest [--kiosk-minuten N]</c>.
+/// Erzeugt eine Testpräsentation, spielt sie auf jedem Bildschirm ab, prüft Lage (gemessen und
+/// per Bildschirmfoto), Navigation mit ausgeblendeten Folien, Schwarz, Endbildschirm, verwaiste
+/// Shows, PNG-Export, einen offenen Dialog und die Geschützte Ansicht. Ergebnis:
+/// <c>%TEMP%\montro-selbsttest\&lt;Zeit&gt;\bericht.md</c> plus Bildschirmfotos.
+/// </summary>
+public sealed class SelfTest
+{
+    private enum Outcome { Ok, Fehler, Info }
+
+    private sealed record Result(string Area, string Test, Outcome Outcome, string Detail);
+
+    private const int Settle = 800;
+
+    private readonly List<Result> results = new();
+    private readonly PowerPointHost host = new();
+    private readonly TestPowerPoint helper = new();
+    private readonly string dir;
+    private readonly string deck;
+    private readonly int kioskMinutes;
+    private string powerPointVersion = "?";
+
+    private SelfTest(int kioskMinutes)
+    {
+        this.kioskMinutes = kioskMinutes;
+        // Unter %TEMP%: dort kann PowerPoint (eigener Prozess) sicher lesen und schreiben, auch
+        // wenn montro selbst in einer Umgebung mit umgeleiteten AppData-Schreibzugriffen läuft
+        dir = Path.Combine(Path.GetTempPath(), "montro-selbsttest", DateTime.Now.ToString("yyyyMMdd-HHmmss"));
+        Directory.CreateDirectory(dir);
+        deck = Path.Combine(dir, "montro-test.pptx");
+    }
+
+    /// <summary>Gibt die Anzahl fehlgeschlagener Prüfungen zurück (0 = alles gut, -1 = abgebrochen).</summary>
+    public static async Task<int> RunAsync(string[] args)
+    {
+        int minutes = 0;
+        int k = Array.IndexOf(args, "--kiosk-minuten");
+        if (k >= 0 && k + 1 < args.Length) int.TryParse(args[k + 1], out minutes);
+        var t = new SelfTest(minutes);
+        return await t.Run();
+    }
+
+    private async Task<int> Run()
+    {
+        DebugLog.Write($"Selbsttest startet → {dir}");
+        var sw = Stopwatch.StartNew();
+        string? aborted = null;
+        IReadOnlyList<MonitorInfo> monitors = Monitors.All();
+        try
+        {
+            // Regel: nie in eine laufende Show hineinfahren
+            int running = await helper.CountShowsAsync();
+            if (running > 0)
+            {
+                aborted = $"Es läuft bereits eine Bildschirmpräsentation ({running}). Der Selbsttest startet nicht, damit keine Show gestört wird.";
+                return -1;
+            }
+            powerPointVersion = await host.ConnectAsync();
+            await helper.CreateDeckAsync(deck);
+            Add("Vorbereitung", "Testpräsentation erzeugt", Outcome.Info, "6 Folien, 3 und 5 ausgeblendet, Folie 2 mit 2 Klick-Animationen");
+
+            foreach (var m in monitors)
+                await Step(Area(m), () => MonitorRun(m));
+
+            var side = monitors.FirstOrDefault(m => !m.IsPrimary) ?? monitors[0];
+            await Step("Kiosk-Modus", () => KioskRun(side));
+            await Step("Verwaiste Shows", () => OrphanRun(side));
+            await Step("Vorschaubilder", ExportRun);
+            await Step("Offener Dialog in PowerPoint", () => DialogRun(side));
+            await Step("Geschützte Ansicht", () => ProtectedViewRun(side));
+        }
+        catch (Exception e)
+        {
+            aborted = $"Selbsttest abgebrochen: {StaWorker.Describe(e)}";
+        }
+        finally
+        {
+            try { await host.ShutdownAsync(); } catch { }
+            try { await helper.CleanupAsync(); } catch { }
+            helper.Dispose();
+            WriteReport(monitors, sw.Elapsed, aborted);
+        }
+        int failed = results.Count(r => r.Outcome == Outcome.Fehler);
+        DebugLog.Write($"Selbsttest fertig: {results.Count(r => r.Outcome == Outcome.Ok)} ok, {failed} Fehler → {Path.Combine(dir, "bericht.md")}");
+        return aborted != null ? -1 : failed;
+    }
+
+    private static string Area(MonitorInfo m) => $"Bildschirm {m.Number}: {m.FriendlyName}, {m.Scale:P0}";
+
+    /// <summary>Ein Testblock; Fehler darin brechen nur diesen Block ab, nicht den ganzen Test.</summary>
+    private async Task Step(string area, Func<Task> run)
+    {
+        try
+        {
+            await run();
+        }
+        catch (Exception e)
+        {
+            Add(area, "Ablauf", Outcome.Fehler, $"abgebrochen: {StaWorker.Describe(e)}");
+        }
+        finally
+        {
+            // für den nächsten Block sauber machen
+            try { await host.StopAsync(); } catch { }
+            try { await helper.CleanupAsync(); } catch { }
+        }
+    }
+
+    // MARK: - Blöcke
+
+    private async Task MonitorRun(MonitorInfo m)
+    {
+        string a = Area(m);
+        var open = await host.OpenAsync(deck, withWindow: false);
+        var map = open.Slides;
+        Check(a, "Öffnen ohne Dokumentfenster", map.Count == 6 && map.VisibleCount == 4 && map.IsHidden(3) && map.IsHidden(5),
+            $"{map}, {open.SlideWidthPt:0}×{open.SlideHeightPt:0} pt");
+
+        await host.StartShowAsync(new ShowOptions(Kiosk: false, Target: m, PreselectMonitorInRegistry: false));
+        var settings = await host.ReadShowSettingsAsync();
+        Check(a, "Show-Typ Referent, PowerPoints Referentenansicht aus", settings.ShowType == 1 && !settings.PresenterView,
+            $"ShowType {settings.ShowType}, ShowPresenterView {(settings.PresenterView ? "an" : "aus")}");
+
+        var place = await host.PlaceAsync(m);
+        Check(a, "Lage gemessen = Bildschirm", place.Ok, place.Detail);
+        await Task.Delay(Settle);
+        CheckEdges(a, "Bildschirmfoto: Folie füllt den Bildschirm", Shot(m, $"bildschirm{m.Number}-folie1.png"), TestPowerPoint.VisibleColor);
+
+        var s = await host.ReadStateAsync();
+        Check(a, "Start auf Folie 1", s.SlideIndex == 1, Describe(s, map));
+
+        await Navigate(a, map, "Weiter", host.NextAsync, s => s.SlideIndex == 2 && s.Click == 0, "Folie 2, Klick 0");
+        await Navigate(a, map, "Weiter", host.NextAsync, s => s.SlideIndex == 2 && s.Click == 1, "Folie 2, Animation 1");
+        await Navigate(a, map, "Weiter", host.NextAsync, s => s.SlideIndex == 2 && s.Click == 2, "Folie 2, Animation 2");
+        await Navigate(a, map, "Weiter", host.NextAsync, s => s.SlideIndex == 4, "überspringt ausgeblendete Folie 3 → Index 4 = Folie 3 von 4");
+        CheckEdges(a, "Bildschirmfoto: keine ausgeblendete Folie zu sehen", Shot(m, $"bildschirm{m.Number}-folie3von4.png"), TestPowerPoint.VisibleColor);
+        await Navigate(a, map, "Zurück", host.PreviousAsync, s => s.SlideIndex == 2, "zurück auf Index 2, ausgeblendete übersprungen");
+        await Navigate(a, map, "Gehe zu 4 von 4", () => host.GotoAsync(map.IndexForVisible(4)!.Value), s => s.SlideIndex == 6, "Index 6");
+        await Navigate(a, map, "Gehe zu 3 von 4", () => host.GotoAsync(map.IndexForVisible(3)!.Value), s => s.SlideIndex == 4, "Index 4");
+
+        await host.GotoAsync(3);
+        await Task.Delay(Settle);
+        var hiddenState = await host.ReadStateAsync();
+        Add(a, "Gehe zu ausgeblendeter Folie (Index 3)", Outcome.Info,
+            $"{Describe(hiddenState, map)} – zur Info: so verhält sich PowerPoint bei GotoSlide auf eine ausgeblendete Folie");
+
+        await host.SetBlackAsync(true);
+        await Task.Delay(Settle);
+        s = await host.ReadStateAsync();
+        Check(a, "Schwarz an", s.IsBlack, Describe(s, map));
+        CheckEdges(a, "Bildschirmfoto: schwarz", Shot(m, $"bildschirm{m.Number}-schwarz.png"), Colors.Black);
+        await host.SetBlackAsync(false);
+        await Task.Delay(Settle);
+        s = await host.ReadStateAsync();
+        Check(a, "Schwarz aus", s.RunState == SlideShowRunState.Running, Describe(s, map));
+
+        await host.GotoAsync(6);
+        await Task.Delay(Settle);
+        await Navigate(a, map, "Weiter auf der letzten Folie", host.NextAsync, s => s.AtEnd, "Endbildschirm erkannt");
+        Shot(m, $"bildschirm{m.Number}-ende.png");
+
+        await host.StopAsync();
+        await Task.Delay(Settle);
+        int left = await helper.CountShowsAsync();
+        Check(a, "Show beenden", left == 0, $"{left} Show(s) laufen noch");
+    }
+
+    private async Task KioskRun(MonitorInfo m)
+    {
+        const string a = "Kiosk-Modus";
+        var open = await host.OpenAsync(deck, withWindow: false);
+        var map = open.Slides;
+        await host.StartShowAsync(new ShowOptions(Kiosk: true, Target: m, PreselectMonitorInRegistry: false));
+        var settings = await host.ReadShowSettingsAsync();
+        Check(a, "Show-Typ Kiosk, PowerPoints Referentenansicht aus", settings.ShowType == 3 && !settings.PresenterView,
+            $"ShowType {settings.ShowType} auf {Area(m)}");
+        var place = await host.PlaceAsync(m);
+        Check(a, "Lage gemessen = Bildschirm", place.Ok, place.Detail);
+        await Navigate(a, map, "Weiter", host.NextAsync, s => s.SlideIndex == 2, "Folie 2");
+        await Navigate(a, map, "Gehe zu 3 von 4", () => host.GotoAsync(4), s => s.SlideIndex == 4, "Index 4");
+
+        if (kioskMinutes <= 0)
+        {
+            Add(a, "Rücksprung nach 5 min ohne Eingabe", Outcome.Info, "nicht geprüft – dafür montro.exe --selbsttest --kiosk-minuten 6");
+            return;
+        }
+        DebugLog.Write($"Selbsttest: warte {kioskMinutes} min ohne Eingabe (Kiosk) …");
+        await Task.Delay(TimeSpan.FromMinutes(kioskMinutes));
+        var s = await host.ReadStateAsync();
+        Shot(m, "kiosk-nach-warten.png");
+        Check(a, $"Nach {kioskMinutes} min ohne Eingabe noch auf derselben Folie", s.SlideIndex == 4 && s.HasShow, Describe(s, map));
+    }
+
+    private async Task OrphanRun(MonitorInfo m)
+    {
+        const string a = "Verwaiste Shows";
+        string other = Path.Combine(dir, "fremd.pptx");
+        File.Copy(deck, other, overwrite: true);
+
+        await host.OpenAsync(deck, withWindow: false);
+        await helper.StartForeignShowAsync(other);
+        await Task.Delay(Settle);
+        int before = await helper.CountShowsAsync();
+        await host.StartShowAsync(new ShowOptions(Kiosk: false, Target: m, PreselectMonitorInRegistry: false));
+        await Task.Delay(Settle);
+        int afterStart = await helper.CountShowsAsync();
+        Check(a, "Neue Show beendet vorher alle alten", before == 1 && afterStart == 1, $"vorher {before}, danach {afterStart}");
+
+        await helper.StartForeignShowAsync(other);
+        await Task.Delay(Settle);
+        int two = await helper.CountShowsAsync();
+        int closed = await host.ExitOrphanShowsAsync();
+        await Task.Delay(Settle);
+        int left = await helper.CountShowsAsync();
+        Check(a, "„Verwaiste Shows beenden“ beendet alle", two == 2 && closed == 2 && left == 0,
+            $"vorher {two}, beendet {closed}, übrig {left}");
+    }
+
+    private async Task ExportRun()
+    {
+        const string a = "Vorschaubilder";
+        await host.OpenAsync(deck, withWindow: false);
+        string thumbs = Path.Combine(dir, "vorschau");
+        var sw = Stopwatch.StartNew();
+        int n = await host.ExportThumbnailsAsync(thumbs);
+        var files = Directory.GetFiles(thumbs, "slide-*.png").OrderBy(f => f).ToArray();
+        var sizes = files.Select(f =>
+        {
+            using var fs = File.OpenRead(f);
+            var frame = BitmapDecoder.Create(fs, BitmapCreateOptions.None, BitmapCacheOption.OnLoad).Frames[0];
+            return (frame.PixelWidth, frame.PixelHeight);
+        }).ToArray();
+        Check(a, "Alle 6 Folien exportiert (auch ausgeblendete)", n == 6 && files.Length == 6,
+            $"{files.Length} Dateien in {sw.Elapsed.TotalSeconds:0.0} s");
+        Check(a, "Format 1280×720 (16:9)", sizes.All(s => s.PixelWidth == 1280 && s.PixelHeight == 720),
+            string.Join(", ", sizes.Distinct().Select(s => $"{s.PixelWidth}×{s.PixelHeight}")));
+    }
+
+    private async Task DialogRun(MonitorInfo m)
+    {
+        const string a = "Offener Dialog in PowerPoint";
+        var open = await host.OpenAsync(deck, withWindow: false);
+        await host.StartShowAsync(new ShowOptions(Kiosk: false, Target: m, PreselectMonitorInRegistry: false));
+        await host.PlaceAsync(m);
+
+        var dialogThread = TestPowerPoint.OpenModalDialog();
+        await Task.Delay(2500);
+        var sw = Stopwatch.StartNew();
+        string outcome;
+        try
+        {
+            await host.NextAsync();
+            outcome = "Befehl wurde trotz Dialog ausgeführt";
+        }
+        catch (Exception e)
+        {
+            outcome = $"Meldung: {StaWorker.Describe(e)}";
+        }
+        sw.Stop();
+        Check(a, "Befehl kommt mit Meldung zurück statt einzufrieren", sw.Elapsed.TotalSeconds < 10,
+            $"nach {sw.Elapsed.TotalSeconds:0.0} s – {outcome}");
+
+        int closedDialogs = 0;
+        for (int i = 0; i < 10 && dialogThread.IsAlive; i++)
+        {
+            closedDialogs += TestPowerPoint.CloseDialogs();
+            await Task.Delay(500);
+        }
+        Add(a, "Dialog geschlossen", dialogThread.IsAlive ? Outcome.Fehler : Outcome.Info,
+            dialogThread.IsAlive ? "Dialog ließ sich nicht schließen – bitte in PowerPoint von Hand schließen" : $"{closedDialogs} Dialogfenster geschlossen");
+        await Task.Delay(1500);
+        var s = await host.ReadStateAsync();
+        Check(a, "Danach wieder bedienbar", s.HasShow, Describe(s, open.Slides));
+    }
+
+    private async Task ProtectedViewRun(MonitorInfo m)
+    {
+        const string a = "Geschützte Ansicht";
+        string web = Path.Combine(dir, "aus-dem-internet.pptx");
+        File.Copy(deck, web, overwrite: true);
+        // Markierung „aus dem Internet“ (Mark of the Web), wie nach einem Download
+        File.WriteAllText(web + ":Zone.Identifier", "[ZoneTransfer]\r\nZoneId=3\r\n");
+        try
+        {
+            var open = await host.OpenAsync(web, withWindow: false);
+            await host.StartShowAsync(new ShowOptions(Kiosk: false, Target: m, PreselectMonitorInRegistry: false));
+            await Task.Delay(Settle);
+            var s = await host.ReadStateAsync();
+            Check(a, "Datei aus dem Internet öffnen und Show starten", s.HasShow,
+                $"PowerPoint öffnet die Datei per Automation direkt, {Describe(s, open.Slides)}");
+        }
+        catch (PowerPointException e)
+        {
+            Check(a, "Datei aus dem Internet: klare Meldung", e.Message.Contains("Geschützten Ansicht"), e.Message);
+        }
+        int pv = await helper.ProtectedViewCountAsync();
+        Add(a, "Fenster in Geschützter Ansicht danach", Outcome.Info, pv.ToString());
+    }
+
+    // MARK: - Hilfen
+
+    private async Task Navigate(string area, SlideMap map, string action, Func<Task> command, Func<ShowState, bool> expect, string expected)
+    {
+        await command();
+        await Task.Delay(Settle);
+        var s = await host.ReadStateAsync();
+        Check(area, $"{action}: {expected}", expect(s), Describe(s, map));
+    }
+
+    private static string Describe(ShowState s, SlideMap map)
+    {
+        if (!s.HasShow) return "keine Show";
+        int visible = map.VisiblePosition(s.SlideIndex);
+        string pos = s.AtEnd ? "Endbildschirm" : visible > 0 ? $"Folie {visible} von {map.VisibleCount}" : $"ausgeblendete Folie";
+        return $"{pos} (Index {s.SlideIndex}, Klick {s.Click}/{s.ClickCount}, {s.RunStateText})";
+    }
+
+    private ScreenShot Shot(MonitorInfo m, string name)
+    {
+        var shot = ScreenShot.Capture(m.Bounds);
+        try { shot.SavePng(Path.Combine(dir, name)); } catch { }
+        return shot;
+    }
+
+    private void CheckEdges(string area, string test, ScreenShot shot, Color expected)
+    {
+        var samples = shot.EdgeSamples().ToList();
+        var wrong = samples.Where(x => !ScreenShot.Near(x.Color, expected)).ToList();
+        Check(area, test, wrong.Count == 0,
+            wrong.Count == 0
+                ? $"Ränder und Ecken in Sollfarbe, Foto {shot.Width}×{shot.Height}"
+                : $"abweichend: {string.Join(", ", wrong.Select(x => $"{x.Where} {x.Color.ToString().Substring(3)}"))} (Soll {expected.ToString().Substring(3)})");
+    }
+
+    private void Check(string area, string test, bool ok, string detail) =>
+        Add(area, test, ok ? Outcome.Ok : Outcome.Fehler, detail);
+
+    private void Add(string area, string test, Outcome outcome, string detail)
+    {
+        results.Add(new Result(area, test, outcome, detail));
+        DebugLog.Write($"Selbsttest [{area}] {test}: {outcome} – {detail}");
+    }
+
+    private void WriteReport(IReadOnlyList<MonitorInfo> monitors, TimeSpan elapsed, string? aborted)
+    {
+        var b = new StringBuilder();
+        int ok = results.Count(r => r.Outcome == Outcome.Ok);
+        int failed = results.Count(r => r.Outcome == Outcome.Fehler);
+        b.AppendLine($"# Selbsttest montro {AppInfo.Version} – {DateTime.Now:dd.MM.yyyy HH:mm}");
+        b.AppendLine();
+        b.AppendLine(aborted ?? $"**{ok} ok, {failed} Fehler** in {elapsed.TotalSeconds:0} s.");
+        b.AppendLine();
+        b.AppendLine($"- {powerPointVersion}");
+        b.AppendLine($"- {Environment.OSVersion}, .NET {Environment.Version}, System-DPI {Monitors.SystemDpi()}");
+        foreach (var m in monitors) b.AppendLine($"- {m.Label}, Arbeitsbereich {m.WorkArea}");
+        foreach (var group in results.GroupBy(r => r.Area))
+        {
+            b.AppendLine();
+            b.AppendLine($"## {group.Key}");
+            b.AppendLine();
+            b.AppendLine("| | Prüfung | Ergebnis |");
+            b.AppendLine("|---|---|---|");
+            foreach (var r in group)
+            {
+                string mark = r.Outcome switch { Outcome.Ok => "✓", Outcome.Fehler => "✗", _ => "ℹ" };
+                b.AppendLine($"| {mark} | {r.Test} | {r.Detail.Replace("|", "/")} |");
+            }
+        }
+        File.WriteAllText(Path.Combine(dir, "bericht.md"), b.ToString(), new UTF8Encoding(true));
+    }
+}

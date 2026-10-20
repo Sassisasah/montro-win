@@ -38,6 +38,7 @@ public sealed class PowerPointHost
     private dynamic? pres;
     private bool ownsPres;
     private string? presPath;
+    private IntPtr onTopHwnd;   // platziertes Show-Fenster, das über der Taskleiste bleiben soll
     // ------------------------------
 
     private CancellationTokenSource? pollCts;
@@ -206,7 +207,8 @@ public sealed class PowerPointHost
     {
         dynamic? w = FindShowWindow();
         if (w == null) throw new PowerPointException("Keine Bildschirmpräsentation aktiv.");
-        IntPtr hwnd = new IntPtr(Safe(() => (int)w.HWND, 0));
+        IntPtr hwnd = ShowWindowHandle(w);
+        if (hwnd == IntPtr.Zero) DebugLog.Write("Lage: Fenster der Bildschirmpräsentation nicht gefunden – nur Lage in Punkt möglich");
         var target = m.Bounds;
         var before = Monitors.WindowRect(hwnd);
         uint sysDpi = Monitors.SystemDpi();
@@ -236,24 +238,36 @@ public sealed class PowerPointHost
             corrections++;
         }
         bool ok = actual is { } fin && fin.RoughlyEquals(target);
+        // Über alles legen: sonst bleibt auf Nebenbildschirmen die Taskleiste über der Show sichtbar
+        // (PowerPoint läuft im Hintergrund, Windows blendet die Taskleiste nur für das aktive Vollbildfenster aus)
+        bool topmost = hwnd != IntPtr.Zero && Monitors.MoveWindow(hwnd, target, topmost: true);
+        onTopHwnd = topmost ? hwnd : IntPtr.Zero;
+        // Die Taskleiste kommt kurz nach dem Platzieren gern noch einmal hoch – 1,5 s lang dagegenhalten
+        for (int i = 0; topmost && i < 15; i++)
+        {
+            Thread.Sleep(100);
+            KeepOnTop();
+        }
         string detail = $"vorher {before?.ToString() ?? "?"}, Ist {actual?.ToString() ?? "?"}, Soll {target}, "
-                      + $"System-DPI {sysDpi}, Fenster-DPI {Monitors.WindowDpi(hwnd)}, Korrekturen {corrections}";
+                      + $"System-DPI {sysDpi}, Fenster-DPI {Monitors.WindowDpi(hwnd)}, Korrekturen {corrections}"
+                      + (topmost ? ", im Vordergrund" : "");
         DebugLog.Write($"Lage {(ok ? "ok" : "WEICHT AB")}: {detail}");
         return new PlacementResult(target, actual, corrections, ok, detail);
     }, 10000, "Platzieren");
 
-    public Task NextAsync() => sta.Run(() => { View().Next(); }, 5000, "Weiter");
+    public Task NextAsync() => sta.Run(() => { View().Next(); KeepOnTop(); }, 5000, "Weiter");
 
-    public Task PreviousAsync() => sta.Run(() => { View().Previous(); }, 5000, "Zurück");
+    public Task PreviousAsync() => sta.Run(() => { View().Previous(); KeepOnTop(); }, 5000, "Zurück");
 
     /// <summary>Zu einem PowerPoint-Index springen (Umrechnung von „sichtbar“ über <see cref="SlideMap"/>).</summary>
-    public Task GotoAsync(int pptIndex) => sta.Run(() => { View().GotoSlide(pptIndex); }, 5000, $"Gehe zu {pptIndex}");
+    public Task GotoAsync(int pptIndex) => sta.Run(() => { View().GotoSlide(pptIndex); KeepOnTop(); }, 5000, $"Gehe zu {pptIndex}");
 
     public Task SetBlackAsync(bool black) => sta.Run(() =>
     {
         dynamic v = View();
         if ((int)v.State == (int)SlideShowRunState.Done) return;
         v.State = black ? (int)SlideShowRunState.BlackScreen : (int)SlideShowRunState.Running;
+        KeepOnTop();
     }, 5000, black ? "Schwarz an" : "Schwarz aus");
 
     /// <summary>Alle Shows beenden und die Präsentation schließen.</summary>
@@ -274,6 +288,17 @@ public sealed class PowerPointHost
         App();
         return ExitAllShowsInternal();
     }, 15000, "Verwaiste Shows beenden");
+
+    /// <summary>Show-Zustand sofort lesen (ohne auf die Abfrage-Schleife zu warten).</summary>
+    public Task<ShowState> ReadStateAsync() => sta.Run(ReadStateInternal, 5000, "Status lesen");
+
+    /// <summary>Tatsächlich gesetzte Show-Einstellungen (Show-Typ, PowerPoint-Referentenansicht an?).</summary>
+    public Task<(int ShowType, bool PresenterView)> ReadShowSettingsAsync() => sta.Run(() =>
+    {
+        if (pres == null) throw new PowerPointException("Keine Präsentation geöffnet.");
+        dynamic ss = pres.SlideShowSettings;
+        return (Safe(() => (int)ss.ShowType, 0), Safe(() => (int)ss.ShowPresenterView, 0) != MsoFalse);
+    }, 5000, "Show-Einstellungen lesen");
 
     // MARK: - Vorschaubilder
 
@@ -348,7 +373,12 @@ public sealed class PowerPointHost
         {
             try
             {
-                var s = await sta.Run(ReadStateInternal, 2000);
+                var s = await sta.Run(() =>
+                {
+                    // bei jeder Abfrage (200 ms): Show-Fenster wieder über die Taskleiste holen
+                    KeepOnTop();
+                    return ReadStateInternal();
+                }, 2000);
                 if (ct.IsCancellationRequested) break;
                 lastPollError = null;
                 if (!s.HasShow)
@@ -430,6 +460,30 @@ public sealed class PowerPointHost
         catch { return null; }
     }
 
+    /// <summary>
+    /// Fenster-Handle der Show. <c>SlideShowWindow.HWND</c> fehlt in aktuellen PowerPoint-Versionen
+    /// (Microsoft 365, Build 19929: Eigenschaft nicht vorhanden) – dann das sichtbare Fenster der
+    /// Klasse „screenClass“ von POWERPNT.EXE suchen, dessen Titel den Präsentationsnamen enthält.
+    /// </summary>
+    private static IntPtr ShowWindowHandle(dynamic w)
+    {
+        int h = Safe(() => (int)w.HWND, 0);
+        if (h != 0) return new IntPtr(h);
+        string name = Safe(() => Path.GetFileNameWithoutExtension((string)w.Presentation.Name), "");
+        return Monitors.FindProcessWindow("POWERPNT", "screenClass", name);
+    }
+
+    /// <summary>
+    /// Die Taskleiste eines Nebenbildschirms schiebt sich wieder über die Show (z. B. bei
+    /// Folienwechsel oder Fokuswechsel), solange PowerPoint nicht das aktive Fenster ist.
+    /// Deshalb nach jedem Befehl und regelmäßig erneut nach oben holen.
+    /// </summary>
+    private void KeepOnTop()
+    {
+        if (onTopHwnd == IntPtr.Zero) return;
+        if (!Monitors.BringToTop(onTopHwnd)) onTopHwnd = IntPtr.Zero;   // Fenster ist weg
+    }
+
     private dynamic View()
     {
         dynamic? w = FindShowWindow();
@@ -439,6 +493,7 @@ public sealed class PowerPointHost
 
     private int ExitAllShowsInternal()
     {
+        onTopHwnd = IntPtr.Zero;
         if (app == null) return 0;
         dynamic a = app;
         int n = Safe(() => (int)a.SlideShowWindows.Count, 0);
@@ -466,7 +521,7 @@ public sealed class PowerPointHost
             try
             {
                 // per Automation schließt PowerPoint ohne „Speichern?“-Frage
-                pres.Close();
+                pres!.Close();
                 DebugLog.Write("PowerPoint: Präsentation geschlossen");
             }
             catch (Exception e)
