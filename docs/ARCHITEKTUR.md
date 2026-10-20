@@ -68,6 +68,10 @@ Der Vertrag dafür steht in [KOMPATIBILITAET.md](KOMPATIBILITAET.md).
   Kontrolle über Kopfzeilen und JSON.
 - **Kein NuGet** im Projekt. Die Cloud-Umgebung von Claude hat keinen Zugang zu nuget.org, und
   es soll ohne Fremdpakete gehen.
+- **`System.IO` in WPF:** Bei WPF-Projekten fehlt `System.IO` in den ImplicitUsings (wegen
+  `System.Windows.Shapes.Path`). Es steht deshalb in `GlobalUsings.cs`.
+- **Build-Logs:** Die Cloud-Sitzung kann die Logs von GitHub Actions nicht laden. Compilerfehler
+  stehen aber als Annotationen am Check-Run (`/check-runs/<job>/annotations`).
 - **DPI:** Ohne PerMonitorV2 virtualisiert Windows die Koordinaten. Fensterlagen auf Monitoren
   mit anderer Skalierung stimmen dann nicht (Bild abgeschnitten oder verschoben, wie am Mac auf
   „CinePanorama“).
