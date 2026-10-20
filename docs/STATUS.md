@@ -2,7 +2,8 @@
 
 ## Getestet
 
-*(noch nichts – Stand 20.10.2026)*
+- **20.10.2026** – Branch `meilenstein-1` baut fehlerfrei auf GitHub Actions (`windows-latest`).
+  Das Artefakt `montro-win-x64` ist eigenständig (ohne .NET-Installation lauffähig).
 
 ## Offen
 
