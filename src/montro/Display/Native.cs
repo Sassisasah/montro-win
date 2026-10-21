@@ -207,6 +207,7 @@ internal static class Native
 
     public const uint WM_CLOSE = 0x0010;
 
+    public const int WM_DPICHANGED = 0x02E0;
     public const int GWL_EXSTYLE = -20;
     public const int WS_EX_TRANSPARENT = 0x20;
     public const int WS_EX_TOOLWINDOW = 0x80;

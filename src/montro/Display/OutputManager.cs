@@ -106,6 +106,14 @@ public sealed class OutputManager
             int ex = Native.GetWindowLong(hwnd, Native.GWL_EXSTYLE);
             Native.SetWindowLong(hwnd, Native.GWL_EXSTYLE,
                 ex | Native.WS_EX_NOACTIVATE | Native.WS_EX_TRANSPARENT | Native.WS_EX_TOOLWINDOW);
+            // WM_DPICHANGED selbst behandeln: Sonst vergrößert WPF das Fenster beim Wechsel auf einen
+            // Bildschirm mit 150 % um den Faktor 1,5 (am Test-PC 2880 statt 1920 px breit, ragte auf
+            // den nächsten Verbatim). Die Lage setzt montro immer selbst in physischen Pixeln.
+            HwndSource.FromHwnd(hwnd)?.AddHook((IntPtr h, int msg, IntPtr wp, IntPtr lp, ref bool handled) =>
+            {
+                if (msg == Native.WM_DPICHANGED) handled = true;
+                return IntPtr.Zero;
+            });
         };
         return w;
     }
