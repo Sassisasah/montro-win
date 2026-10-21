@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
@@ -8,18 +8,18 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <LangVersion>latest</LangVersion>
     <ApplicationManifest>app.manifest</ApplicationManifest>
-    <!-- App-Symbol = Mac-Symbol (Resources/AppIcon.iconset im Repo Sassisasah/montro), 16â€“256 px -->
+    <!-- App-Symbol = Mac-Symbol (Resources/AppIcon.iconset im Repo Sassisasah/montro), 16–256 px -->
     <ApplicationIcon>Resources\montro.ico</ApplicationIcon>
     <AssemblyName>montro</AssemblyName>
     <RootNamespace>Montro</RootNamespace>
-    <!-- Version kommt aus CHANGELOG.md (oberster Eintrag); Build-Nummer spÃ¤ter = Anzahl Commits -->
+    <!-- Version kommt aus CHANGELOG.md (oberster Eintrag); Build-Nummer später = Anzahl Commits -->
     <Version>0.2.0</Version>
     <Product>montro</Product>
     <Company>movidal</Company>
     <Authors>Sarah-Mathias Andrae</Authors>
-    <Copyright>Â© movidal</Copyright>
-    <Description>montro â€“ PrÃ¤sentations-Player fÃ¼r BÃ¼hne und Regie, funktioniert mit Microsoft PowerPoint</Description>
-    <!-- erlaubt das Kompilieren auch auÃŸerhalb von Windows (z. B. PrÃ¼f-Builds) -->
+    <Copyright>© movidal</Copyright>
+    <Description>montro – Präsentations-Player für Bühne und Regie, funktioniert mit Microsoft PowerPoint</Description>
+    <!-- erlaubt das Kompilieren auch außerhalb von Windows (z. B. Prüf-Builds) -->
     <EnableWindowsTargeting>true</EnableWindowsTargeting>
     <SatelliteResourceLanguages>de</SatelliteResourceLanguages>
   </PropertyGroup>
