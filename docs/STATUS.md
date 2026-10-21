@@ -15,7 +15,8 @@
   wird alle 250 ms nach oben geholt). Von der Nutzerin bestätigt („passt“).
 - **21.10.2026** – Übergänge „Hart“ (kurz Schwarz, dann neue Folie) und „Über Schwarz“ (alte
   Folie blendet ab, Schwarz, neue Folie) auf dem Verbatim, mehrere Wechsel hintereinander, Videos
-  der Nutzerin. „Überblenden“ noch offen.
+  der Nutzerin. „Überblenden“ ebenso: alte Folie bleibt als Standbild stehen und blendet direkt
+  in die neue über (auf den Einzelbildern beide überlagert), ohne Schwarz dazwischen.
 
 - **21.10.2026** – Meilenstein 4, Etappe 1 (Branch `meilenstein-4`), über UI Automation
   bedient: 4 Präsentationen per Kommandozeile hinzugefügt, alle in 23 s analysiert und mit
