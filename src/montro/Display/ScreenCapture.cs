@@ -2,11 +2,10 @@ using System.Windows;
 using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using Montro.Display;
 
-namespace Montro.Testing;
+namespace Montro.Display;
 
-/// <summary>Bildschirmfoto eines Bereichs in physischen Pixeln (für den Selbsttest).</summary>
+/// <summary>Bildschirmfoto eines Bereichs in physischen Pixeln (Standbild fürs Überblenden, Selbsttest).</summary>
 public sealed class ScreenShot
 {
     private readonly byte[] pixels;   // BGRA

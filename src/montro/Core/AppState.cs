@@ -245,7 +245,6 @@ public sealed class AppState : Observable
     }
 
     private string blackKey = "";
-    private int tickCount;
 
     /// <summary>
     /// Nicht live (oder Ende auf Schwarz): zugewiesene Bildschirme schwarz. Blackscreen und Start:
@@ -391,7 +390,13 @@ public sealed class AppState : Observable
         bool covered = false;
         if (style != ShowTransition.Cut && AudienceScreen is { } coverScreen)
         {
-            string? still = style == ShowTransition.Crossfade && IsShowRunning && !IsBlackout && !IsEndBlack ? CurrentSlideImage : null;
+            // Standbild = Bildschirmfoto des Publikumsbildschirms (scharf, mit Animationsstand), wie am Mac das Live-Bild
+            System.Windows.Media.ImageSource? still = null;
+            if (style == ShowTransition.Crossfade && IsShowRunning && !IsBlackout && !IsEndBlack)
+            {
+                try { still = ScreenShot.Capture(coverScreen.Bounds).Image; }
+                catch (Exception e) { DebugLog.Write($"Übergang: kein Standbild – {e.Message}"); }
+            }
             // Ist der Bildschirm schon schwarz (nichts live, Blackscreen), sofort abdecken
             bool alreadyBlack = !IsShowRunning || IsBlackout || IsEndBlack;
             double fadeIn = alreadyBlack ? 0.01 : still != null ? 0.12 : TransitionDuration / 2;
@@ -620,12 +625,14 @@ public sealed class AppState : Observable
     {
         Timer.Tick();
         Message.Tick();
-        // Schwarzbild/Übergang über allem halten (wie das PowerPoint-Fenster)
-        outputs.RaiseAll();
-        // Taskleiste auf dem Publikumsbildschirm ausblenden (etwa jede Sekunde prüfen, Explorer
-        // zeigt sie z. B. nach Bildschirmänderungen von selbst wieder)
-        if (++tickCount % 4 == 0)
-            TaskbarHider.Apply(AudienceScreen is { } a ? new[] { a } : Array.Empty<MonitorInfo>());
+        // Schwarzbild/Übergang über allem halten – aber nicht, solange die Show sichtbar sein soll
+        // oder gerade startet: Sonst wechseln sich Schwarzbild und PowerPoint-Fenster (das ebenfalls
+        // nach oben geholt wird) ständig ab, und die neue Folie flackert.
+        if (outputs.TransitionActive || (!IsStarting && (!IsShowRunning || IsBlackout || IsEndBlack)))
+            outputs.RaiseAll();
+        // Taskleiste auf dem Publikumsbildschirm ausgeblendet halten (Explorer zeigt sie z. B. bei
+        // automatisch ausblendender Taskleiste von selbst wieder)
+        TaskbarHider.Apply(AudienceScreen is { } a ? new[] { a } : Array.Empty<MonitorInfo>());
         Clock = DateTime.Now;
         Raise(nameof(ClockText));
         BlinkPhase = DateTime.Now.Millisecond < 500;

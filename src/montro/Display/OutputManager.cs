@@ -51,7 +51,7 @@ public sealed class OutputManager
     }
 
     /// <summary>Publikumsbildschirm abdecken: Standbild (Überblenden) oder Schwarz.</summary>
-    public async Task BeginTransition(string? stillImage, MonitorInfo screen, double fadeIn)
+    public async Task BeginTransition(ImageSource? stillImage, MonitorInfo screen, double fadeIn)
     {
         transitionWindow?.Close();
         var w = CreateCover(screen, stillImage);
@@ -86,7 +86,7 @@ public sealed class OutputManager
         transitionWindow = null;
     }
 
-    private static Window CreateCover(MonitorInfo m, string? image)
+    private static Window CreateCover(MonitorInfo m, ImageSource? image)
     {
         var w = new Window
         {
@@ -101,8 +101,13 @@ public sealed class OutputManager
             IsHitTestVisible = false,
             Title = "montro Ausgabe",
         };
-        if (image != null && new Views.PathToImage().Convert(image, typeof(ImageSource), null, System.Globalization.CultureInfo.InvariantCulture) is ImageSource src)
-            w.Content = new Image { Source = src, Stretch = Stretch.Uniform };
+        if (image != null)
+        {
+            // Bildschirmfoto in Originalgröße: 1:1 auf den Bildschirm, ohne Umrechnen (sonst unscharf)
+            var img = new Image { Source = image, Stretch = Stretch.Fill, SnapsToDevicePixels = true };
+            RenderOptions.SetBitmapScalingMode(img, BitmapScalingMode.HighQuality);
+            w.Content = img;
+        }
         w.SourceInitialized += (_, _) =>
         {
             var hwnd = new WindowInteropHelper(w).Handle;
