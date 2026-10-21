@@ -5,19 +5,21 @@
 Diese Schritte einmalig selbst erledigen. Sie brauchen Admin-Rechte, und Claude bedient keine
 UAC-Dialoge.
 
-1. **.NET 8 SDK** (x64) installieren: <https://dotnet.microsoft.com/download/dotnet/8.0>
+1. **.NET SDK 8 oder neuer** (x64) installieren: <https://dotnet.microsoft.com/download>.
+   Ein neueres SDK (z. B. 10) baut .NET 8 ohne Zusatzinstallation. Ist nur die .NET-10-Laufzeit
+   installiert, den Debug-Build mit `$env:DOTNET_ROLL_FORWARD='Major'` starten.
 2. **Git für Windows** installieren.
 3. **GitHub CLI** installieren und als `Sassisasah` anmelden: `gh auth login`.
 4. **Microsoft PowerPoint** (lizenziert) installieren und einmal von Hand starten, damit
    Aktivierungs- und Willkommensdialoge erledigt sind. Offene Dialoge blockieren die
    Fernsteuerung.
-5. Den Ordner `C:\Developer` anlegen und das Repo dorthin klonen:
+5. Das Repo in den Projektordner klonen (Test-PC: `C:\Users\mathi\Projekte`):
    ```powershell
-   cd C:\Developer
+   cd C:\Users\mathi\Projekte
    gh repo clone Sassisasah/montro-win
    ```
-6. Den PC mit der Claude-Desktop-App verknüpfen. Dazu diesen Chat in der Desktop-App auf dem PC
-   öffnen und `C:\Developer\montro-win` als verbundenen Ordner freigeben.
+6. Den PC mit der Claude-Desktop-App verknüpfen und den Projektordner als verbundenen Ordner
+   freigeben.
 
 ## Bildschirme
 
@@ -27,6 +29,10 @@ Getestet wird mit dem Laptop und zwei externen Bildschirmen (Publikum, Referent*
 - Hauptbildschirm bleibt der Laptop.
 - Unterschiedliche Skalierung je Bildschirm ist erlaubt. montro rechnet pro Monitor
   (DPI-Modus PerMonitorV2).
+- **Bildschirm-Abschaltung:** Schaltet Windows die Bildschirme wegen Inaktivität ab, melden sich
+  USB-C-Monitore (z. B. Verbatim MT15) ganz ab und zeigen „No signal“. Auf Show-Rechnern unter
+  Einstellungen › System › Energie „Bildschirm ausschalten“ auf „Nie“ stellen. montro soll das
+  ab Meilenstein 4 während einer Show selbst verhindern (`SetThreadExecutionState`).
 
 ## Show-Rechner
 
