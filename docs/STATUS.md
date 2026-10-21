@@ -13,6 +13,9 @@
 - **21.10.2026** – Live-Schalten ohne Aufblitzen (gemessen alle 120 ms; vorher schob sich
   PowerPoint kurz über die Abdeckung) und Taskleiste bleibt unter dem Schwarzbild (Schwarzbild
   wird alle 250 ms nach oben geholt). Von der Nutzerin bestätigt („passt“).
+- **21.10.2026** – Übergänge „Hart“ (kurz Schwarz, dann neue Folie) und „Über Schwarz“ (alte
+  Folie blendet ab, Schwarz, neue Folie) auf dem Verbatim, mehrere Wechsel hintereinander, Videos
+  der Nutzerin. „Überblenden“ noch offen.
 
 - **21.10.2026** – Meilenstein 4, Etappe 1 (Branch `meilenstein-4`), über UI Automation
   bedient: 4 Präsentationen per Kommandozeile hinzugefügt, alle in 23 s analysiert und mit
