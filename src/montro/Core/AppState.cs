@@ -245,6 +245,7 @@ public sealed class AppState : Observable
     }
 
     private string blackKey = "";
+    private int tickCount;
 
     /// <summary>
     /// Nicht live (oder Ende auf Schwarz): zugewiesene Bildschirme schwarz. Blackscreen und Start:
@@ -253,6 +254,7 @@ public sealed class AppState : Observable
     public void UpdateOutputs()
     {
         var black = new HashSet<string>();
+        TaskbarHider.Apply(AudienceScreen is { } shown ? new[] { shown } : Array.Empty<MonitorInfo>());
         // Während eines Übergangs nichts ändern: dessen Fenster deckt ab, und ein ausblendendes
         // Schwarzbild darunter würde kurz den Desktop durchscheinen lassen. Danach erneut aufrufen.
         if (outputs.TransitionActive) return;
@@ -618,8 +620,12 @@ public sealed class AppState : Observable
     {
         Timer.Tick();
         Message.Tick();
-        // Schwarzbild/Übergang über der Taskleiste halten (wie das PowerPoint-Fenster)
+        // Schwarzbild/Übergang über allem halten (wie das PowerPoint-Fenster)
         outputs.RaiseAll();
+        // Taskleiste auf dem Publikumsbildschirm ausblenden (etwa jede Sekunde prüfen, Explorer
+        // zeigt sie z. B. nach Bildschirmänderungen von selbst wieder)
+        if (++tickCount % 4 == 0)
+            TaskbarHider.Apply(AudienceScreen is { } a ? new[] { a } : Array.Empty<MonitorInfo>());
         Clock = DateTime.Now;
         Raise(nameof(ClockText));
         BlinkPhase = DateTime.Now.Millisecond < 500;
@@ -660,6 +666,7 @@ public sealed class AppState : Observable
             if (e.PropertyName is nameof(RegieMessage.Background) or nameof(RegieMessage.Foreground)) QueueSave();
         };
         CleanOrphanThumbs();
+        TaskbarHider.RestoreAll();   // falls montro vorher abgestürzt ist
         _ = ui.InvokeAsync(() => _ = PrepareAll(), DispatcherPriority.ApplicationIdle);
         _ = ui.InvokeAsync(UpdateOutputs, DispatcherPriority.Loaded);
     }
@@ -724,6 +731,7 @@ public sealed class AppState : Observable
         ticker.Stop();
         SaveNow();
         outputs.CloseAll();
+        TaskbarHider.RestoreAll();
         await ppt.ShutdownAsync();
     }
 }

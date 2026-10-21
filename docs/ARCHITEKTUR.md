@@ -161,6 +161,12 @@ Fremdbibliothek. Zählweise absichtlich wie am Mac:
 - **Oberfläche testen ohne Maus:** WPF stellt alle Knöpfe und Listen über UI Automation bereit.
   Damit lässt sich das Hauptfenster aus einem Skript bedienen (Eintrag wählen, „Ausgewählte live
   schalten“, „Weiter“, Statuszeile lesen), so geprüft am 21.10.2026.
+- **Taskleiste auf dem Publikumsbildschirm:** Wegen der 1 Pixel niedrigeren Fenster gilt der
+  Bildschirm für Windows nicht als „Vollbild“, die Taskleiste (`Shell_SecondaryTrayWnd`) kam
+  immer wieder über Show und Schwarzbild. 1 Pixel *größer* (TEST E) brachte das Verbatim-Problem
+  zurück. Lösung wie am Mac (Dock/Menüleiste ausblenden): montro versteckt das Taskleistenfenster
+  dieses Bildschirms, solange er Ausgabe ist, und zeigt es beim Umstellen, Beenden und nach einem
+  Absturz beim nächsten Start wieder. Keine Windows-Einstellung wird geändert.
 - **Eigene Vollbildfenster auf Bildschirmen mit anderer Skalierung:** WPF vergrößert ein Fenster
   beim Wechsel auf einen Monitor mit 150 % selbst (WM_DPICHANGED). Schwarzbild- und
   Übergangsfenster fangen die Meldung ab und werden nur in physischen Pixeln per `SetWindowPos`

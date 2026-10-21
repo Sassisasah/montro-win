@@ -6,6 +6,8 @@
   Über Schwarz / Überblenden), Publikumsbildschirm schwarz, wenn nichts live ist, beim Start,
   bei Blackscreen und am Ende. Ausgabe während der Show umstellen startet an gleicher Folie neu.
 - Dunkle Kontextmenüs und Bildlaufleisten wie am Mac.
+- Taskleiste auf dem Publikumsbildschirm wird ausgeblendet, solange er Ausgabe ist (wie Dock und
+  Menüleiste am Mac). Kein Aufblitzen mehr beim Live-Schalten.
 
 ## 0.3 – 21.10.2026
 - Neu (Branch `meilenstein-4`, Etappe 1): Hauptfenster wie am Mac. Playlist mit Vorschaubild,
