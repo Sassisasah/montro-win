@@ -2,6 +2,23 @@
 
 ## Getestet
 
+- **20.10.2026** – Sichtprüfung durch die Nutzerin (eigenständige Version aus `publish`, per
+  Doppelklick gestartet). Erster Versuch: Die Bildschirm-Auswahl war weiß auf weiß (behoben,
+  ComboBox dunkel). Laut Fotos und Log:
+  - Erster Start auf Verbatim 2 lief (Lage ok), Zustand aber „pausiert“ und kein Bild sichtbar.
+  - Zweites „Show starten“: „Object does not exist“ – behoben (Präsentation wird neu geöffnet).
+  - Das „Pixelgewitter“ war ein PowerPoint-Dialog auf dem Verbatim (150 %), unleserlich
+    gezeichnet. Solange er offen war, meldete montro „PowerPoint antwortet nicht … Dialog
+    offen?“. Inhalt des Dialogs noch unbekannt; vermutlich hat er die Show pausiert.
+  - Nachgestellt mit derselben Datei (`--selbsttest --datei …`, 15 Folien, 720×405 pt): auf
+    allen drei Bildschirmen je zweimal gestartet, Lage ok, Show läuft, Bildschirmfoto korrekt.
+  - **Aber:** Auf den Verbatims selbst kam nur Schwarz, eine kaputte Taskleiste oder ein
+    zerstückeltes Hintergrundbild an – auch mit PowerPoint allein. Die Bildschirmfotos (DWM)
+    zeigten die Folie, sie prüfen also nicht, was der Monitor wirklich anzeigt.
+  - Test C/D auf Verbatim 2: Show-Fenster 1 Pixel niedriger → Bild kommt an; exakt
+    bildschirmfüllend → kein Bild. montro legt das Fenster jetzt 1 Pixel niedriger.
+  - **21.10.2026 – Sichtprüfung ok:** Mit dieser Version (Fenster 1920×1079) sind die Folien auf beiden Verbatims sauber zu sehen, Weiter/Zurück/Schwarz funktionieren.
+
 - **20.10.2026** – Meilenstein 1 (Branch `meilenstein-1`) mit dem Selbsttest
   (`montro.exe --selbsttest`, siehe [BEDIENUNG.md](BEDIENUNG.md#selbsttest)) auf dem Test-PC
   geprüft: **65 von 65 Prüfungen ok**, in mehreren Läufen hintereinander.
@@ -49,22 +66,6 @@
   umgeleitet, und PowerPoint sah den Ordner dort nicht. Der Selbsttest arbeitet deshalb unter
   `%TEMP%`.
 - PowerPoint ohne Lizenz: lässt sich auf dem Test-PC nicht nachstellen.
-- **20.10.2026** – Sichtprüfung durch die Nutzerin (eigenständige Version aus `publish`, per
-  Doppelklick gestartet). Erster Versuch: Die Bildschirm-Auswahl war weiß auf weiß (behoben,
-  ComboBox dunkel). Laut Fotos und Log:
-  - Erster Start auf Verbatim 2 lief (Lage ok), Zustand aber „pausiert“ und kein Bild sichtbar.
-  - Zweites „Show starten“: „Object does not exist“ – behoben (Präsentation wird neu geöffnet).
-  - Das „Pixelgewitter“ war ein PowerPoint-Dialog auf dem Verbatim (150 %), unleserlich
-    gezeichnet. Solange er offen war, meldete montro „PowerPoint antwortet nicht … Dialog
-    offen?“. Inhalt des Dialogs noch unbekannt; vermutlich hat er die Show pausiert.
-  - Nachgestellt mit derselben Datei (`--selbsttest --datei …`, 15 Folien, 720×405 pt): auf
-    allen drei Bildschirmen je zweimal gestartet, Lage ok, Show läuft, Bildschirmfoto korrekt.
-  - **Aber:** Auf den Verbatims selbst kam nur Schwarz, eine kaputte Taskleiste oder ein
-    zerstückeltes Hintergrundbild an – auch mit PowerPoint allein. Die Bildschirmfotos (DWM)
-    zeigten die Folie, sie prüfen also nicht, was der Monitor wirklich anzeigt.
-  - Test C/D auf Verbatim 2: Show-Fenster 1 Pixel niedriger → Bild kommt an; exakt
-    bildschirmfüllend → kein Bild. montro legt das Fenster jetzt 1 Pixel niedriger.
-  - Nächster Schritt: Test der Nutzerin mit dieser Version.
 - Der Selbsttest kann nicht sehen, was ein Monitor wirklich anzeigt. Sichtprüfung bleibt nötig.
 - **20.10.2026** – Während einer Pause schaltete Windows die Bildschirme ab, die Verbatims
   meldeten sich ab („No signal“). Für Meilenstein 4: Abschaltung während einer Show verhindern
