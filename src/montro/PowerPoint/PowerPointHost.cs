@@ -257,7 +257,9 @@ public sealed class PowerPointHost
         bool ok = actual is { } fin && fin.RoughlyEquals(target, 0);
         // Über alles legen: sonst bleibt auf Nebenbildschirmen die Taskleiste über der Show sichtbar
         // (PowerPoint läuft im Hintergrund, Windows blendet die Taskleiste nur für das aktive Vollbildfenster aus)
-        bool topmost = topmostWanted && hwnd != IntPtr.Zero && Monitors.MoveWindow(hwnd, target, topmost: true);
+        // Während eines Übergangs direkt unter montros Abdeckung einordnen, sonst blitzt die neue
+        // Folie kurz auf, bevor die Abdeckung wieder nach oben kommt („kommt, geht, kommt wieder“)
+        bool topmost = topmostWanted && hwnd != IntPtr.Zero && Monitors.MoveWindow(hwnd, target, topmost: true, insertAfter: PlaceBelow);
         onTopHwnd = topmost ? hwnd : IntPtr.Zero;
         // Die Taskleiste kommt kurz nach dem Platzieren gern noch einmal hoch – 1,5 s lang dagegenhalten
         for (int i = 0; topmost && i < 15; i++)
@@ -569,6 +571,9 @@ public sealed class PowerPointHost
     /// </summary>
     /// <summary>Während eines Übergangs liegt montros Abdeckung über der Show – dann nicht nach oben holen.</summary>
     public volatile bool KeepOnTopPaused;
+
+    /// <summary>Fenster, unter das die Show beim Platzieren eingeordnet wird (Übergangsabdeckung), sonst Zero.</summary>
+    public IntPtr PlaceBelow;
 
     private void KeepOnTop()
     {

@@ -19,6 +19,9 @@ public sealed class OutputManager
 
     public bool TransitionActive => transitionWindow != null;
 
+    /// <summary>Fenster-Handle der Übergangsabdeckung (Zero = keine).</summary>
+    public IntPtr TransitionHandle => transitionWindow != null ? new WindowInteropHelper(transitionWindow).Handle : IntPtr.Zero;
+
     /// <summary>Genau diese Bildschirme (Gerätenamen) schwarz, alle anderen frei.</summary>
     public void ApplyBlack(ISet<string> devices)
     {

@@ -253,8 +253,10 @@ public sealed class AppState : Observable
     public void UpdateOutputs()
     {
         var black = new HashSet<string>();
-        // während eines Übergangs deckt dessen Fenster ab (Standbild würde sonst schwarz überdeckt)
-        if (AudienceScreen is { } audience && !outputs.TransitionActive)
+        // Während eines Übergangs nichts ändern: dessen Fenster deckt ab, und ein ausblendendes
+        // Schwarzbild darunter würde kurz den Desktop durchscheinen lassen. Danach erneut aufrufen.
+        if (outputs.TransitionActive) return;
+        if (AudienceScreen is { } audience)
         {
             if (!IsShowRunning || IsEndBlack || IsBlackout || IsStarting) black.Add(audience.DeviceName);
         }
@@ -388,10 +390,13 @@ public sealed class AppState : Observable
         if (style != ShowTransition.Cut && AudienceScreen is { } coverScreen)
         {
             string? still = style == ShowTransition.Crossfade && IsShowRunning && !IsBlackout && !IsEndBlack ? CurrentSlideImage : null;
-            double fadeIn = still != null ? 0.12 : TransitionDuration / 2;
+            // Ist der Bildschirm schon schwarz (nichts live, Blackscreen), sofort abdecken
+            bool alreadyBlack = !IsShowRunning || IsBlackout || IsEndBlack;
+            double fadeIn = alreadyBlack ? 0.01 : still != null ? 0.12 : TransitionDuration / 2;
             DebugLog.Write($"Übergang {style} ({TransitionDuration:0.0} s), Standbild: {still != null}");
             ppt.KeepOnTopPaused = true;
             await outputs.BeginTransition(still, coverScreen, fadeIn);
+            ppt.PlaceBelow = outputs.TransitionHandle;
             covered = true;
         }
 
@@ -440,7 +445,10 @@ public sealed class AppState : Observable
             outputs.RaiseAll();
             await Task.Delay(450);
             await outputs.EndTransition(style == ShowTransition.Crossfade ? TransitionDuration : TransitionDuration / 2);
+            ppt.PlaceBelow = IntPtr.Zero;
             ppt.KeepOnTopPaused = false;
+            blackKey = "?";
+            UpdateOutputs();
         }
     }
 
