@@ -17,7 +17,10 @@
     zeigten die Folie, sie prüfen also nicht, was der Monitor wirklich anzeigt.
   - Test C/D auf Verbatim 2: Show-Fenster 1 Pixel niedriger → Bild kommt an; exakt
     bildschirmfüllend → kein Bild. montro legt das Fenster jetzt 1 Pixel niedriger.
-  - **21.10.2026 – Sichtprüfung ok:** Mit dieser Version (Fenster 1920×1079) sind die Folien auf beiden Verbatims sauber zu sehen, Weiter/Zurück/Schwarz funktionieren.
+  - **21.10.2026 – Sichtprüfung ok:** Mit dieser Version (Fenster 1920×1079) sind die Folien
+    auf beiden Verbatims sauber zu sehen, Weiter/Zurück/Schwarz funktionieren.
+  - **21.10.2026:** „Vorschaubilder exportieren“ aus dem per Doppelklick gestarteten montro
+    funktioniert (nach `%LOCALAPPDATA%\montro\thumbs\test`).
 
 - **20.10.2026** – Meilenstein 1 (Branch `meilenstein-1`) mit dem Selbsttest
   (`montro.exe --selbsttest`, siehe [BEDIENUNG.md](BEDIENUNG.md#selbsttest)) auf dem Test-PC
@@ -60,11 +63,6 @@
 
 ## Offen
 
-- **20.10.2026** – Von Hand prüfen (montro per Doppelklick starten, nicht aus der
-  Claude-Sitzung): Testfenster › „Vorschaubilder exportieren“ schreibt nach
-  `%LOCALAPPDATA%\montro\thumbs\test`. In der Claude-Sitzung werden Schreibzugriffe auf AppData
-  umgeleitet, und PowerPoint sah den Ordner dort nicht. Der Selbsttest arbeitet deshalb unter
-  `%TEMP%`.
 - PowerPoint ohne Lizenz: lässt sich auf dem Test-PC nicht nachstellen.
 - Der Selbsttest kann nicht sehen, was ein Monitor wirklich anzeigt. Sichtprüfung bleibt nötig.
 - **20.10.2026** – Während einer Pause schaltete Windows die Bildschirme ab, die Verbatims
