@@ -161,6 +161,13 @@ Fremdbibliothek. Zählweise absichtlich wie am Mac:
 - **Oberfläche testen ohne Maus:** WPF stellt alle Knöpfe und Listen über UI Automation bereit.
   Damit lässt sich das Hauptfenster aus einem Skript bedienen (Eintrag wählen, „Ausgewählte live
   schalten“, „Weiter“, Statuszeile lesen), so geprüft am 21.10.2026.
+- **Schwarzbild liegt immer unter oder über der Show:** Auf dem Publikumsbildschirm bleibt das
+  Schwarzbild (layered, volle Bildschirmhöhe) dauerhaft liegen. Ist Schwarz gefragt (nichts live,
+  Blackscreen, Ende auf Schwarz), holt montro es nach oben, sonst liegt es unter dem
+  PowerPoint-Fenster. So scheint beim Umschalten und in der untersten Pixelzeile (Show 1 Pixel
+  niedriger) nie Desktop oder Taskleiste durch. Während eines Übergangs wird nur dessen Abdeckung
+  nach oben geholt, nicht das Schwarzbild – sonst lag es über der neuen Show und das Aufblenden
+  fehlte.
 - **Taskleiste auf dem Publikumsbildschirm:** Wegen der 1 Pixel niedrigeren Fenster gilt der
   Bildschirm für Windows nicht als „Vollbild“, die Taskleiste (`Shell_SecondaryTrayWnd`) kam
   immer wieder über Show und Schwarzbild. 1 Pixel *größer* (TEST E) brachte das Verbatim-Problem

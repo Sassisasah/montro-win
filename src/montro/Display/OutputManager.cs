@@ -9,8 +9,8 @@ namespace Montro.Display;
 
 /// <summary>
 /// Schwarzbild- und Übergangsfenster auf den Ausgabebildschirmen (Mac: OutputManager).
-/// Randlos, über allem, ohne Fokus und ohne Mausklicks. Wie das PowerPoint-Fenster 1 Pixel
-/// niedriger als der Bildschirm (Vollbild-Direktmodus, siehe ARCHITEKTUR.md).
+/// Randlos, ohne Fokus und ohne Mausklicks, in voller Bildschirmgröße. Das Schwarzbild liegt
+/// immer auf dem Publikumsbildschirm, je nach Zustand über oder unter der Show.
 /// </summary>
 public sealed class OutputManager
 {
@@ -38,7 +38,7 @@ public sealed class OutputManager
             if (m == null) continue;
             if (blackWindows.TryGetValue(device, out var existing))
             {
-                Place(existing, m);
+                Place(existing, m, raise: false);   // Lage nachziehen, Stapelreihenfolge nicht ändern
                 continue;
             }
             var w = CreateCover(m, null);
@@ -72,9 +72,10 @@ public sealed class OutputManager
     }
 
     /// <summary>Abdeckungen wieder ganz nach oben holen (über das PowerPoint-Fenster).</summary>
-    public void RaiseAll()
+    public void RaiseAll(bool black = true)
     {
-        foreach (var w in blackWindows.Values) Raise(w);
+        if (black)
+            foreach (var w in blackWindows.Values) Raise(w);
         if (transitionWindow != null) Raise(transitionWindow);
     }
 
@@ -127,12 +128,19 @@ public sealed class OutputManager
     }
 
     /// <summary>In physischen Pixeln platzieren (WPF-Koordinaten wären DPI-abhängig).</summary>
-    private static void Place(Window w, MonitorInfo m)
+    /// <remarks>
+    /// Volle Bildschirmhöhe: Diese Fenster sind „layered“ (AllowsTransparency) und laufen nie im
+    /// Vollbild-Direktmodus, das Verbatim-Problem betrifft nur das PowerPoint-Fenster. So deckt das
+    /// Schwarzbild auch die unterste Pixelzeile unter der Show ab.
+    /// </remarks>
+    private static void Place(Window w, MonitorInfo m, bool raise = true)
     {
         var hwnd = new WindowInteropHelper(w).Handle;
         if (hwnd == IntPtr.Zero) return;
-        var b = m.Bounds;
-        Monitors.MoveWindow(hwnd, new PixelRect(b.X, b.Y, b.Width, b.Height - 1), topmost: true);
+        if (raise)
+            Monitors.MoveWindow(hwnd, m.Bounds, topmost: true);
+        else
+            Monitors.MoveWindow(hwnd, m.Bounds);
     }
 
     private static void Raise(Window w)

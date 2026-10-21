@@ -257,15 +257,22 @@ public sealed class AppState : Observable
         // Während eines Übergangs nichts ändern: dessen Fenster deckt ab, und ein ausblendendes
         // Schwarzbild darunter würde kurz den Desktop durchscheinen lassen. Danach erneut aufrufen.
         if (outputs.TransitionActive) return;
-        if (AudienceScreen is { } audience)
-        {
-            if (!IsShowRunning || IsEndBlack || IsBlackout || IsStarting) black.Add(audience.DeviceName);
-        }
+        // Das Schwarzbild bleibt auf dem Publikumsbildschirm immer liegen: über der Show, wenn
+        // Schwarz gefragt ist, sonst darunter (die Show wird darüber gehalten). So scheint beim
+        // Umschalten und in der untersten Pixelzeile (Show-Fenster 1 Pixel niedriger) nie der
+        // Desktop oder die Taskleiste durch.
+        if (AudienceScreen is { } audience) black.Add(audience.DeviceName);
         string key = string.Join("|", black.OrderBy(x => x));
-        if (key == blackKey) return;
-        blackKey = key;
-        outputs.ApplyBlack(black);
+        if (key != blackKey)
+        {
+            blackKey = key;
+            outputs.ApplyBlack(black);
+        }
+        if (BlackOnTop) outputs.RaiseAll();
     }
+
+    /// <summary>Soll das Schwarzbild gerade über der Show liegen?</summary>
+    private bool BlackOnTop => !IsStarting && (!IsShowRunning || IsBlackout || IsEndBlack);
 
     // MARK: - Playlist
 
@@ -449,7 +456,7 @@ public sealed class AppState : Observable
         if (covered)
         {
             // erst aufblenden, wenn die neue Folie sicher steht
-            outputs.RaiseAll();
+            outputs.RaiseAll(black: BlackOnTop);
             await Task.Delay(450);
             await outputs.EndTransition(style == ShowTransition.Crossfade ? TransitionDuration : TransitionDuration / 2);
             ppt.PlaceBelow = IntPtr.Zero;
@@ -628,8 +635,8 @@ public sealed class AppState : Observable
         // Schwarzbild/Übergang über allem halten – aber nicht, solange die Show sichtbar sein soll
         // oder gerade startet: Sonst wechseln sich Schwarzbild und PowerPoint-Fenster (das ebenfalls
         // nach oben geholt wird) ständig ab, und die neue Folie flackert.
-        if (outputs.TransitionActive || (!IsStarting && (!IsShowRunning || IsBlackout || IsEndBlack)))
-            outputs.RaiseAll();
+        if (outputs.TransitionActive || BlackOnTop)
+            outputs.RaiseAll(black: BlackOnTop);
         // Taskleiste auf dem Publikumsbildschirm ausgeblendet halten (Explorer zeigt sie z. B. bei
         // automatisch ausblendender Taskleiste von selbst wieder)
         TaskbarHider.Apply(AudienceScreen is { } a ? new[] { a } : Array.Empty<MonitorInfo>());
