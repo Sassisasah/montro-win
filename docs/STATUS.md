@@ -8,6 +8,9 @@
   Popup-Modus (PowerPoint 960×540 rechts auf dem Laptop, Lage ok), 2× „Weiter“ → Statuszeile
   „Folie 3 von 14 · Animation 0/5“, Folienübersicht markiert Folie 3, „Stopp“ → „Gestoppt –
   Ausgänge schwarz“. Bildschirmfoto im Aussehen nah an der Mac-Vorlage.
+- **21.10.2026** – Sichtprüfung durch die Nutzerin: Live schalten aus dem Hauptfenster auf einen
+  Verbatim funktioniert („mega“). Vorher war das Bildschirm-Menü weiß auf weiß (behoben,
+  Kontextmenüs jetzt dunkel).
 
 - **21.10.2026** – Meilenstein 3 (Branch `meilenstein-3`): PPTX-Parser gegen PowerPoint
   verglichen (`--selbsttest --parser`), **0 Abweichungen**:
