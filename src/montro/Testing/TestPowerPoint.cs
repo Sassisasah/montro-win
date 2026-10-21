@@ -89,6 +89,67 @@ public sealed class TestPowerPoint : IDisposable
         }
     }, 60000, "Selbsttest: Testpräsentation erzeugen");
 
+    /// <summary>
+    /// Testpräsentation für den Parser: Notizen mit mehreren Absätzen, Klick-Effekte gemischt mit
+    /// „Mit vorherigem“/„Nach vorherigem“ (zählen nicht als Klick), eine ausgeblendete Folie und eine
+    /// Trigger-Animation (interaktive Sequenz, zählt nicht).
+    /// </summary>
+    public Task CreateParserDeckAsync(string path) => sta.Run(() =>
+    {
+        dynamic a = App();
+        dynamic p = a.Presentations.Add(MsoFalse);
+        try
+        {
+            dynamic Box(dynamic slide, string text, float x)
+            {
+                dynamic b = slide.Shapes.AddShape(1, x, 200f, 180f, 80f);
+                b.TextFrame.TextRange.Text = text;
+                return b;
+            }
+            void Notes(dynamic slide, string text)
+            {
+                dynamic ph = slide.NotesPage.Shapes.Placeholders;
+                for (int k = 1; k <= (int)ph.Count; k++)
+                {
+                    dynamic s = ph.Item(k);
+                    if ((int)s.PlaceholderFormat.Type == 2) s.TextFrame.TextRange.Text = text;
+                }
+            }
+
+            // 1: zwei Klicks, dazwischen „Mit vorherigem“ und „Nach vorherigem“
+            dynamic s1 = p.Slides.Add(1, 12);
+            dynamic seq1 = s1.TimeLine.MainSequence;
+            seq1.AddEffect(Box(s1, "A", 20f), 10, 0, 1);    // Klick
+            seq1.AddEffect(Box(s1, "B", 220f), 10, 0, 2);   // mit vorherigem
+            seq1.AddEffect(Box(s1, "C", 420f), 10, 0, 3);   // nach vorherigem
+            seq1.AddEffect(Box(s1, "D", 620f), 10, 0, 1);   // Klick
+            Notes(s1, "Erster Absatz mit Umlauten: äöü ß\rZweiter Absatz\vmit Zeilenumbruch");
+
+            // 2: ausgeblendet, mit Notiz
+            dynamic s2 = p.Slides.Add(2, 12);
+            Box(s2, "versteckt", 20f);
+            Notes(s2, "Notiz auf ausgeblendeter Folie");
+            s2.SlideShowTransition.Hidden = MsoTrue;
+
+            // 3: ein Klick plus eine Trigger-Animation (Klick auf Form startet Effekt)
+            dynamic s3 = p.Slides.Add(3, 12);
+            dynamic trigger = Box(s3, "Auslöser", 20f);
+            dynamic target = Box(s3, "Ziel", 420f);
+            s3.TimeLine.MainSequence.AddEffect(Box(s3, "Klick", 220f), 10, 0, 1);
+            dynamic inter = s3.TimeLine.InteractiveSequences.Add();
+            inter.AddTriggerEffect(target, 10, 4, trigger);   // msoAnimTriggerOnShapeClick
+
+            // 4: ohne alles
+            p.Slides.Add(4, 12);
+
+            p.SaveAs(path, 24);
+        }
+        finally
+        {
+            p.Close();
+        }
+    }, 60000, "Selbsttest: Parser-Testpräsentation erzeugen");
+
     /// <summary>Eine weitere Show außerhalb des Prüflings starten (simuliert eine verwaiste Show).</summary>
     public Task StartForeignShowAsync(string path) => sta.Run(() =>
     {
@@ -117,6 +178,75 @@ public sealed class TestPowerPoint : IDisposable
             try { a.ProtectedViewWindows.Item(i).Close(); } catch { }
         }
     }, 15000, "Selbsttest: aufräumen");
+
+    /// <summary>Was PowerPoint selbst über eine Folie sagt – Vergleichswert für den PPTX-Parser.</summary>
+    public sealed record ReferenceSlide(bool Hidden, string Notes, int ClickCount, IReadOnlyList<(string Name, double Seconds)> Videos);
+
+    /// <summary>Präsentation schreibgeschützt öffnen und je Folie Ausblendung, Notizen, Klicks und Videos lesen.</summary>
+    public Task<List<ReferenceSlide>> ReadReferenceAsync(string path) => sta.Run(() =>
+    {
+        dynamic a = App();
+        dynamic p = a.Presentations.Open(path, MsoTrue, MsoFalse, MsoFalse);
+        try
+        {
+            var list = new List<ReferenceSlide>();
+            int n = (int)p.Slides.Count;
+            for (int i = 1; i <= n; i++)
+            {
+                dynamic s = p.Slides.Item(i);
+                bool hidden = (int)s.SlideShowTransition.Hidden == MsoTrue;
+
+                string notes = "";
+                try
+                {
+                    dynamic ph = s.NotesPage.Shapes.Placeholders;
+                    int pc = (int)ph.Count;
+                    var parts = new List<string>();
+                    for (int k = 1; k <= pc; k++)
+                    {
+                        dynamic shp = ph.Item(k);
+                        if ((int)shp.PlaceholderFormat.Type == 2 && (int)shp.HasTextFrame == MsoTrue)   // ppPlaceholderBody
+                            parts.Add(((string)shp.TextFrame.TextRange.Text).Trim());
+                    }
+                    notes = string.Join("\n\n", parts.Where(x => x.Length > 0));
+                }
+                catch { }
+
+                int clicks = 0;
+                dynamic seq = s.TimeLine.MainSequence;
+                int ec = (int)seq.Count;
+                for (int k = 1; k <= ec; k++)
+                {
+                    if ((int)seq.Item(k).Timing.TriggerType == 1) clicks++;   // msoAnimTriggerOnPageClick
+                }
+
+                var videos = new List<(string, double)>();
+                void Collect(dynamic shapes)
+                {
+                    int sc = (int)shapes.Count;
+                    for (int k = 1; k <= sc; k++)
+                    {
+                        dynamic sh = shapes.Item(k);
+                        int type = (int)sh.Type;
+                        if (type == 6) { Collect(sh.GroupItems); continue; }   // msoGroup
+                        if (type == 16 && (int)sh.MediaType == 3)              // msoMedia, ppMediaTypeMovie
+                        {
+                            double sec = 0;
+                            try { sec = (int)sh.MediaFormat.Length / 1000.0; } catch { }
+                            videos.Add(((string)sh.Name, sec));
+                        }
+                    }
+                }
+                Collect(s.Shapes);
+                list.Add(new ReferenceSlide(hidden, notes, clicks, videos));
+            }
+            return list;
+        }
+        finally
+        {
+            p.Close();
+        }
+    }, 300000, "Selbsttest: Vergleichswerte lesen");
 
     /// <summary>Anzahl Fenster in der Geschützten Ansicht.</summary>
     public Task<int> ProtectedViewCountAsync() => sta.Run(() =>

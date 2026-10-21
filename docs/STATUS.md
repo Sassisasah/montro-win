@@ -2,6 +2,18 @@
 
 ## Getestet
 
+- **21.10.2026** – Meilenstein 3 (Branch `meilenstein-3`): PPTX-Parser gegen PowerPoint
+  verglichen (`--selbsttest --parser`), **0 Abweichungen**:
+  - 7 echte Präsentationen vom Desktop der Nutzerin (1 bis 24 Folien, bis 408 MB): Folienzahl,
+    ausgeblendete Folien (bis 4 je Datei), Notizen (bis 17 Folien je Datei), Klick-Animationen
+    (bis 9), 2 eingebettete Videos mit Länge 198,1 s und 168,1 s (wie PowerPoint), Start mit
+    Klick 1. Lesezeit 0,0–1,6 s.
+  - Testpräsentation aus dem Selbsttest (ausgeblendete Folien, 2 Klicks).
+  - Eigene Parser-Testpräsentation: Klick gemischt mit „Mit/Nach vorherigem“, Trigger-Animation,
+    ausgeblendete Folie, Notizen mit Absätzen, Zeilenumbruch und Umlauten. Ergebnis 2/0/1/0
+    Klicks wie erwartet.
+  - Gesamter Selbsttest danach: 77 von 77 ok.
+
 - **20.10.2026** – Sichtprüfung durch die Nutzerin (eigenständige Version aus `publish`, per
   Doppelklick gestartet). Erster Versuch: Die Bildschirm-Auswahl war weiß auf weiß (behoben,
   ComboBox dunkel). Laut Fotos und Log:
@@ -64,6 +76,9 @@
 ## Offen
 
 - PowerPoint ohne Lizenz: lässt sich auf dem Test-PC nicht nachstellen.
+- **21.10.2026** – Parser: noch nicht geprüft sind verknüpfte (nicht eingebettete) Videos,
+  Videos mit Trigger-Start und andere Videoformate als MP4/MOV (Länge dann 0 = unbekannt).
+  Abgleich mit dem Mac-Ergebnis für dieselben Dateien steht aus.
 - Der Selbsttest kann nicht sehen, was ein Monitor wirklich anzeigt. Sichtprüfung bleibt nötig.
 - **20.10.2026** – Während einer Pause schaltete Windows die Bildschirme ab, die Verbatims
   meldeten sich ab („No signal“). Für Meilenstein 4: Abschaltung während einer Show verhindern

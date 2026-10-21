@@ -1,5 +1,12 @@
 # Änderungsprotokoll
 
+## 0.2 – 21.10.2026
+- Neu (Branch `meilenstein-3`): PPTX-Parser, portiert aus der Mac-Version. Liest ohne
+  PowerPoint Folienreihenfolge, ausgeblendete Folien, Notizen, Klick-Animationen und Videos mit
+  Länge und Startklick. Das Testfenster zeigt das Ergebnis an.
+- Neu: `--selbsttest --parser <dateien…>` vergleicht den Parser mit PowerPoint. Auf dem Test-PC
+  mit 7 echten Präsentationen und 2 Testpräsentationen: keine Abweichung.
+
 ## 0.1 – 20.10.2026
 - Neu: Repo `montro-win` mit Doku-Gerüst und verbindlichem Kompatibilitätsvertrag zur
   Mac-Version (Remote-API für Companion, Verbund Mac ↔ Windows).
