@@ -158,6 +158,9 @@ public sealed class TalkTimer : Observable
 
     public string PlayGlyph => IsRunning ? "⏸" : "▶";
 
+    /// <summary>Nach Änderungen an <see cref="Settings"/> alle Anzeigen neu berechnen.</summary>
+    public void Refresh() => RaiseAll();
+
     private void RaiseAll() => Raise(nameof(RunState), nameof(Elapsed), nameof(Remaining), nameof(Total), nameof(IsRunning),
         nameof(Phase), nameof(ColorHex), nameof(ColorBrush), nameof(ShouldBlink), nameof(DisplayText), nameof(Progress),
         nameof(StateLabel), nameof(TotalText), nameof(PlayGlyph), nameof(ManualBlink));

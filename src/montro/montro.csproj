@@ -13,7 +13,7 @@
     <AssemblyName>montro</AssemblyName>
     <RootNamespace>Montro</RootNamespace>
     <!-- Version kommt aus CHANGELOG.md (oberster Eintrag); Build-Nummer später = Anzahl Commits -->
-    <Version>0.3.0</Version>
+    <Version>0.4.0</Version>
     <Product>montro</Product>
     <Company>movidal</Company>
     <Authors>Sarah-Mathias Andrae</Authors>

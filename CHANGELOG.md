@@ -1,5 +1,12 @@
 # Änderungsprotokoll
 
+## 0.4 – 21.10.2026
+- Neu (Branch `meilenstein-4`, Etappe 2): Timer-Einstellungen, Regie-Nachricht mit Vorlagen,
+  Farben und Blinken (in der Referent*innenansicht), Übergang zwischen Präsentationen (Hart /
+  Über Schwarz / Überblenden), Publikumsbildschirm schwarz, wenn nichts live ist, beim Start,
+  bei Blackscreen und am Ende. Ausgabe während der Show umstellen startet an gleicher Folie neu.
+- Dunkle Kontextmenüs und Bildlaufleisten wie am Mac.
+
 ## 0.3 – 21.10.2026
 - Neu (Branch `meilenstein-4`, Etappe 1): Hauptfenster wie am Mac. Playlist mit Vorschaubild,
   „x Folien · y ausgeblendet · z Videos“, Status und LIVE-Markierung; Hinzufügen per Knopf,

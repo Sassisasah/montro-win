@@ -567,9 +567,12 @@ public sealed class PowerPointHost
     /// Folienwechsel oder Fokuswechsel), solange PowerPoint nicht das aktive Fenster ist.
     /// Deshalb nach jedem Befehl und regelmäßig erneut nach oben holen.
     /// </summary>
+    /// <summary>Während eines Übergangs liegt montros Abdeckung über der Show – dann nicht nach oben holen.</summary>
+    public volatile bool KeepOnTopPaused;
+
     private void KeepOnTop()
     {
-        if (onTopHwnd == IntPtr.Zero) return;
+        if (onTopHwnd == IntPtr.Zero || KeepOnTopPaused) return;
         if (!Monitors.BringToTop(onTopHwnd)) onTopHwnd = IntPtr.Zero;   // Fenster ist weg
     }
 

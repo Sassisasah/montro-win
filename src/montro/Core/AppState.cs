@@ -40,6 +40,46 @@ public sealed class AppState : Observable
 
     public ObservableCollection<PresentationItem> Items { get; } = new();
     public TalkTimer Timer { get; } = new();
+    public RegieMessage Message { get; } = new();
+    private readonly OutputManager outputs = new();
+    private ShowTransition transition = ShowTransition.Black;
+    private double transitionDuration = 1.0;
+
+    public ShowTransition Transition
+    {
+        get => transition;
+        set
+        {
+            if (Set(ref transition, value))
+            {
+                Raise(nameof(TransitionDetail), nameof(TransitionHasDuration));
+                QueueSave();
+            }
+        }
+    }
+
+    public double TransitionDuration
+    {
+        get => transitionDuration;
+        set
+        {
+            if (Set(ref transitionDuration, Math.Round(Math.Clamp(value, 0.3, 3), 1)))
+            {
+                Raise(nameof(TransitionDurationText));
+                QueueSave();
+            }
+        }
+    }
+
+    public bool TransitionHasDuration => Transition != ShowTransition.Cut;
+    public string TransitionDurationText => $"{TransitionDuration:0.0} s";
+
+    public string TransitionDetail => Transition switch
+    {
+        ShowTransition.Cut => "Kein Übergang – das Umschalten (kurz Schwarz) ist zu sehen.",
+        ShowTransition.Black => "Die alte Folie blendet nach Schwarz ab, die neue blendet auf, sobald sie steht.",
+        _ => "Die letzte Folie bleibt als Standbild stehen und blendet direkt in die neue Präsentation über.",
+    };
 
     /// <summary>Wird gesetzt, wenn eine Meldung als Dialog erscheinen soll (Mac: lastError).</summary>
     public event Action<string>? ErrorRaised;
@@ -123,6 +163,10 @@ public sealed class AppState : Observable
             {
                 Raise(nameof(AudienceCaption), nameof(AudienceIsPopup));
                 QueueSave();
+                blackKey = "?";
+                UpdateOutputs();
+                // Ausgabe nur beim Start wählbar → laufende Show an gleicher Stelle neu starten (wie am Mac)
+                if (IsShowRunning && LiveItem is { } live) _ = GoLive(live, CurrentSlide);
             }
         }
     }
@@ -136,7 +180,12 @@ public sealed class AppState : Observable
 
     public string ExternalScreensText => $"{ExternalScreens.Count} externe(r) Bildschirm(e)";
 
-    public void RefreshScreens() => Raise(nameof(ExternalScreens), nameof(ExternalScreensText), nameof(AudienceCaption), nameof(AudienceIsPopup));
+    public void RefreshScreens()
+    {
+        Raise(nameof(ExternalScreens), nameof(ExternalScreensText), nameof(AudienceCaption), nameof(AudienceIsPopup));
+        blackKey = "?";
+        UpdateOutputs();
+    }
 
     // MARK: - Abgeleitete Werte
 
@@ -187,9 +236,33 @@ public sealed class AppState : Observable
 
     public string CurrentNotes => CurrentSlideMeta?.Notes ?? "";
 
-    private void RaiseDerived() => Raise(nameof(CanControl), nameof(CanGoLive), nameof(CanStop), nameof(CurrentSlideMeta),
-        nameof(NavigatorItem), nameof(SlidePositionText), nameof(LiveStatusLine), nameof(CurrentSlideImage),
-        nameof(NextSlideImage), nameof(LiveOverlayText), nameof(BlackoutButtonText), nameof(CurrentNotes));
+    private void RaiseDerived()
+    {
+        Raise(nameof(CanControl), nameof(CanGoLive), nameof(CanStop), nameof(CurrentSlideMeta),
+            nameof(NavigatorItem), nameof(SlidePositionText), nameof(LiveStatusLine), nameof(CurrentSlideImage),
+            nameof(NextSlideImage), nameof(LiveOverlayText), nameof(BlackoutButtonText), nameof(CurrentNotes));
+        UpdateOutputs();
+    }
+
+    private string blackKey = "";
+
+    /// <summary>
+    /// Nicht live (oder Ende auf Schwarz): zugewiesene Bildschirme schwarz. Blackscreen und Start:
+    /// Publikumsbildschirm schwarz (Mac: updateOutputs). Popup-Modus hat keinen eigenen Bildschirm.
+    /// </summary>
+    public void UpdateOutputs()
+    {
+        var black = new HashSet<string>();
+        // während eines Übergangs deckt dessen Fenster ab (Standbild würde sonst schwarz überdeckt)
+        if (AudienceScreen is { } audience && !outputs.TransitionActive)
+        {
+            if (!IsShowRunning || IsEndBlack || IsBlackout || IsStarting) black.Add(audience.DeviceName);
+        }
+        string key = string.Join("|", black.OrderBy(x => x));
+        if (key == blackKey) return;
+        blackKey = key;
+        outputs.ApplyBlack(black);
+    }
 
     // MARK: - Playlist
 
@@ -309,6 +382,19 @@ public sealed class AppState : Observable
             ErrorRaised?.Invoke($"Die Datei „{Path.GetFileName(item.Path)}“ wurde nicht gefunden.");
             return;
         }
+        // Übergang: Publikumsbildschirm abdecken (Standbild bzw. Schwarz), darunter umschalten
+        var style = AudienceScreen == null ? ShowTransition.Cut : Transition;
+        bool covered = false;
+        if (style != ShowTransition.Cut && AudienceScreen is { } coverScreen)
+        {
+            string? still = style == ShowTransition.Crossfade && IsShowRunning && !IsBlackout && !IsEndBlack ? CurrentSlideImage : null;
+            double fadeIn = still != null ? 0.12 : TransitionDuration / 2;
+            DebugLog.Write($"Übergang {style} ({TransitionDuration:0.0} s), Standbild: {still != null}");
+            ppt.KeepOnTopPaused = true;
+            await outputs.BeginTransition(still, coverScreen, fadeIn);
+            covered = true;
+        }
+
         IsStarting = true;
         StatusMessage = $"Starte „{item.Title}“ …";
         IsLocked = false;
@@ -347,6 +433,14 @@ public sealed class AppState : Observable
         finally
         {
             IsStarting = false;
+        }
+        if (covered)
+        {
+            // erst aufblenden, wenn die neue Folie sicher steht
+            outputs.RaiseAll();
+            await Task.Delay(450);
+            await outputs.EndTransition(style == ShowTransition.Crossfade ? TransitionDuration : TransitionDuration / 2);
+            ppt.KeepOnTopPaused = false;
         }
     }
 
@@ -515,6 +609,7 @@ public sealed class AppState : Observable
     private void Tick()
     {
         Timer.Tick();
+        Message.Tick();
         Clock = DateTime.Now;
         Raise(nameof(ClockText));
         BlinkPhase = DateTime.Now.Millisecond < 500;
@@ -540,8 +635,23 @@ public sealed class AppState : Observable
         Timer.Settings = s.Timer;
         endBehavior = s.EndBehavior;
         notesFontScale = s.NotesFontScale;
+        transition = s.Transition;
+        transitionDuration = Math.Clamp(s.TransitionDuration, 0.3, 3);
+        if (s.MessagePresets is { Count: > 0 } presets)
+        {
+            Message.Presets.Clear();
+            foreach (var p in presets) Message.Presets.Add(p);
+        }
+        if (s.MessageBackground != null) Message.Background = s.MessageBackground;
+        if (s.MessageForeground != null) Message.Foreground = s.MessageForeground;
+        Message.Presets.CollectionChanged += (_, _) => QueueSave();
+        Message.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName is nameof(RegieMessage.Background) or nameof(RegieMessage.Foreground)) QueueSave();
+        };
         CleanOrphanThumbs();
         _ = ui.InvokeAsync(() => _ = PrepareAll(), DispatcherPriority.ApplicationIdle);
+        _ = ui.InvokeAsync(UpdateOutputs, DispatcherPriority.Loaded);
     }
 
     private void CleanOrphanThumbs()
@@ -591,6 +701,11 @@ public sealed class AppState : Observable
             Timer = Timer.Settings,
             EndBehavior = EndBehavior,
             NotesFontScale = NotesFontScale,
+            Transition = Transition,
+            TransitionDuration = TransitionDuration,
+            MessagePresets = Message.Presets.ToList(),
+            MessageBackground = Message.Background,
+            MessageForeground = Message.Foreground,
         });
     }
 
@@ -598,6 +713,7 @@ public sealed class AppState : Observable
     {
         ticker.Stop();
         SaveNow();
+        outputs.CloseAll();
         await ppt.ShutdownAsync();
     }
 }

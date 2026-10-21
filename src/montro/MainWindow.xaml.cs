@@ -36,6 +36,11 @@ public partial class MainWindow : Window
         SystemEvents.DisplaySettingsChanged += OnDisplaysChanged;
 
         (state.EndBehavior == EndBehavior.HoldLastSlide ? EndHold : EndBlack).IsChecked = true;
+        LoadTransition();
+        LoadTimerSettings();
+        DurTotal.Changed += v => { state.Timer.Settings.Duration = Math.Max(v, 1); TimerSettingsChanged(); };
+        DurWarn1.Changed += v => { state.Timer.Settings.Warning1 = v; TimerSettingsChanged(); };
+        DurWarn2.Changed += v => { state.Timer.Settings.Warning2 = v; TimerSettingsChanged(); };
         UpdateEnd();
         UpdateEmpty();
         UpdateNavigatorHint();
@@ -110,8 +115,156 @@ public partial class MainWindow : Window
 
     private void UpdateNotesFont() => PresenterNotes.FontSize = 34 * state.NotesFontScale;
 
-    private void UpdateBlink() =>
+    private void UpdateBlink()
+    {
         TimerText.Opacity = state.Timer.ShouldBlink && !state.BlinkPhase ? 0.2 : 1;
+        bool msgBlink = state.Message.Blink || state.Message.IsFlashing;
+        PresenterMessage.Opacity = msgBlink && !state.BlinkPhase ? 0.25 : 1;
+    }
+
+    // MARK: - Timer-Einstellungen (Mac: DisclosureGroup „Einstellungen“)
+
+    private void LoadTimerSettings()
+    {
+        var s = state.Timer.Settings;
+        DurTotal.Value = s.Duration;
+        DurWarn1.Value = s.Warning1;
+        DurWarn2.Value = s.Warning2;
+        (s.CountUp ? ModeUp : ModeDown).IsChecked = true;
+        OptOvertime.IsChecked = s.AllowOvertime;
+        OptBlinkOver.IsChecked = s.BlinkInOvertime;
+        OptBlinkWarn2.IsChecked = s.BlinkInWarning2;
+        OptProgress.IsChecked = s.ShowProgress;
+        OptAutoStart.IsChecked = s.AutoStartWithPresentation;
+        ColNormal.Background = Swatch(s.NormalColor);
+        ColWarn1.Background = Swatch(s.Warning1Color);
+        ColWarn2.Background = Swatch(s.Warning2Color);
+        ColOver.Background = Swatch(s.OvertimeColor);
+        TimerProgress.Visibility = s.ShowProgress ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    private static Brush Swatch(string hex)
+    {
+        try { return new SolidColorBrush((Color)ColorConverter.ConvertFromString(hex)); }
+        catch { return Brushes.Gray; }
+    }
+
+    private void TimerSettingsChanged()
+    {
+        state.Timer.Refresh();
+        state.QueueSave();
+        LoadTimerSettings();
+    }
+
+    private void OnTimerSetting(object sender, RoutedEventArgs e)
+    {
+        if (!IsLoaded) return;
+        var s = state.Timer.Settings;
+        s.CountUp = ModeUp.IsChecked == true;
+        s.AllowOvertime = OptOvertime.IsChecked == true;
+        s.BlinkInOvertime = OptBlinkOver.IsChecked == true;
+        s.BlinkInWarning2 = OptBlinkWarn2.IsChecked == true;
+        s.ShowProgress = OptProgress.IsChecked == true;
+        s.AutoStartWithPresentation = OptAutoStart.IsChecked == true;
+        TimerSettingsChanged();
+    }
+
+    /// <summary>Farben wie die Mac-Voreinstellungen plus movidal-CD (Mac: ColorPicker).</summary>
+    private static readonly (string Name, string Hex)[] Palette =
+    [
+        ("White Noise", "#F5F5F5"), ("Gelb", "#FFC71F"), ("Orange", "#FF8C1A"), ("Rot", "#F53838"),
+        ("Bass Lime", "#B2F141"), ("Grün", "#38D675"), ("Cloud Purple", "#B088FB"), ("Static Lavender", "#E8DFFC"),
+        ("Live-Rot", "#F2465A"), ("Warnung", "#FFB13D"), ("Dark Matter", "#202020"), ("Schwarz", "#000000"),
+    ];
+
+    private void PickColor(UIElement target, string current, Action<string> apply)
+    {
+        var menu = new ContextMenu { PlacementTarget = target, Placement = System.Windows.Controls.Primitives.PlacementMode.Bottom };
+        foreach (var (name, hex) in Palette)
+        {
+            var row = new StackPanel { Orientation = Orientation.Horizontal };
+            row.Children.Add(new Border { Width = 18, Height = 12, CornerRadius = new CornerRadius(3), Background = Swatch(hex), Margin = new Thickness(0, 0, 8, 0), BorderBrush = Brushes.Gray, BorderThickness = new Thickness(1) });
+            row.Children.Add(new TextBlock { Text = name });
+            var mi = new MenuItem { Header = row, IsCheckable = true, IsChecked = string.Equals(hex, current, StringComparison.OrdinalIgnoreCase) };
+            string h = hex;
+            mi.Click += (_, _) => apply(h);
+            menu.Items.Add(mi);
+        }
+        menu.IsOpen = true;
+    }
+
+    private void OnTimerColor(object sender, RoutedEventArgs e)
+    {
+        var s = state.Timer.Settings;
+        switch ((sender as FrameworkElement)?.Tag as string)
+        {
+            case "normal": PickColor((UIElement)sender, s.NormalColor, h => { s.NormalColor = h; TimerSettingsChanged(); }); break;
+            case "w1": PickColor((UIElement)sender, s.Warning1Color, h => { s.Warning1Color = h; TimerSettingsChanged(); }); break;
+            case "w2": PickColor((UIElement)sender, s.Warning2Color, h => { s.Warning2Color = h; TimerSettingsChanged(); }); break;
+            case "over": PickColor((UIElement)sender, s.OvertimeColor, h => { s.OvertimeColor = h; TimerSettingsChanged(); }); break;
+        }
+    }
+
+    // MARK: - Regie-Nachricht
+
+    private void OnMessageSend(object sender, RoutedEventArgs e) => state.Message.Send();
+    private void OnMessageClear(object sender, RoutedEventArgs e) => state.Message.Clear();
+
+    private void OnMessageKey(object sender, KeyEventArgs e)
+    {
+        if (e.Key == Key.Enter)
+        {
+            state.Message.Send();
+            e.Handled = true;
+        }
+    }
+
+    private void OnMessagePreset(object sender, RoutedEventArgs e)
+    {
+        if (sender is FrameworkElement { Tag: string t }) state.Message.Send(t);
+    }
+
+    private void OnMessagePresetRemove(object sender, RoutedEventArgs e)
+    {
+        if (sender is FrameworkElement { Tag: string t }) state.Message.Presets.Remove(t);
+    }
+
+    private void OnMessagePresetAdd(object sender, RoutedEventArgs e) => AddPreset();
+
+    private void OnNewPresetKey(object sender, KeyEventArgs e)
+    {
+        if (e.Key != Key.Enter) return;
+        AddPreset();
+        e.Handled = true;
+    }
+
+    private void AddPreset()
+    {
+        string t = NewPresetBox.Text.Trim();
+        if (t.Length == 0 || state.Message.Presets.Contains(t)) return;
+        state.Message.Presets.Add(t);
+        NewPresetBox.Text = "";
+    }
+
+    private void OnMessageColor(object sender, RoutedEventArgs e)
+    {
+        var m = state.Message;
+        if ((sender as FrameworkElement)?.Tag as string == "bg")
+            PickColor((UIElement)sender, m.Background, h => m.Background = h);
+        else
+            PickColor((UIElement)sender, m.Foreground, h => m.Foreground = h);
+    }
+
+    // MARK: - Übergang
+
+    private void LoadTransition() =>
+        (state.Transition switch { ShowTransition.Cut => TrCut, ShowTransition.Crossfade => TrFade, _ => TrBlack }).IsChecked = true;
+
+    private void OnTransition(object sender, RoutedEventArgs e)
+    {
+        state.Transition = TrCut.IsChecked == true ? ShowTransition.Cut
+            : TrFade.IsChecked == true ? ShowTransition.Crossfade : ShowTransition.Black;
+    }
 
     private void UpdateEnd()
     {

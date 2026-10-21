@@ -2,6 +2,12 @@
 
 ## Getestet
 
+- **21.10.2026** – Meilenstein 4, Etappe 2, über UI Automation mit Bildschirmfotos von Verbatim 2:
+  Ausgabe auf „Verbatim MT15 (2)“ gestellt → Verbatim schwarz; Technik-Testdeck live → Folie
+  auf Verbatim 2 (1920×1079, Lage ok); Blackscreen → schwarz, wieder aus → Folie; zweite
+  Präsentation live mit „Über Schwarz“ → während des Wechsels schwarz, danach neue Folie;
+  Stopp → schwarz. Timer-Einstellungen, Regie-Nachricht und Übergang sichtbar wie am Mac.
+
 - **21.10.2026** – Meilenstein 4, Etappe 1 (Branch `meilenstein-4`), über UI Automation
   bedient: 4 Präsentationen per Kommandozeile hinzugefügt, alle in 23 s analysiert und mit
   Vorschaubildern „bereit“; Technik-Testdeck ausgewählt, „Ausgewählte live schalten“ im
@@ -89,10 +95,11 @@
 ## Offen
 
 - PowerPoint ohne Lizenz: lässt sich auf dem Test-PC nicht nachstellen.
-- **21.10.2026** – Meilenstein 4, Etappe 1: noch nicht geprüft sind Ausgabe auf einen Verbatim
-  aus dem Hauptfenster, Ende-Sperre (beide Varianten), Blackscreen, Ziehen & Ablegen und
-  Sichtvergleich mit dem Mac durch die Nutzerin. Offen für Etappe 2: schwarze Ausgänge ohne
-  Show, Popup-Modus wie am Mac (links Referent*innenansicht), dunkle Bildlaufleisten.
+- **21.10.2026** – Meilenstein 4: noch nicht geprüft sind Ende-Sperre (beide Varianten),
+  „Überblenden“, Regie-Nachricht in der Anzeige, Timer-Einstellungen, Ziehen & Ablegen. Offen:
+  echte Referent*innenansicht (Builder, Presets, eigener Bildschirm), Popup-Modus wie am Mac
+  (links Referent*innenansicht), Video-Karte, „In PowerPoint bearbeiten“, „Aktualisieren“,
+  Show-Dateien `.montro`, Bildschirm-Abschaltung während der Show verhindern.
 - **21.10.2026** – Parser: noch nicht geprüft sind verknüpfte (nicht eingebettete) Videos,
   Videos mit Trigger-Start und andere Videoformate als MP4/MOV (Länge dann 0 = unbekannt).
   Abgleich mit dem Mac-Ergebnis für dieselben Dateien steht aus.

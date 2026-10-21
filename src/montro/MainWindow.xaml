@@ -319,6 +319,13 @@
                                             <TextBlock x:Name="PresenterNotes" Grid.Row="1" Grid.ColumnSpan="2" Text="{Binding CurrentNotes}" TextWrapping="Wrap"
                                                        FontSize="34" Foreground="{StaticResource Brand.Text}" />
                                         </Grid>
+                                        <!-- Regie-Nachricht in der Referent*innenansicht -->
+                                        <Border x:Name="PresenterMessage" VerticalAlignment="Bottom" Margin="24" Padding="24,14" CornerRadius="12"
+                                                Background="{Binding Message.BackgroundBrush}"
+                                                Visibility="{Binding Message.IsVisible, Converter={StaticResource Vis}}">
+                                            <TextBlock Text="{Binding Message.Text}" FontSize="48" FontWeight="Bold" TextWrapping="Wrap"
+                                                       Foreground="{Binding Message.ForegroundBrush}" />
+                                        </Border>
                                     </Grid>
                                 </Viewbox>
                             </Border>
@@ -360,7 +367,7 @@
                                                Foreground="{Binding ColorBrush}" FontFamily="Segoe UI Variable Display, Segoe UI" />
                                 </Border>
                             </DockPanel>
-                            <ProgressBar Value="{Binding Progress, Mode=OneWay}" Maximum="1" Margin="0,10,0,10" Foreground="{Binding ColorBrush}" />
+                            <ProgressBar x:Name="TimerProgress" Value="{Binding Progress, Mode=OneWay}" Maximum="1" Margin="0,10,0,10" Foreground="{Binding ColorBrush}" />
                             <DockPanel>
                                 <ToggleButton DockPanel.Dock="Right" Style="{StaticResource Brand.Toggle}" IsChecked="{Binding ManualBlink}"
                                               ToolTip="Timer auf Kommando blinken lassen">
@@ -391,6 +398,135 @@
                                 <Button Style="{StaticResource Brand.Small}" Content="45" Tag="45" Click="OnTimerPreset" />
                                 <Button Style="{StaticResource Brand.Small}" Content="60" Tag="60" Click="OnTimerPreset" />
                             </StackPanel>
+                            <Expander Style="{StaticResource Brand.Disclosure}" Header="Einstellungen" Margin="0,10,0,0">
+                                <StackPanel x:Name="TimerSettingsPanel">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="100" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition /><RowDefinition /><RowDefinition /><RowDefinition />
+                                        </Grid.RowDefinitions>
+                                        <TextBlock Text="Redezeit" VerticalAlignment="Center" />
+                                        <v:DurationBox x:Name="DurTotal" Grid.Column="1" />
+                                        <Button x:Name="ColNormal" Grid.Column="2" Style="{StaticResource Brand.Small}" Width="34" Height="20" Tag="normal" Click="OnTimerColor" ToolTip="Normalfarbe" />
+                                        <TextBlock Grid.Row="1" Text="1. Warnung ab" VerticalAlignment="Center" />
+                                        <v:DurationBox x:Name="DurWarn1" Grid.Row="1" Grid.Column="1" />
+                                        <Button x:Name="ColWarn1" Grid.Row="1" Grid.Column="2" Style="{StaticResource Brand.Small}" Width="34" Height="20" Tag="w1" Click="OnTimerColor" ToolTip="Farbe in der 1. Warnzeit" />
+                                        <TextBlock Grid.Row="2" Text="2. Warnung ab" VerticalAlignment="Center" />
+                                        <v:DurationBox x:Name="DurWarn2" Grid.Row="2" Grid.Column="1" />
+                                        <Button x:Name="ColWarn2" Grid.Row="2" Grid.Column="2" Style="{StaticResource Brand.Small}" Width="34" Height="20" Tag="w2" Click="OnTimerColor" ToolTip="Farbe in der 2. Warnzeit" />
+                                        <TextBlock Grid.Row="3" Text="Überzogen" VerticalAlignment="Center" />
+                                        <TextBlock Grid.Row="3" Grid.Column="1" Text="Restzeit &lt; 0" Style="{StaticResource Brand.Caption}" VerticalAlignment="Center" Margin="0,6" />
+                                        <Button x:Name="ColOver" Grid.Row="3" Grid.Column="2" Style="{StaticResource Brand.Small}" Width="34" Height="20" Tag="over" Click="OnTimerColor" ToolTip="Farbe beim Überziehen" />
+                                    </Grid>
+                                    <TextBlock Style="{StaticResource Brand.Caption}" TextWrapping="Wrap" Margin="0,6,0,8"
+                                               Text="Warnzeiten sind Restzeiten: z. B. „5 min“ = Farbwechsel, wenn noch 5 Minuten übrig sind." />
+                                    <UniformGrid Columns="2" Margin="0,0,0,8">
+                                        <RadioButton x:Name="ModeDown" Style="{StaticResource Brand.Segment}" Content="Herunterzählen" GroupName="TimerMode" Checked="OnTimerSetting" />
+                                        <RadioButton x:Name="ModeUp" Style="{StaticResource Brand.Segment}" Content="Hochzählen" GroupName="TimerMode" Checked="OnTimerSetting" />
+                                    </UniformGrid>
+                                    <CheckBox x:Name="OptOvertime" Content="Ins Minus laufen (Überziehen anzeigen)" Margin="0,0,0,4" Click="OnTimerSetting" />
+                                    <CheckBox x:Name="OptBlinkOver" Content="Beim Überziehen blinken" Margin="0,0,0,4" Click="OnTimerSetting" />
+                                    <CheckBox x:Name="OptBlinkWarn2" Content="In der 2. Warnzeit blinken" Margin="0,0,0,4" Click="OnTimerSetting" />
+                                    <CheckBox x:Name="OptProgress" Content="Fortschrittsbalken zeigen" Margin="0,0,0,4" Click="OnTimerSetting" />
+                                    <CheckBox x:Name="OptAutoStart" Content="Mit dem Live-Schalten automatisch starten" Click="OnTimerSetting" />
+                                </StackPanel>
+                            </Expander>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Regie-Nachricht (Mac: MessageControlView) -->
+                    <Border Style="{StaticResource Brand.Card}" DataContext="{Binding Message}">
+                        <StackPanel>
+                            <DockPanel Margin="0,0,0,10">
+                                <TextBlock DockPanel.Dock="Right" Text="wird angezeigt" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource Brand.Warning}"
+                                           Visibility="{Binding IsVisible, Converter={StaticResource Vis}}" />
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Style="{StaticResource Brand.Icon}" Text="&#xE8BD;" Foreground="{StaticResource Brand.Accent}" Margin="0,0,6,0" />
+                                    <TextBlock Text="Regie-Nachricht" FontWeight="SemiBold" FontSize="14" />
+                                </StackPanel>
+                            </DockPanel>
+                            <Grid>
+                                <TextBox x:Name="MessageInput" Text="{Binding Draft, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="False"
+                                         TextWrapping="Wrap" MaxHeight="80" KeyDown="OnMessageKey" />
+                                <TextBlock Text="Nachricht an die Referent*in …" Style="{StaticResource Brand.Caption}" Margin="8,0" VerticalAlignment="Center"
+                                           IsHitTestVisible="False" Visibility="{Binding Draft, Converter={StaticResource NullVis}, ConverterParameter=not}" />
+                            </Grid>
+                            <DockPanel Margin="0,8,0,0">
+                                <Button DockPanel.Dock="Right" x:Name="MsgFg" Style="{StaticResource Brand.Small}" Width="34" Height="20" Margin="6,0,0,0"
+                                        Background="{Binding ForegroundBrush}" Tag="fg" Click="OnMessageColor" ToolTip="Textfarbe" />
+                                <Button DockPanel.Dock="Right" x:Name="MsgBg" Style="{StaticResource Brand.Small}" Width="34" Height="20" Margin="6,0,0,0"
+                                        Background="{Binding BackgroundBrush}" Tag="bg" Click="OnMessageColor" ToolTip="Hintergrundfarbe" />
+                                <CheckBox DockPanel.Dock="Right" Content="Blinken" IsChecked="{Binding Blink}" Margin="0" />
+                                <StackPanel Orientation="Horizontal">
+                                    <Button Style="{StaticResource Brand.Compact}" Background="{StaticResource Brand.Accent}" Margin="0,0,6,0"
+                                            IsEnabled="{Binding CanSend}" Click="OnMessageSend">
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Style="{StaticResource Brand.Icon}" Text="&#xE724;" FontSize="11" Margin="0,0,6,0" Foreground="{StaticResource Brand.Background}" />
+                                            <TextBlock Text="Senden" Foreground="{StaticResource Brand.Background}" />
+                                        </StackPanel>
+                                    </Button>
+                                    <Button Style="{StaticResource Brand.Compact}" Content="Ausblenden" IsEnabled="{Binding IsVisible}" Click="OnMessageClear" />
+                                </StackPanel>
+                            </DockPanel>
+                            <Border CornerRadius="6" Padding="8" Margin="0,8,0,0" Background="#40B2F141"
+                                    Visibility="{Binding IsVisible, Converter={StaticResource Vis}}">
+                                <TextBlock Text="{Binding Quoted}" TextWrapping="Wrap" />
+                            </Border>
+                            <ItemsControl ItemsSource="{Binding Presets}" Margin="0,8,0,0">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <UniformGrid Columns="3" />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Button Style="{StaticResource Brand.Small}" Margin="0,0,6,6" Click="OnMessagePreset" Tag="{Binding}"
+                                                ToolTip="{Binding}">
+                                            <Button.ContextMenu>
+                                                <ContextMenu>
+                                                    <MenuItem Header="Vorlage entfernen" Click="OnMessagePresetRemove" Tag="{Binding}" />
+                                                </ContextMenu>
+                                            </Button.ContextMenu>
+                                            <TextBlock Text="{Binding}" TextTrimming="CharacterEllipsis" />
+                                        </Button>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                            <Expander Style="{StaticResource Brand.Disclosure}" Header="Vorlagen bearbeiten" Margin="0,4,0,0">
+                                <StackPanel>
+                                    <DockPanel>
+                                        <Button DockPanel.Dock="Right" Style="{StaticResource Brand.Compact}" Content="Hinzufügen" Margin="6,0,0,0" Click="OnMessagePresetAdd" />
+                                        <TextBox x:Name="NewPresetBox" KeyDown="OnNewPresetKey" />
+                                    </DockPanel>
+                                    <TextBlock Text="Rechtsklick auf eine Vorlage entfernt sie." Style="{StaticResource Brand.Caption}" Margin="0,6,0,0" />
+                                </StackPanel>
+                            </Expander>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Übergang zwischen Präsentationen (Mac: TransitionSection) -->
+                    <Border Style="{StaticResource Brand.Card}">
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                                <TextBlock Style="{StaticResource Brand.Icon}" Text="&#xE8AB;" Foreground="{StaticResource Brand.Accent}" Margin="0,0,6,0" />
+                                <TextBlock Text="Übergang zwischen Präsentationen" FontWeight="SemiBold" FontSize="14" />
+                            </StackPanel>
+                            <UniformGrid Columns="3">
+                                <RadioButton x:Name="TrCut" Style="{StaticResource Brand.Segment}" Content="Hart" GroupName="Transition" Checked="OnTransition" />
+                                <RadioButton x:Name="TrBlack" Style="{StaticResource Brand.Segment}" Content="Über Schwarz" GroupName="Transition" Checked="OnTransition" />
+                                <RadioButton x:Name="TrFade" Style="{StaticResource Brand.Segment}" Content="Überblenden" GroupName="Transition" Checked="OnTransition" />
+                            </UniformGrid>
+                            <DockPanel Margin="0,8,0,0" Visibility="{Binding TransitionHasDuration, Converter={StaticResource Vis}}">
+                                <TextBlock DockPanel.Dock="Left" Text="Dauer" VerticalAlignment="Center" Margin="0,0,8,0" />
+                                <TextBlock DockPanel.Dock="Right" Text="{Binding TransitionDurationText}" Width="40" TextAlignment="Right" VerticalAlignment="Center" />
+                                <Slider Minimum="0.3" Maximum="3" TickFrequency="0.1" IsSnapToTickEnabled="True"
+                                        Value="{Binding TransitionDuration}" VerticalAlignment="Center" />
+                            </DockPanel>
+                            <TextBlock Text="{Binding TransitionDetail}" Style="{StaticResource Brand.Caption}" TextWrapping="Wrap" Margin="0,6,0,0" />
                         </StackPanel>
                     </Border>
 

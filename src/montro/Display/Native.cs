@@ -206,6 +206,18 @@ internal static class Native
     // --- Fenster von PowerPoint finden (Selbsttest: offenen Dialog schließen) ---
 
     public const uint WM_CLOSE = 0x0010;
+
+    public const int GWL_EXSTYLE = -20;
+    public const int WS_EX_TRANSPARENT = 0x20;
+    public const int WS_EX_TOOLWINDOW = 0x80;
+    public const int WS_EX_LAYERED = 0x80000;
+    public const int WS_EX_NOACTIVATE = 0x8000000;
+
+    [DllImport("user32.dll", EntryPoint = "GetWindowLongW")]
+    public static extern int GetWindowLong(IntPtr hwnd, int index);
+
+    [DllImport("user32.dll", EntryPoint = "SetWindowLongW")]
+    public static extern int SetWindowLong(IntPtr hwnd, int index, int value);
     public static readonly IntPtr HWND_TOPMOST = new(-1);
 
     [DllImport("user32.dll", CharSet = CharSet.Unicode)]

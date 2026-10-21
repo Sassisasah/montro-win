@@ -14,7 +14,15 @@ public sealed class SavedState
     public TimerSettings Timer { get; set; } = new();
     public EndBehavior EndBehavior { get; set; } = EndBehavior.HoldLastSlide;
     public double NotesFontScale { get; set; } = 1.0;
+    public ShowTransition Transition { get; set; } = ShowTransition.Black;
+    public double TransitionDuration { get; set; } = 1.0;
+    public List<string>? MessagePresets { get; set; }
+    public string? MessageBackground { get; set; }
+    public string? MessageForeground { get; set; }
 }
+
+/// <summary>Übergang auf dem Publikumsbildschirm, wenn eine andere Präsentation live geht (Mac: ShowTransition).</summary>
+public enum ShowTransition { Cut, Black, Crossfade }
 
 public sealed class SavedItem
 {

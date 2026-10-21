@@ -29,6 +29,17 @@ wenn die Ende-Sperre greift).
   Folie, Uhr, „Folie x von n“ und Notizen. Notizen-Schriftgröße 40–400 % (Strg+Plus/Minus/0).
   Builder, Presets und eigene Ausgabe folgen.
 - **Timer:** Start/Pause (Strg+T), Zurücksetzen, ±1 min, Blinken, Schnellwahl 5–60 min.
+  „Einstellungen“: Redezeit, 1. und 2. Warnung (als Restzeit) mit Farben, Überzogen-Farbe,
+  Herunter- oder Hochzählen, ins Minus laufen, Blinken beim Überziehen bzw. in der 2. Warnzeit,
+  Fortschrittsbalken, automatischer Start beim Live-Schalten.
+- **Regie-Nachricht:** Text eingeben und Senden (Enter) oder eine Vorlage anklicken. Erscheint in
+  der Referent*innenansicht in den gewählten Farben, blinkt nach dem Senden 3 s lang und auf
+  Wunsch dauerhaft. „Ausblenden“ nimmt sie weg. Vorlagen: „Vorlagen bearbeiten“ fügt hinzu,
+  Rechtsklick auf eine Vorlage entfernt sie.
+- **Übergang zwischen Präsentationen:** Hart / Über Schwarz / Überblenden (Standbild der
+  letzten Folie), Dauer 0,3–3 s. Gilt nur mit externem Publikumsbildschirm.
+- **Schwarze Ausgänge:** Ist ein externer Publikumsbildschirm gewählt, zeigt er Schwarz, solange
+  nichts live ist, während des Starts, bei Blackscreen und bei „Überall auf Schwarz gehen“.
 - **Am Ende der Präsentation:** „Auf letzter Folie stehen bleiben“ oder „Überall auf Schwarz
   gehen“. Danach ist die Steuerung gesperrt, auch gegen Eingaben direkt in PowerPoint, bis
   „Entsperren“.
