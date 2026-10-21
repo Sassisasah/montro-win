@@ -302,7 +302,7 @@ public partial class MainWindow : Window
     /// <summary>Bildschirmwahl wie am Mac (DisplayPickerButton): Popup-Fenster oder externer Bildschirm.</summary>
     private void OnAudiencePicker(object sender, RoutedEventArgs e)
     {
-        var menu = new ContextMenu { PlacementTarget = (UIElement)sender };
+        var menu = new ContextMenu { PlacementTarget = (UIElement)sender, Placement = System.Windows.Controls.Primitives.PlacementMode.Bottom };
         var popup = new MenuItem { Header = "Popup-Fenster", IsCheckable = true, IsChecked = state.AudienceIsPopup };
         popup.Click += (_, _) => state.AudienceDevice = null;
         menu.Items.Add(popup);
