@@ -13,6 +13,9 @@
     ausgeblendete Folie, Notizen mit Absätzen, Zeilenumbruch und Umlauten. Ergebnis 2/0/1/0
     Klicks wie erwartet.
   - Gesamter Selbsttest danach: 77 von 77 ok.
+  - **21.10.2026** – „Technik-Testdeck-movidal.pptx“ (14 Folien, von der Nutzerin): Notizen auf
+    allen 14 Folien, 13 Klick-Animationen, eingebettetes MP4 „Testvideo“ 10,0 s mit Start 0
+    (automatisch, wie in den Notizen beschrieben). Alles gleich wie PowerPoint.
 
 - **20.10.2026** – Sichtprüfung durch die Nutzerin (eigenständige Version aus `publish`, per
   Doppelklick gestartet). Erster Versuch: Die Bildschirm-Auswahl war weiß auf weiß (behoben,
