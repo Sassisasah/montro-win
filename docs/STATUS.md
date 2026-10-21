@@ -10,6 +10,9 @@
 - **21.10.2026** – Sichtprüfung (Video der Nutzerin): gewählter Verbatim schwarz, dann die Folie;
   der andere Verbatim bleibt unberührt. Vorher war das Schwarzbild auf 150 % um den Faktor 1,5
   zu groß (WPF reagierte auf WM_DPICHANGED) und ragte auf den anderen Verbatim – behoben.
+- **21.10.2026** – Live-Schalten ohne Aufblitzen (gemessen alle 120 ms; vorher schob sich
+  PowerPoint kurz über die Abdeckung) und Taskleiste bleibt unter dem Schwarzbild (Schwarzbild
+  wird alle 250 ms nach oben geholt). Von der Nutzerin bestätigt („passt“).
 
 - **21.10.2026** – Meilenstein 4, Etappe 1 (Branch `meilenstein-4`), über UI Automation
   bedient: 4 Präsentationen per Kommandozeile hinzugefügt, alle in 23 s analysiert und mit
