@@ -55,11 +55,20 @@ public sealed class OutputManager
     {
         transitionWindow?.Close();
         var w = CreateCover(screen, stillImage);
-        w.Opacity = 0;
+        // Standbild = Bildschirmfoto des aktuellen Bilds: sofort voll zeigen, ohne Einblenden – ein
+        // Einblenden über dasselbe Bild flackert nur (erstes Bild der Ebene, Zwischenstufen).
+        // Schon vor dem Anzeigen grob auf den Bildschirm legen, damit es nicht erst woanders erscheint.
+        bool instant = stillImage != null || fadeIn < 0.05;
+        w.Opacity = instant ? 1 : 0;
+        w.WindowStartupLocation = WindowStartupLocation.Manual;
+        w.Left = screen.Bounds.X;
+        w.Top = screen.Bounds.Y;
+        w.Width = screen.Bounds.Width;
+        w.Height = screen.Bounds.Height;
         w.Show();
         Place(w, screen);
         transitionWindow = w;
-        await FadeAsync(w, 1, fadeIn);
+        if (!instant) await FadeAsync(w, 1, fadeIn);
     }
 
     /// <summary>Abdeckung ausblenden und die neue Präsentation freigeben.</summary>
