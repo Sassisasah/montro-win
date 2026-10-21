@@ -46,7 +46,8 @@ Der Vertrag dafür steht in [KOMPATIBILITAET.md](KOMPATIBILITAET.md).
 ## Oberfläche: wie am Mac (verbindlich)
 
 Die Oberfläche sieht **so gleich wie möglich aus wie montro für Mac**. Vorlage ist der
-SwiftUI-Code im Repo `Sassisasah/montro` (`Sources/montro/Views/MainView.swift`,
+SwiftUI-Code im Repo `Sassisasah/montro`, aktueller Stand (0.36, 21.10.2026) auf dem Branch
+`feature/bearbeiten-abgleich`, nicht `main` (`Sources/montro/Views/MainView.swift`,
 `PlaylistView.swift`, `SlideNavigatorView.swift`, `InspectorView.swift`,
 `TimerControlView.swift`, `MessageControlView.swift`, `PresenterView.swift`,
 `LayoutBuilderView.swift`, `Components.swift`, `Core/Theme.swift`) und der aktuelle Stand der
