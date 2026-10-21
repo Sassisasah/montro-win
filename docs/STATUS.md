@@ -17,6 +17,10 @@
   Folie blendet ab, Schwarz, neue Folie) auf dem Verbatim, mehrere Wechsel hintereinander, Videos
   der Nutzerin. „Überblenden“ ebenso: alte Folie bleibt als Standbild stehen und blendet direkt
   in die neue über (auf den Einzelbildern beide überlagert), ohne Schwarz dazwischen.
+- **21.10.2026** – Nach den Korrekturen (Taskleiste ausgeblendet, Schwarzbild dauerhaft unter der
+  Show, scharfes Standbild): Nutzerin „gefällt mir alles gut“. Letzter Rest: kleines Flackern
+  beim Wechsel von der laufenden Folie ins Standbild – Standbild wird jetzt sofort statt
+  eingeblendet gezeigt, Bestätigung steht aus.
 
 - **21.10.2026** – Meilenstein 4, Etappe 1 (Branch `meilenstein-4`), über UI Automation
   bedient: 4 Präsentationen per Kommandozeile hinzugefügt, alle in 23 s analysiert und mit
