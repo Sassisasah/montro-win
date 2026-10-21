@@ -57,18 +57,23 @@ public sealed class OutputManager
         var w = CreateCover(screen, stillImage);
         // Standbild = Bildschirmfoto des aktuellen Bilds: sofort voll zeigen, ohne Einblenden – ein
         // Einblenden über dasselbe Bild flackert nur (erstes Bild der Ebene, Zwischenstufen).
-        // Schon vor dem Anzeigen grob auf den Bildschirm legen, damit es nicht erst woanders erscheint.
+        // Nicht vorab per Left/Top/Width/Height legen: WPF rechnet die in DIPs und machte das Fenster
+        // auf dem 150-%-Verbatim kurz 2880 px breit (Störungen am rechten Rand, 21.10.2026).
         bool instant = stillImage != null || fadeIn < 0.05;
-        w.Opacity = instant ? 1 : 0;
-        w.WindowStartupLocation = WindowStartupLocation.Manual;
-        w.Left = screen.Bounds.X;
-        w.Top = screen.Bounds.Y;
-        w.Width = screen.Bounds.Width;
-        w.Height = screen.Bounds.Height;
+        w.Opacity = 0;
         w.Show();
         Place(w, screen);
         transitionWindow = w;
-        if (!instant) await FadeAsync(w, 1, fadeIn);
+        if (instant)
+        {
+            // erst sichtbar machen, wenn es an der richtigen Stelle liegt
+            await System.Windows.Threading.Dispatcher.Yield(System.Windows.Threading.DispatcherPriority.Render);
+            w.Opacity = 1;
+        }
+        else
+        {
+            await FadeAsync(w, 1, fadeIn);
+        }
     }
 
     /// <summary>Abdeckung ausblenden und die neue Präsentation freigeben.</summary>
