@@ -157,8 +157,8 @@ Fremdbibliothek. Zählweise absichtlich wie am Mac:
 
 1. PowerPoint-COM-Kern mit Testfenster ✓ (21.10.2026)
 2. *(in 1 enthalten)* Gerüst, Doku, Build über GitHub Actions ✓
-3. PPTX-Parser portieren (Notizen, Klick-Animationen, Videos, ausgeblendete Folien) ← **jetzt**
-4. Playlist, Inspector, Ausgaben (Schwarzfenster, Popup-Modus), Ende-Sperre
+3. PPTX-Parser portieren (Notizen, Klick-Animationen, Videos, ausgeblendete Folien) ✓ (21.10.2026)
+4. Playlist, Inspector, Ausgaben (Schwarzfenster, Popup-Modus), Ende-Sperre ← **als Nächstes**
 5. Remote-API 1:1, Test mit dem Companion-Modul
 6. Referent*innenansicht mit Builder und Presets, Timer, Regie-Nachricht
 7. Übergänge, Verbund (DNS-SD und Sync), gemischter Test mit dem Mac
