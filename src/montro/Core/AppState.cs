@@ -618,6 +618,8 @@ public sealed class AppState : Observable
     {
         Timer.Tick();
         Message.Tick();
+        // Schwarzbild/Übergang über der Taskleiste halten (wie das PowerPoint-Fenster)
+        outputs.RaiseAll();
         Clock = DateTime.Now;
         Raise(nameof(ClockText));
         BlinkPhase = DateTime.Now.Millisecond < 500;
