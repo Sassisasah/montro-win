@@ -27,7 +27,11 @@ public partial class App : Application
         }
         base.OnStartup(e);
         // Hauptfenster hier statt per StartupUri, damit der Selbsttest ohne Fenster starten kann
-        new MainWindow().Show();
+        var main = new MainWindow();
+        main.Show();
+        // „Öffnen mit montro“ / Dateien als Argumente: in die Playlist
+        var files = e.Args.Where(a => !a.StartsWith("--") && File.Exists(a)).ToArray();
+        if (files.Length > 0) main.AddFiles(files);
     }
 
     private static void OnUnhandled(object sender, DispatcherUnhandledExceptionEventArgs e)

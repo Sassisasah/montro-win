@@ -173,4 +173,170 @@
         <Setter Property="BorderBrush" Value="{StaticResource Brand.Live}" />
         <Setter Property="FontWeight" Value="SemiBold" />
     </Style>
+
+    <!-- ===== Hauptfenster (Meilenstein 4), Vorlage: Mac-Oberfläche ===== -->
+
+    <FontFamily x:Key="Brand.IconFont">Segoe Fluent Icons, Segoe MDL2 Assets</FontFamily>
+
+    <!-- Symbol (Segoe-Glyph) -->
+    <Style TargetType="TextBlock" x:Key="Brand.Icon">
+        <Setter Property="FontFamily" Value="{StaticResource Brand.IconFont}" />
+        <Setter Property="FontSize" Value="13" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="Foreground" Value="{StaticResource Brand.Text}" />
+    </Style>
+
+    <Style TargetType="TextBlock" x:Key="Brand.Caption">
+        <Setter Property="FontSize" Value="11" />
+        <Setter Property="Foreground" Value="{StaticResource Brand.SecondaryText}" />
+    </Style>
+
+    <!-- Karte im Inspector (Mac: InspectorSection) -->
+    <Style TargetType="Border" x:Key="Brand.Card">
+        <Setter Property="Background" Value="{StaticResource Brand.Panel}" />
+        <Setter Property="BorderBrush">
+            <Setter.Value>
+                <SolidColorBrush Color="{StaticResource ShadowFlexColor}" Opacity="0.6" />
+            </Setter.Value>
+        </Setter>
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="10" />
+        <Setter Property="Padding" Value="12" />
+        <Setter Property="Margin" Value="0,0,0,14" />
+    </Style>
+
+    <!-- Knöpfe -->
+    <Style TargetType="Button" x:Key="Brand.Compact" BasedOn="{StaticResource {x:Type Button}}">
+        <Setter Property="Padding" Value="10,4" />
+        <Setter Property="Margin" Value="0" />
+        <Setter Property="FontSize" Value="12" />
+    </Style>
+
+    <Style TargetType="Button" x:Key="Brand.Small" BasedOn="{StaticResource {x:Type Button}}">
+        <Setter Property="Padding" Value="7,2" />
+        <Setter Property="Margin" Value="0,0,4,0" />
+        <Setter Property="FontSize" Value="11" />
+    </Style>
+
+    <!-- randloser Symbolknopf (Werkzeugleiste, Zahnrad) -->
+    <Style TargetType="Button" x:Key="Brand.Borderless">
+        <Setter Property="Foreground" Value="{StaticResource Brand.Text}" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Padding" Value="8,5" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="Bd" Background="{TemplateBinding Background}" CornerRadius="6" Padding="{TemplateBinding Padding}">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Bd" Property="Background" Value="{StaticResource Brand.Line}" />
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Opacity" Value="0.35" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- großer roter Knopf „Ausgewählte live schalten“ (Mac: borderedProminent, tint live) -->
+    <Style TargetType="Button" x:Key="Brand.Prominent" BasedOn="{StaticResource {x:Type Button}}">
+        <Setter Property="Background" Value="{StaticResource Brand.Live}" />
+        <Setter Property="BorderBrush" Value="{StaticResource Brand.Live}" />
+        <Setter Property="Foreground" Value="White" />
+        <Setter Property="Padding" Value="14,8" />
+        <Setter Property="Margin" Value="0" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+
+    <Style TargetType="ToggleButton" x:Key="Brand.Toggle">
+        <Setter Property="Foreground" Value="{StaticResource Brand.Text}" />
+        <Setter Property="Background" Value="{StaticResource Brand.Panel}" />
+        <Setter Property="BorderBrush" Value="{StaticResource Brand.Line}" />
+        <Setter Property="Padding" Value="10,4" />
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ToggleButton">
+                    <Border x:Name="Bd" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="1" CornerRadius="6" Padding="{TemplateBinding Padding}">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsChecked" Value="True">
+                            <Setter TargetName="Bd" Property="Background" Value="{StaticResource Brand.Warning}" />
+                            <Setter Property="Foreground" Value="{StaticResource Brand.Background}" />
+                        </Trigger>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource Brand.Accent}" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style TargetType="RadioButton">
+        <Setter Property="Foreground" Value="{StaticResource Brand.Text}" />
+        <Setter Property="Margin" Value="0,0,0,6" />
+    </Style>
+
+    <Style TargetType="ProgressBar">
+        <Setter Property="Height" Value="4" />
+        <Setter Property="Background" Value="{StaticResource Brand.Line}" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Foreground" Value="{StaticResource Brand.Accent}" />
+    </Style>
+
+    <!-- Playlist -->
+    <Style TargetType="ListBox" x:Key="Brand.Playlist">
+        <Setter Property="Background" Value="{StaticResource Brand.Background}" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Foreground" Value="{StaticResource Brand.Text}" />
+        <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled" />
+        <Setter Property="AlternationCount" Value="2" />
+        <Setter Property="Padding" Value="8,4" />
+    </Style>
+
+    <Style TargetType="ListBoxItem" x:Key="Brand.PlaylistItem">
+        <Setter Property="Padding" Value="8,4" />
+        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ListBoxItem">
+                    <Border x:Name="Bd" Background="Transparent" CornerRadius="6" Padding="{TemplateBinding Padding}">
+                        <ContentPresenter />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="ItemsControl.AlternationIndex" Value="0">
+                            <Setter TargetName="Bd" Property="Background" Value="{StaticResource Brand.Panel}" />
+                        </Trigger>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Bd" Property="Background" Value="#33464646" />
+                        </Trigger>
+                        <Trigger Property="IsSelected" Value="True">
+                            <Setter TargetName="Bd" Property="Background" Value="{StaticResource Brand.Highlight}" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style TargetType="ListBoxItem" x:Key="Brand.TileItem">
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="Margin" Value="0,0,10,0" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ListBoxItem">
+                    <ContentPresenter />
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
 </ResourceDictionary>

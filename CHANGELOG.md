@@ -1,5 +1,14 @@
 # Änderungsprotokoll
 
+## 0.3 – 21.10.2026
+- Neu (Branch `meilenstein-4`, Etappe 1): Hauptfenster wie am Mac. Playlist mit Vorschaubild,
+  „x Folien · y ausgeblendet · z Videos“, Status und LIVE-Markierung; Hinzufügen per Knopf,
+  Ziehen & Ablegen oder Kommandozeile; Reihenfolge per Ziehen; Folienübersicht; „Ausgewählte
+  live schalten“ und „Stopp“; Inspector mit Live-Folie (Bildschirmwahl, Zurück/Weiter,
+  Blackscreen), vorläufiger Referent*innenansicht, Timer und „Am Ende der Präsentation“
+  (Ende-Sperre); Statuszeile; Tastenkürzel wie am Mac. Die Playlist wird gespeichert.
+- Das Testfenster „PowerPoint testen“ ist jetzt über Strg+Umschalt+P erreichbar.
+
 ## 0.2 – 21.10.2026
 - Neu (Branch `meilenstein-3`): PPTX-Parser, portiert aus der Mac-Version. Liest ohne
   PowerPoint Folienreihenfolge, ausgeblendete Folien, Notizen, Klick-Animationen und Videos mit

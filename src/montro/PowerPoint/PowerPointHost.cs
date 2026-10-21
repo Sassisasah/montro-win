@@ -206,19 +206,27 @@ public sealed class PowerPointHost
     /// Show-Fenster exakt auf die Bounds des Monitors legen: erst über das Objektmodell (Punkt),
     /// dann Ist-Lage in physischen Pixeln prüfen und bis zu 4× per SetWindowPos korrigieren.
     /// </summary>
-    public Task<PlacementResult> PlaceAsync(MonitorInfo m) => sta.Run(() =>
+    public Task<PlacementResult> PlaceAsync(MonitorInfo m)
     {
-        dynamic? w = FindShowWindow();
-        if (w == null) throw new PowerPointException("Keine Bildschirmpräsentation aktiv.");
-        IntPtr hwnd = ShowWindowHandle(w);
-        if (hwnd == IntPtr.Zero) DebugLog.Write("Lage: Fenster der Bildschirmpräsentation nicht gefunden – nur Lage in Punkt möglich");
         // 1 Pixel niedriger als der Bildschirm: Ein Fenster, das den Monitor exakt füllt, gibt
         // Windows im Vollbild-Direktmodus aus (Independent Flip). Auf dem Test-PC (AMD Vega 8,
         // Verbatim MT15 per USB-C) kam dann auf den externen Monitoren nur Schwarz oder ein
         // kaputtes Hintergrundbild an – auch mit PowerPoint allein. Die fehlende Zeile unten
         // ist schwarz und fällt nicht auf.
         var b = m.Bounds;
-        var target = new PixelRect(b.X, b.Y, b.Width, b.Height - 1);
+        return PlaceAsync(new PixelRect(b.X, b.Y, b.Width, b.Height - 1), topmostWanted: true);
+    }
+
+    /// <summary>
+    /// Show-Fenster auf ein beliebiges Rechteck legen (physische Pixel). Ohne <paramref name="topmostWanted"/>
+    /// bleibt es ein normales Fenster (Popup-Modus neben montro).
+    /// </summary>
+    public Task<PlacementResult> PlaceAsync(PixelRect target, bool topmostWanted) => sta.Run(() =>
+    {
+        dynamic? w = FindShowWindow();
+        if (w == null) throw new PowerPointException("Keine Bildschirmpräsentation aktiv.");
+        IntPtr hwnd = ShowWindowHandle(w);
+        if (hwnd == IntPtr.Zero) DebugLog.Write("Lage: Fenster der Bildschirmpräsentation nicht gefunden – nur Lage in Punkt möglich");
         var before = Monitors.WindowRect(hwnd);
         uint sysDpi = Monitors.SystemDpi();
         double f = 72.0 / sysDpi;
@@ -249,7 +257,7 @@ public sealed class PowerPointHost
         bool ok = actual is { } fin && fin.RoughlyEquals(target, 0);
         // Über alles legen: sonst bleibt auf Nebenbildschirmen die Taskleiste über der Show sichtbar
         // (PowerPoint läuft im Hintergrund, Windows blendet die Taskleiste nur für das aktive Vollbildfenster aus)
-        bool topmost = hwnd != IntPtr.Zero && Monitors.MoveWindow(hwnd, target, topmost: true);
+        bool topmost = topmostWanted && hwnd != IntPtr.Zero && Monitors.MoveWindow(hwnd, target, topmost: true);
         onTopHwnd = topmost ? hwnd : IntPtr.Zero;
         // Die Taskleiste kommt kurz nach dem Platzieren gern noch einmal hoch – 1,5 s lang dagegenhalten
         for (int i = 0; topmost && i < 15; i++)
@@ -340,6 +348,78 @@ public sealed class PowerPointHost
         }
         DebugLog.Write($"PowerPoint: {count} Vorschaubilder ({width}×{height}) nach {dir}");
         return count;
+    }
+
+    /// <summary>
+    /// Vorschaubilder einer beliebigen Datei für die Playlist, ohne laufende Shows oder die
+    /// geöffnete Präsentation anzufassen: eigene schreibgeschützte Kopie öffnen, je Folie ein PNG
+    /// (1280 px) nach <c>%TEMP%</c>, schließen, dann nach <paramref name="dir"/> verschieben.
+    /// Über %TEMP%, weil PowerPoint als eigener Prozess nicht überall hinschreiben darf, wo montro es kann.
+    /// </summary>
+    public async Task<Dictionary<int, string>> ExportFileThumbnailsAsync(string path, string dir, IProgress<(int done, int total)>? progress = null)
+    {
+        string temp = Path.Combine(Path.GetTempPath(), $"montro-thumbs-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(temp);
+        object? handle = null;
+        bool close = false;
+        try
+        {
+            var (count, height) = await sta.Run(() =>
+            {
+                dynamic a = App();
+                string full = Path.GetFullPath(path);
+                dynamic? p = null;
+                // schon offen (z. B. gerade live)? Dann mitbenutzen und auf keinen Fall schließen
+                int open = Safe(() => (int)a.Presentations.Count, 0);
+                for (int i = 1; i <= open && p == null; i++)
+                {
+                    int k = i;
+                    dynamic? q = Safe<dynamic?>(() => a.Presentations.Item(k), null);
+                    if (q != null && string.Equals(Safe(() => (string)q!.FullName, ""), full, StringComparison.OrdinalIgnoreCase))
+                        p = q;
+                }
+                if (p == null)
+                {
+                    p = a.Presentations.Open(full, MsoTrue, MsoFalse, MsoFalse);
+                    close = true;
+                }
+                handle = p;
+                double sw = Safe(() => (double)p.PageSetup.SlideWidth, 960.0);
+                double sh = Safe(() => (double)p.PageSetup.SlideHeight, 540.0);
+                return ((int)p.Slides.Count, (int)Math.Round(1280 * sh / Math.Max(sw, 1)));
+            }, 60000, "Vorschau öffnen");
+
+            for (int i = 1; i <= count; i++)
+            {
+                int index = i;
+                await sta.Run(() =>
+                {
+                    dynamic p = handle!;
+                    p.Slides.Item(index).Export(Path.Combine(temp, $"slide-{index}.png"), "PNG", 1280, height);
+                }, 20000, $"Vorschau Folie {index}");
+                progress?.Report((index, count));
+            }
+
+            Directory.CreateDirectory(dir);
+            var result = new Dictionary<int, string>();
+            for (int i = 1; i <= count; i++)
+            {
+                string src = Path.Combine(temp, $"slide-{i}.png");
+                if (!File.Exists(src)) continue;
+                string dst = Path.Combine(dir, $"slide-{i}.png");
+                File.Move(src, dst, overwrite: true);
+                result[i] = dst;
+            }
+            return result;
+        }
+        finally
+        {
+            if (handle != null && close)
+            {
+                try { await sta.Run(() => { ((dynamic)handle).Close(); }, 10000, "Vorschau schließen"); } catch { }
+            }
+            try { Directory.Delete(temp, recursive: true); } catch { }
+        }
     }
 
     // MARK: - Beenden der App

@@ -24,4 +24,9 @@
     <SatelliteResourceLanguages>de</SatelliteResourceLanguages>
   </PropertyGroup>
 
+  <ItemGroup>
+    <!-- auch als WPF-Ressource, z. B. für die leere Playlist -->
+    <Resource Include="Resources\montro.ico" />
+  </ItemGroup>
+
 </Project>

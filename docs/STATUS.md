@@ -2,6 +2,13 @@
 
 ## Getestet
 
+- **21.10.2026** – Meilenstein 4, Etappe 1 (Branch `meilenstein-4`), über UI Automation
+  bedient: 4 Präsentationen per Kommandozeile hinzugefügt, alle in 23 s analysiert und mit
+  Vorschaubildern „bereit“; Technik-Testdeck ausgewählt, „Ausgewählte live schalten“ im
+  Popup-Modus (PowerPoint 960×540 rechts auf dem Laptop, Lage ok), 2× „Weiter“ → Statuszeile
+  „Folie 3 von 14 · Animation 0/5“, Folienübersicht markiert Folie 3, „Stopp“ → „Gestoppt –
+  Ausgänge schwarz“. Bildschirmfoto im Aussehen nah an der Mac-Vorlage.
+
 - **21.10.2026** – Meilenstein 3 (Branch `meilenstein-3`): PPTX-Parser gegen PowerPoint
   verglichen (`--selbsttest --parser`), **0 Abweichungen**:
   - 7 echte Präsentationen vom Desktop der Nutzerin (1 bis 24 Folien, bis 408 MB): Folienzahl,
@@ -79,6 +86,10 @@
 ## Offen
 
 - PowerPoint ohne Lizenz: lässt sich auf dem Test-PC nicht nachstellen.
+- **21.10.2026** – Meilenstein 4, Etappe 1: noch nicht geprüft sind Ausgabe auf einen Verbatim
+  aus dem Hauptfenster, Ende-Sperre (beide Varianten), Blackscreen, Ziehen & Ablegen und
+  Sichtvergleich mit dem Mac durch die Nutzerin. Offen für Etappe 2: schwarze Ausgänge ohne
+  Show, Popup-Modus wie am Mac (links Referent*innenansicht), dunkle Bildlaufleisten.
 - **21.10.2026** – Parser: noch nicht geprüft sind verknüpfte (nicht eingebettete) Videos,
   Videos mit Trigger-Start und andere Videoformate als MP4/MOV (Länge dann 0 = unbekannt).
   Abgleich mit dem Mac-Ergebnis für dieselben Dateien steht aus.

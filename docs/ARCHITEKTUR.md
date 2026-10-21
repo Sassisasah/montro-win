@@ -18,6 +18,14 @@ Der Vertrag dafür steht in [KOMPATIBILITAET.md](KOMPATIBILITAET.md).
 | `src/montro/Themes/Brand.xaml` | Alle Farben (movidal-CD) und Grund-Stile. Keine Systemfarben |
 | `src/montro/Core/AppPaths.cs` | `%APPDATA%\montro` (Zustand), `%LOCALAPPDATA%\montro` (Vorschaubilder, Log) |
 | `src/montro/Core/DebugLog.cs` | Log-Datei `montro.log`, letzte Zeilen im Speicher (später für `/api/diag`) |
+| `src/montro/Core/AppState.cs` | Zentraler Zustand wie am Mac: Playlist, Vorbereitung, Live, Blackscreen, Ende-Sperre, Ausgabe, Timer, Speichern |
+| `src/montro/Core/PresentationItem.cs` | Playlist-Eintrag (Pfad, Meta, Vorschaubilder, Status, LIVE) |
+| `src/montro/Core/TalkTimer.cs` | Redezeit-Timer, portiert aus `TalkTimer.swift` |
+| `src/montro/Core/StateStore.cs` | `%APPDATA%\montro\state.json` lesen und schreiben |
+| `src/montro/Core/Observable.cs` | `INotifyPropertyChanged`-Basis für die Bindungen |
+| `src/montro/MainWindow.xaml(.cs)` | Hauptfenster wie `MainView`/`PlaylistView`/`InspectorView` am Mac |
+| `src/montro/Views/SlideTile.cs` | Kachel der Folienübersicht (Mac: `SlideTile`) |
+| `src/montro/Views/Converters.cs` | Bindungshilfen (Sichtbarkeit, Bilder ohne Dateisperre) |
 | `src/montro/Core/PresentationMeta.cs` | Ergebnis des Parsers: Folien mit Ausblendung, Notizen, Klicks, Videos (wie `SlideMeta` am Mac) |
 | `src/montro/Pptx/PptxParser.cs` | PPTX-Parser, portiert aus `PPTXParser.swift`: liest das ZIP direkt, ohne PowerPoint |
 | `src/montro/Pptx/MediaDuration.cs` | Videolänge aus dem MP4/MOV-Kopf (`moov/mvhd`), ohne Fremdbibliothek |
@@ -145,6 +153,13 @@ Fremdbibliothek. Zählweise absichtlich wie am Mac:
   PowerPoint allein** (F5). Bildschirmfotos (DWM) zeigten trotzdem die Folie. Mit 1 Pixel
   weniger Höhe kam das Bild an (Test „C/D“ am 20.10.2026). Die fehlende Zeile unten ist schwarz.
   Für das spätere Publikumsfenster (Meilenstein 4) gilt dasselbe.
+- **Vorschaubilder für die Playlist:** `ExportFileThumbnailsAsync` öffnet eine eigene
+  schreibgeschützte Kopie (oder benutzt die schon offene, ohne sie zu schließen), exportiert nach
+  `%TEMP%` und verschiebt dann nach `%LOCALAPPDATA%\montro\thumbs\<ID>`. Laufende Shows bleiben
+  unberührt. Verwaiste Vorschau-Ordner löscht montro beim Start.
+- **Oberfläche testen ohne Maus:** WPF stellt alle Knöpfe und Listen über UI Automation bereit.
+  Damit lässt sich das Hauptfenster aus einem Skript bedienen (Eintrag wählen, „Ausgewählte live
+  schalten“, „Weiter“, Statuszeile lesen), so geprüft am 21.10.2026.
 - **Präsentation verschwindet mit dem Show-Ende:** Eine mit `WithWindow:false` geöffnete
   Präsentation schließt PowerPoint selbst, sobald ihre Show beendet wird. Danach liefert jeder
   Zugriff „Object does not exist“ (0x80048010). montro prüft vor Show-Start und Export, ob die

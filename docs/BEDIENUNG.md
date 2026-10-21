@@ -3,9 +3,43 @@
 Ziel ist dieselbe Bedienung wie am Mac (siehe `docs/BEDIENUNG.md` im Repo `Sassisasah/montro`),
 nur mit Strg statt ⌘. Dieser Abschnitt wächst mit jedem Meilenstein.
 
+## Hauptfenster (Meilenstein 4, Etappe 1)
+
+Aufbau wie am Mac: links die **Playlist**, darunter die **Folienübersicht** und der rote Knopf
+**Ausgewählte live schalten** mit **Stopp**, rechts der **Inspector** mit den Karten, unten die
+Statuszeile. Oben rechts: Live schalten, Stopp, Zurück, Weiter, Blackscreen (und Entsperren,
+wenn die Ende-Sperre greift).
+
+- **Hinzufügen:** „+ Hinzufügen“, Dateien ins Fenster ziehen oder `montro.exe datei.pptx …`.
+  Nur `.pptx .pptm .ppsx .ppsm`; eine alte `.ppt` wird mit Hinweis abgelehnt. montro liest jede
+  Datei (Folien, ausgeblendet, Videos) und erzeugt Vorschaubilder. Der grüne Haken heißt
+  „bereit“.
+- **Playlist:** Doppelklick = live schalten. Reihenfolge per Ziehen. Rechtsklick: Live
+  schalten, Im Explorer zeigen, Neu analysieren & Vorschaubilder erzeugen, Aus Playlist
+  entfernen (auch Entf). Die Playlist bleibt nach einem Neustart erhalten
+  (`%APPDATA%\montro\state.json`).
+- **Folien:** zeigt die laufende, sonst die ausgewählte Präsentation. Während der Show springt
+  ein Klick zur Folie, sonst startet ein Doppelklick ab dieser Folie. Ausgeblendete Folien sind
+  abgedunkelt, darunter die Nummer wie in „Folie x von n“ und Symbole für Animationen, Video,
+  Notizen. „#“ bzw. Strg+G: Gehe zu Folie.
+- **Live-Folie:** Vorschau der aktuellen Folie, Zeile „Titel · Folie x von n · Animation a/b“,
+  Zurück/Weiter, Blackscreen. Das Bildschirm-Symbol oben rechts wählt die Ausgabe: einen
+  externen Bildschirm oder **Popup-Fenster** (PowerPoint rechts auf dem Laptop).
+- **Referent*innenansicht:** ohne Show die Uhr, während der Show vorerst aktuelle und nächste
+  Folie, Uhr, „Folie x von n“ und Notizen. Notizen-Schriftgröße 40–400 % (Strg+Plus/Minus/0).
+  Builder, Presets und eigene Ausgabe folgen.
+- **Timer:** Start/Pause (Strg+T), Zurücksetzen, ±1 min, Blinken, Schnellwahl 5–60 min.
+- **Am Ende der Präsentation:** „Auf letzter Folie stehen bleiben“ oder „Überall auf Schwarz
+  gehen“. Danach ist die Steuerung gesperrt, auch gegen Eingaben direkt in PowerPoint, bis
+  „Entsperren“.
+- **Tasten:** → Bild↓ Leertaste Return N = weiter · ← Bild↑ P = zurück · B . = Blackscreen ·
+  Strg+Return live · Strg+. Stopp · Strg+T Timer · Strg+G Gehe zu.
+- Werkzeuge: Strg+Umschalt+P öffnet das Testfenster „PowerPoint testen“, Strg+Umschalt+L den
+  Log-Ordner.
+
 ## PowerPoint testen (Meilenstein 1)
 
-Hauptfenster › **PowerPoint testen …** öffnet ein Testfenster für den PowerPoint-Kern:
+Strg+Umschalt+P im Hauptfenster öffnet ein Testfenster für den PowerPoint-Kern:
 
 1. **Datei wählen …**: eine `.pptx`, `.pptm`, `.ppsx` oder `.ppsm`. montro öffnet sie
    schreibgeschützt in PowerPoint. Oben steht die PowerPoint-Version.
