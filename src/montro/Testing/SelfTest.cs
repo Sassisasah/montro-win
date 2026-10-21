@@ -31,6 +31,7 @@ public sealed class SelfTest
     private readonly int kioskMinutes;
     private string powerPointVersion = "?";
     private string? userFile;
+    private readonly List<string> parserFiles = new();
 
     private SelfTest(int kioskMinutes)
     {
@@ -50,6 +51,9 @@ public sealed class SelfTest
         if (k >= 0 && k + 1 < args.Length) int.TryParse(args[k + 1], out minutes);
         int f = Array.IndexOf(args, "--datei");
         var t = new SelfTest(minutes) { userFile = f >= 0 && f + 1 < args.Length ? Path.GetFullPath(args[f + 1]) : null };
+        int pz = Array.IndexOf(args, "--parser");
+        if (pz >= 0)
+            t.parserFiles.AddRange(args.Skip(pz + 1).TakeWhile(a => !a.StartsWith("--")).Select(Path.GetFullPath));
         return await t.Run();
     }
 
@@ -69,6 +73,13 @@ public sealed class SelfTest
                 return -1;
             }
             powerPointVersion = await host.ConnectAsync();
+            if (parserFiles.Count > 0)
+            {
+                // nur den PPTX-Parser gegen PowerPoint vergleichen, keine Shows
+                foreach (var f in parserFiles)
+                    await Step($"Parser: {Path.GetFileName(f)}", () => ParserRun(f));
+                return results.Count(r => r.Outcome == Outcome.Fehler);
+            }
             if (userFile != null)
             {
                 // nur die eigene Präsentation auf jedem Bildschirm, ohne die übrigen Blöcke
@@ -86,6 +97,21 @@ public sealed class SelfTest
             await Step("Kiosk-Modus", () => KioskRun(side));
             await Step("Verwaiste Shows", () => OrphanRun(side));
             await Step("Vorschaubilder", ExportRun);
+            await Step("PPTX-Parser", async () =>
+            {
+                string pdeck = Path.Combine(dir, "parser-test.pptx");
+                await helper.CreateParserDeckAsync(pdeck);
+                await ParserRun(deck, "PPTX-Parser: Testpräsentation");
+                await ParserRun(pdeck, "PPTX-Parser: Animationen, Notizen, Trigger");
+                var m = Pptx.PptxParser.Parse(pdeck);
+                // feste Erwartung zusätzlich zum Vergleich mit PowerPoint
+                Check("PPTX-Parser: Animationen, Notizen, Trigger", "Erwartung 2/0/1/0 Klicks, Folie 2 ausgeblendet",
+                    m.Slides.Select(s => s.ClickCount).SequenceEqual(new[] { 2, 0, 1, 0 }) && m.Slides[1].Hidden && !m.Slides[0].Hidden,
+                    string.Join(", ", m.Slides.Select(s => $"{s.Index}: {s.ClickCount}{(s.Hidden ? " ausgeblendet" : "")}")));
+                Check("PPTX-Parser: Animationen, Notizen, Trigger", "Notizen mit Absätzen und Umlauten",
+                    m.Slides[0].Notes == "Erster Absatz mit Umlauten: äöü ß\nZweiter Absatz\nmit Zeilenumbruch",
+                    m.Slides[0].Notes.Replace("\n", "⏎"));
+            });
             await Step("Offener Dialog in PowerPoint", () => DialogRun(side));
             await Step("Geschützte Ansicht", () => ProtectedViewRun(side));
         }
@@ -183,6 +209,53 @@ public sealed class SelfTest
         await Task.Delay(Settle);
         int left = await helper.CountShowsAsync();
         Check(a, "Show beenden", left == 0, $"{left} Show(s) laufen noch");
+    }
+
+    /// <summary>PPTX-Parser (--parser): Ergebnis Folie für Folie mit dem vergleichen, was PowerPoint selbst meldet.</summary>
+    private async Task ParserRun(string file, string? area = null)
+    {
+        string a = area ?? $"Parser: {Path.GetFileName(file)}";
+        var sw = Stopwatch.StartNew();
+        var meta = await Task.Run(() => Pptx.PptxParser.Parse(file));
+        double parseSec = sw.Elapsed.TotalSeconds;
+        var reference = await helper.ReadReferenceAsync(file);
+        Add(a, "Gelesen", Outcome.Info, $"{meta.Subtitle}, Parser {parseSec:0.0} s");
+        Check(a, "Folienzahl", meta.Slides.Count == reference.Count, $"Parser {meta.Slides.Count}, PowerPoint {reference.Count}");
+
+        static string Norm(string s) => string.Join(' ', s.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries));
+        var hiddenDiff = new List<int>();
+        var notesDiff = new List<int>();
+        var clickDiff = new List<string>();
+        var videoDiff = new List<string>();
+        var videoInfo = new List<string>();
+        for (int i = 0; i < Math.Min(meta.Slides.Count, reference.Count); i++)
+        {
+            var m = meta.Slides[i];
+            var r = reference[i];
+            if (m.Hidden != r.Hidden) hiddenDiff.Add(m.Index);
+            if (Norm(m.Notes) != Norm(r.Notes)) notesDiff.Add(m.Index);
+            if (m.ClickCount != r.ClickCount) clickDiff.Add($"{m.Index}: {m.ClickCount}≠{r.ClickCount}");
+            if (m.Videos.Count != r.Videos.Count)
+                videoDiff.Add($"{m.Index}: {m.Videos.Count}≠{r.Videos.Count}");
+            else
+                for (int k = 0; k < m.Videos.Count; k++)
+                {
+                    var v = m.Videos[k];
+                    double rs = r.Videos[k].Seconds;
+                    videoInfo.Add($"Folie {m.Index} „{v.Name}“ {v.Duration:0.0} s (PowerPoint {rs:0.0} s), Start {(v.StartClick?.ToString() ?? "Trigger")}");
+                    if (rs > 0 && Math.Abs(v.Duration - rs) > 1.0)
+                        videoDiff.Add($"{m.Index}: Länge {v.Duration:0.0}≠{rs:0.0} s");
+                }
+        }
+        Check(a, "Ausgeblendete Folien", hiddenDiff.Count == 0,
+            hiddenDiff.Count == 0 ? $"{meta.Slides.Count(s => s.Hidden)} gleich" : $"abweichend: Folie {string.Join(", ", hiddenDiff)}");
+        Check(a, "Notizen", notesDiff.Count == 0,
+            notesDiff.Count == 0 ? $"{meta.Slides.Count(s => s.Notes.Length > 0)} Folien mit Notizen, alle gleich" : $"abweichend: Folie {string.Join(", ", notesDiff)}");
+        Check(a, "Klick-Animationen", clickDiff.Count == 0,
+            clickDiff.Count == 0 ? $"{meta.Slides.Sum(s => s.ClickCount)} Klicks, alle gleich" : $"abweichend (Parser≠PowerPoint): {string.Join(", ", clickDiff)}");
+        Check(a, "Videos", videoDiff.Count == 0,
+            videoDiff.Count == 0 ? $"{meta.VideoCount} Videos, Anzahl und Länge gleich" : $"abweichend: {string.Join(", ", videoDiff)}");
+        foreach (var v in videoInfo) Add(a, "Video", Outcome.Info, v);
     }
 
     /// <summary>Eigene Präsentation (--datei): starten, platzieren, Foto, weiter, Foto, zweimal hintereinander.</summary>

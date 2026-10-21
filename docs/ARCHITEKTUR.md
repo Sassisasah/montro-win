@@ -3,7 +3,7 @@
 ## Grundprinzip
 
 Microsoft PowerPoint ist die Wiedergabe-Engine. montro steuert PowerPoint per COM, liest die
-`.pptx` selbst aus (geplant für Meilenstein 3) und baut darum herum Playlist,
+`.pptx` selbst aus (PPTX-Parser, Meilenstein 3) und baut darum herum Playlist,
 Referent*innenansicht, Timer und Ausgabesteuerung.
 
 Nach außen spricht montro dieselbe Remote-API und dasselbe Verbund-Protokoll wie die Mac-Version.
@@ -18,6 +18,9 @@ Der Vertrag dafür steht in [KOMPATIBILITAET.md](KOMPATIBILITAET.md).
 | `src/montro/Themes/Brand.xaml` | Alle Farben (movidal-CD) und Grund-Stile. Keine Systemfarben |
 | `src/montro/Core/AppPaths.cs` | `%APPDATA%\montro` (Zustand), `%LOCALAPPDATA%\montro` (Vorschaubilder, Log) |
 | `src/montro/Core/DebugLog.cs` | Log-Datei `montro.log`, letzte Zeilen im Speicher (später für `/api/diag`) |
+| `src/montro/Core/PresentationMeta.cs` | Ergebnis des Parsers: Folien mit Ausblendung, Notizen, Klicks, Videos (wie `SlideMeta` am Mac) |
+| `src/montro/Pptx/PptxParser.cs` | PPTX-Parser, portiert aus `PPTXParser.swift`: liest das ZIP direkt, ohne PowerPoint |
+| `src/montro/Pptx/MediaDuration.cs` | Videolänge aus dem MP4/MOV-Kopf (`moov/mvhd`), ohne Fremdbibliothek |
 | `src/montro/Core/SlideMap.cs` | **Einzige Stelle** für die Umrechnung PowerPoint-Index ↔ sichtbare Folie |
 | `src/montro/PowerPoint/StaWorker.cs` | Eigener STA-Thread mit Nachrichtenschleife. Alle COM-Aufrufe laufen nacheinander dort, mit Timeout |
 | `src/montro/PowerPoint/MessageFilter.cs` | `IMessageFilter`: Ist PowerPoint beschäftigt (`RPC_E_CALL_REJECTED`), wird bis zu 6 s wiederholt |
@@ -75,10 +78,31 @@ Mac-App (Screenshots vom 20.10.2026).
      `SlideShowWindow.HWND` fehlt in PowerPoint 365 (Build 19929). Dann sucht montro das
      sichtbare Fenster der Klasse `screenClass` von `POWERPNT.EXE`, dessen Titel den
      Präsentationsnamen enthält.
-  4. Das Show-Fenster **topmost** legen und nach jedem Befehl sowie etwa jede Sekunde wieder
-     nach oben holen (direkt nach dem Platzieren 1,5 s lang alle 100 ms, danach bei jeder Statusabfrage alle 200 ms). Sonst schiebt sich auf Nebenbildschirmen die Taskleiste über die Show,
-     denn Windows blendet sie nur für das *aktive* Vollbildfenster aus, und PowerPoint läuft im
-     Hintergrund.
+  4. Das Show-Fenster **topmost** legen und wieder nach oben holen: nach jedem Befehl, direkt
+     nach dem Platzieren 1,5 s lang alle 100 ms und danach bei jeder Statusabfrage (200 ms).
+     Sonst schiebt sich auf Nebenbildschirmen die Taskleiste über die Show, denn Windows blendet
+     sie nur für das *aktive* Vollbildfenster aus, und PowerPoint läuft im Hintergrund.
+
+## PPTX-Parser
+
+Portiert aus `Sources/montro/Services/PPTXParser.swift` (Mac). Liest die Datei als ZIP
+(`System.IO.Compression`) und die XML-Teile mit `XmlReader`, ohne PowerPoint und ohne
+Fremdbibliothek. Zählweise absichtlich wie am Mac:
+
+- **Reihenfolge:** `ppt/presentation.xml` › `sldIdLst` › `r:id` › `presentation.xml.rels`.
+- **Ausgeblendet:** `<p:sld show="0">`.
+- **Notizen:** Text der Platzhalter vom Typ `body` der Notizenseite. Absätze und `<a:br/>`
+  werden Zeilenumbrüche, mehrere Body-Platzhalter mit Leerzeile getrennt.
+- **Klick-Animationen:** Anzahl der `cTn nodeType="clickEffect"` außerhalb einer
+  `interactiveSeq` (Trigger-Animationen zählen nicht, „Mit/Nach vorherigem“ auch nicht).
+- **Videos:** `p:pic` mit `a:videoFile r:link`. Eingebettet wird die Datei kurz nach `%TEMP%`
+  entpackt, verknüpft relativ zur .pptx gesucht. Startklick = Klickzahl beim ersten
+  `cmd playFrom…` auf diese Form, `null` bei Trigger. Länge aus `moov/mvhd` (MP4/MOV/M4V),
+  sonst 0 = unbekannt (am Mac: AVFoundation).
+- **Prüfung:** `--selbsttest --parser <dateien…>` vergleicht Folie für Folie mit dem, was
+  PowerPoint per COM meldet (Ausblendung, Notizen, `MainSequence` mit Auslöser „Bei Klick“,
+  Videos mit `MediaFormat.Length`). Der normale Selbsttest erzeugt zusätzlich eine
+  Testpräsentation mit gemischten Effekten, Trigger und Notizen mit Umlauten.
 - **Status:** Abfrage alle 200 ms (`View.State`, `Slide.SlideIndex`, `CurrentShowPosition`,
   `GetClickIndex/GetClickCount`). Am Endbildschirm wirft `View.Slide` eine Ausnahme, und
   `State == ppSlideShowDone (5)`. Vier Abfragen in Folge ohne Show bedeuten „beendet“.
@@ -131,9 +155,9 @@ Mac-App (Screenshots vom 20.10.2026).
 
 ## Fahrplan
 
-1. PowerPoint-COM-Kern mit Testfenster ← **jetzt**
-2. *(in 1 enthalten)* Gerüst, Doku, Build über GitHub Actions
-3. PPTX-Parser portieren (Notizen, Klick-Animationen, Videos, ausgeblendete Folien)
+1. PowerPoint-COM-Kern mit Testfenster ✓ (21.10.2026)
+2. *(in 1 enthalten)* Gerüst, Doku, Build über GitHub Actions ✓
+3. PPTX-Parser portieren (Notizen, Klick-Animationen, Videos, ausgeblendete Folien) ← **jetzt**
 4. Playlist, Inspector, Ausgaben (Schwarzfenster, Popup-Modus), Ende-Sperre
 5. Remote-API 1:1, Test mit dem Companion-Modul
 6. Referent*innenansicht mit Builder und Presets, Timer, Regie-Nachricht

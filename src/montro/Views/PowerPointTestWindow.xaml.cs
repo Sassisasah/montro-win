@@ -92,10 +92,24 @@ public partial class PowerPointTestWindow : Window
         isOpen = false;
         FileDetails.Text = "öffne …";
         bool withWindow = WithWindowBox.IsChecked == true;
-        var r = await host.OpenAsync(FileBox.Text, withWindow);
+        string file = FileBox.Text;
+        var parse = Task.Run(() => Pptx.PptxParser.Parse(file));
+        var r = await host.OpenAsync(file, withWindow);
         isOpen = true;
         openedWithWindow = withWindow;
         FileDetails.Text = $"„{r.Title}“ – {r.Slides}, Seitenformat {r.SlideWidthPt:0}×{r.SlideHeightPt:0} pt";
+        try
+        {
+            var meta = await parse;
+            int notes = meta.Slides.Count(s => s.Notes.Length > 0);
+            int clicks = meta.Slides.Sum(s => s.ClickCount);
+            FileDetails.Text += $" · Parser: {meta.Subtitle}, {clicks} Klick-Animationen, {notes} Folien mit Notizen";
+            DebugLog.Write($"Parser: {meta.Subtitle}, {clicks} Klicks, {notes} Folien mit Notizen");
+        }
+        catch (Exception e)
+        {
+            DebugLog.Write($"Parser: {e.Message}");
+        }
     }
 
     // MARK: - Show

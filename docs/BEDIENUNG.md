@@ -40,7 +40,15 @@ Taskleiste.
 montro.exe --selbsttest                    # etwa 1 Minute
 montro.exe --selbsttest --kiosk-minuten 6  # zusätzlich: Kiosk 6 min ohne Eingabe stehen lassen
 montro.exe --selbsttest --datei "C:\Pfad\Vortrag.pptx"  # eigene Präsentation auf jedem Bildschirm
+montro.exe --selbsttest --parser "A.pptx" "B.pptx"      # PPTX-Parser gegen PowerPoint vergleichen
 ```
+
+Mit `--parser` startet keine Show. montro liest jede Datei mit dem eigenen PPTX-Parser und
+vergleicht Folie für Folie mit PowerPoint: ausgeblendete Folien, Notizen, Klick-Animationen,
+Anzahl und Länge der Videos.
+
+Das Testfenster zeigt nach dem Öffnen zusätzlich, was der Parser gelesen hat (Folien,
+ausgeblendet, Videos, Klick-Animationen, Folien mit Notizen).
 
 Mit `--datei` startet montro nur die angegebene Präsentation auf jedem Bildschirm, zweimal
 hintereinander ohne Beenden dazwischen, prüft Lage und Zustand und macht Bildschirmfotos.
