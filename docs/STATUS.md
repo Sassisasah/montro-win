@@ -7,6 +7,9 @@
   auf Verbatim 2 (1920×1079, Lage ok); Blackscreen → schwarz, wieder aus → Folie; zweite
   Präsentation live mit „Über Schwarz“ → während des Wechsels schwarz, danach neue Folie;
   Stopp → schwarz. Timer-Einstellungen, Regie-Nachricht und Übergang sichtbar wie am Mac.
+- **21.10.2026** – Sichtprüfung (Video der Nutzerin): gewählter Verbatim schwarz, dann die Folie;
+  der andere Verbatim bleibt unberührt. Vorher war das Schwarzbild auf 150 % um den Faktor 1,5
+  zu groß (WPF reagierte auf WM_DPICHANGED) und ragte auf den anderen Verbatim – behoben.
 
 - **21.10.2026** – Meilenstein 4, Etappe 1 (Branch `meilenstein-4`), über UI Automation
   bedient: 4 Präsentationen per Kommandozeile hinzugefügt, alle in 23 s analysiert und mit
