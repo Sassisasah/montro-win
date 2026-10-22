@@ -95,6 +95,15 @@
                 </DockPanel>
 
                 <Border Grid.Row="1" BorderBrush="{StaticResource Brand.Line}" BorderThickness="0,1,0,0">
+                    <DockPanel>
+                    <!-- Verbund: Hinweisleiste über der Playlist (Mac: SyncBanners), Inhalt in UpdateSyncBanner -->
+                    <Border x:Name="SyncBanner" DockPanel.Dock="Top" Padding="14,6" Visibility="Collapsed"
+                            BorderBrush="{StaticResource Brand.Line}" BorderThickness="0,0,0,1">
+                        <DockPanel>
+                            <Button x:Name="SyncBannerButton" DockPanel.Dock="Right" Style="{StaticResource Brand.Compact}" Click="OnSyncBanner" />
+                            <TextBlock x:Name="SyncBannerText" FontSize="11" TextWrapping="Wrap" VerticalAlignment="Center" Margin="0,0,8,0" />
+                        </DockPanel>
+                    </Border>
                     <Grid>
                         <ListBox x:Name="Playlist" Style="{StaticResource Brand.Playlist}"
                                  ItemContainerStyle="{StaticResource Brand.PlaylistItem}"
@@ -134,6 +143,11 @@
                                         <StackPanel Grid.Column="2" Margin="10,0" VerticalAlignment="Center">
                                             <TextBlock Text="{Binding Title}" FontWeight="Medium" TextTrimming="CharacterEllipsis" />
                                             <TextBlock Text="{Binding Subtitle}" Style="{StaticResource Brand.Caption}" TextTrimming="CharacterEllipsis" Margin="0,2,0,0" />
+                                            <!-- Verbund: Neue Version / Geändert / An Master (Mac: syncBadges) -->
+                                            <Border Background="{StaticResource Brand.Highlight}" CornerRadius="7" Padding="6,0" Margin="0,3,0,0" HorizontalAlignment="Left"
+                                                    Visibility="{Binding SyncBadge, Converter={StaticResource NullVis}}">
+                                                <TextBlock Text="{Binding SyncBadge}" FontSize="10" FontWeight="SemiBold" Foreground="{StaticResource Brand.Accent}" />
+                                            </Border>
                                         </StackPanel>
                                         <Grid Grid.Column="4" VerticalAlignment="Center" Margin="0,0,4,0">
                                             <!-- LIVE / Vorbereitung / Bereit / Fehler -->
@@ -167,6 +181,7 @@
                         <Border x:Name="DropFrame" BorderBrush="{StaticResource Brand.Accent}" BorderThickness="3" CornerRadius="12"
                                 Margin="6" Visibility="Collapsed" IsHitTestVisible="False" />
                     </Grid>
+                    </DockPanel>
                 </Border>
 
                 <!-- Folienübersicht (Mac: SlideNavigatorView) -->

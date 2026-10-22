@@ -88,6 +88,19 @@ public sealed class TalkTimer : Observable
         RaiseAll();
     }
 
+    /// <summary>Stand vom Master übernehmen (Verbund, Mac: applyRemote).</summary>
+    public void ApplyRemote(double total, double remoteElapsed, TimerRunState state, bool blink)
+    {
+        Settings.Duration = total;
+        adjustment = 0;
+        accumulated = remoteElapsed;
+        elapsed = remoteElapsed;
+        if (state == TimerRunState.Running) watch.Restart(); else watch.Reset();
+        runState = state;
+        manualBlink = blink;
+        RaiseAll();
+    }
+
     public void SetDuration(double minutes)
     {
         Settings.Duration = minutes * 60;

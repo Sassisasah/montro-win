@@ -30,6 +30,12 @@ Der Vertrag dafür steht in [KOMPATIBILITAET.md](KOMPATIBILITAET.md).
 | `src/montro/Display/OutputManager.cs` | Schwarzbild, Übergang und Ausgabefenster der Referent*innenansicht (Bildschirm oder Popup) |
 | `src/montro/Testing/PresenterSnapshot.cs` | `--referentenbild`: Testbilder der Referent*innenansicht ohne PowerPoint |
 | `src/montro/Core/AppState.Layouts.cs` | Standard, Presets, Entwurf und Zuweisung der Referent*innenansicht (Mac: `AppState`, Presets) |
+| `src/montro/Cluster/ClusterManager.cs` | Verbund Master/Slave: Befehle, Stand jede Sekunde, Korrektur nach 1,5 s, Bediensperre (Mac: `ClusterManager.swift`) |
+| `src/montro/Cluster/ClusterModels.cs` | Nachrichten im Verbund (Befehl, Stand, Info, Manifest), JSON wie am Mac |
+| `src/montro/Cluster/DnsSd.cs` | DNS-SD `_montro._tcp` mit den Windows-Funktionen aus `dnsapi.dll` (ankündigen, suchen, auflösen) |
+| `src/montro/Cluster/FileSync.cs` | Datei-Abgleich: Prüfsummen, Laden, Ersetzen mit Sicherung, Bereitlegen, Abkoppeln (Mac: `FileSync.swift`) |
+| `src/montro/Core/AppState.Cluster.cs` | Anbindung: Bediensperre, Weitergabe, „Aktualisieren“ |
+| `src/montro/Views/ClusterSection.cs` | Einstellungen › Verbund (Mac: `ClusterSection`) |
 | `src/montro/Remote/RemoteApi.cs` | Fernsteuerung per HTTP/JSON auf `TcpListener` (Mac: `RemoteAPI.swift`, `docs/REMOTE-API.md` im Mac-Repo), ohne Verbund-Teil |
 | `src/montro/Core/AppState.Remote.cs` | Einstellungen der Fernsteuerung (an/aus, Port, nur lokal) |
 | `src/montro/Views/SettingsWindow.cs` | Einstellungen › Fernsteuerung (Mac: `RemoteAPISection`) |
@@ -240,7 +246,7 @@ Fremdbibliothek. Zählweise absichtlich wie am Mac:
 4. Playlist, Inspector, Ausgaben (Schwarzfenster, Popup-Modus), Ende-Sperre, dazu (vorgezogen aus 6
    und 7) Referent*innenansicht mit Baukasten und Presets, Timer, Regie-Nachricht, Übergänge,
    Video-Karte, „In PowerPoint bearbeiten“, Show-Dateien ✓ (22.10.2026, Branch `meilenstein-4`)
-5. Remote-API 1:1, Test mit dem Companion-Modul ← **in Arbeit** (Branch `meilenstein-5`)
+5. Remote-API 1:1, Test mit dem Companion-Modul ✓ (22.10.2026)
 6. *(in 4 enthalten)*
-7. Verbund (DNS-SD und Sync, „Aktualisieren“), gemischter Test mit dem Mac
+7. Verbund (DNS-SD und Sync, „Aktualisieren“), gemischter Test mit dem Mac ← **in Arbeit** (Branch `meilenstein-7`)
 8. Installer mit Firewall-Regel, Info-Fenster, Version aus CHANGELOG

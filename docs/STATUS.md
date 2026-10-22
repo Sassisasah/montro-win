@@ -2,6 +2,24 @@
 
 ## Getestet
 
+- **22.10.2026** – Meilenstein 7, Verbund mit dem Mac (MacBook der Nutzerin, montro für macOS als
+  Master, 192.168.1.100; Windows-Laptop als Slave, 192.168.1.11, Version aus `publish`):
+  - DNS-SD: Der Mac findet den PC von selbst („Master · 1/1 Slave(s) synchron“), der PC den Mac.
+  - Datei-Abgleich: Der PC hat die 19 Präsentationen des Masters geladen (bis 256 MB je Datei,
+    Prüfsumme ok), das geänderte Testdeck ersetzt (Sicherung in `Versionen`), eigene Einträge
+    entfernt und die Reihenfolge angeglichen.
+  - Befehle über die Fernsteuerung des Macs: `golive/1` → PC live mit derselben Präsentation;
+    `goto/3` + `next` → beide Folie 3, Animation 1; `blackout/on` → beide schwarz;
+    Regie-Nachricht erscheint am PC; Timer 12 min gestartet → PC „11:56 running“ wie der Mac;
+    `golive/next` → beide auf der zweiten Präsentation; `stop` → beide gestoppt.
+  - Bediensperre am Slave: „weiter“ direkt am PC wird abgelehnt („Slave – Bedienung erfolgt über
+    den Master“).
+  - Erster Versuch: Die Debug-Version war von der Windows-Firewall blockiert (öffentliches Netz);
+    die Version aus `publish` ist freigegeben. Große Dateien wurden auf dem UI-Thread kopiert und
+    gehasht – montro hing dabei kurz; jetzt im Hintergrund.
+  - Noch offen: PC als Master mit dem Mac als Slave, Abkoppeln/Wiederverbinden mit Übergabe einer
+    geänderten Datei, „Aktualisieren“ (neue Version während der Show).
+
 - **22.10.2026** – Meilenstein 5, Remote-API am Test-PC mit `curl` (nur lokal, 127.0.0.1:8765):
   `/api/state` vollständig wie am Mac; `select/2`, `message?text=…` (sichtbar), `timer/duration/20`
   („20:00“), `golive/1` (live, „1/14“, nächste 2), `goto/3` + `next` (Folie 3, Animation 1/5),

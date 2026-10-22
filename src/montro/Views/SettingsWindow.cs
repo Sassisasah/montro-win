@@ -57,8 +57,11 @@ public sealed class SettingsWindow : Window
         close.Click += (_, _) => Close();
         var root = new StackPanel { Margin = new Thickness(16) };
         root.Children.Add(new Border { Style = (Style)FindResource("Brand.Card"), Child = card });
+        root.Children.Add(new ClusterSection(state));
         root.Children.Add(close);
-        Content = root;
+        Content = new ScrollViewer { VerticalScrollBarVisibility = ScrollBarVisibility.Auto, Content = root };
+        Width = 600;
+        MaxHeight = SystemParameters.WorkArea.Height - 40;
 
         enabled.Click += (_, _) => state.RemoteEnabled = enabled.IsChecked == true;
         localOnly.Click += (_, _) => state.RemoteLocalOnly = localOnly.IsChecked == true;

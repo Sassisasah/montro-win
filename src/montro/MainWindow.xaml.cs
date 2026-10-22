@@ -53,6 +53,9 @@ public partial class MainWindow : Window
         UpdateBlackoutButton();
         PresenterPreviewHost.Child = new PresenterOutputView(state) { PreviewWhenIdle = true };
         UpdateTitle();
+        state.FileSync.PropertyChanged += (_, _) => UpdateSyncBanner();
+        state.Cluster.Changed += () => Dispatcher.InvokeAsync(UpdateSyncBanner);
+        UpdateSyncBanner();
         state.ShowLoaded += () =>
         {
             (state.EndBehavior == EndBehavior.HoldLastSlide ? EndHold : EndBlack).IsChecked = true;
@@ -74,6 +77,33 @@ public partial class MainWindow : Window
         };
         Playlist.PreviewMouseMove += OnPlaylistDragMove;
         DebugLog.Write($"Hauptfenster: {state.Items.Count} Einträge in der Playlist, {state.ExternalScreens.Count} externe(r) Bildschirm(e)");
+    }
+
+    // MARK: - Verbund-Hinweis über der Playlist (Mac: SyncBanners)
+
+    private void UpdateSyncBanner()
+    {
+        if (state.FileSync.Banner is not var (text, button, warning))
+        {
+            SyncBanner.Visibility = Visibility.Collapsed;
+            return;
+        }
+        SyncBanner.Visibility = Visibility.Visible;
+        SyncBannerText.Text = text;
+        SyncBanner.Background = new SolidColorBrush(Color.FromArgb(46,
+            warning ? (byte)0xFF : (byte)0xB0, warning ? (byte)0xB1 : (byte)0x88, warning ? (byte)0x3D : (byte)0xFB));
+        SyncBannerButton.Visibility = button != null ? Visibility.Visible : Visibility.Collapsed;
+        SyncBannerButton.Content = button ?? "";
+        SyncBannerButton.IsEnabled = !state.ReloadingInPlace;
+    }
+
+    private void OnSyncBanner(object sender, RoutedEventArgs e)
+    {
+        var fs = state.FileSync;
+        if (state.LiveItem is { } live && fs.StagedVersion(live) != null) state.ReloadLiveWithNewVersion();
+        else if (fs.Detached) fs.Rejoin();
+        else if (state.Cluster.Role == Cluster.ClusterRole.Slave) fs.Detach();
+        UpdateSyncBanner();
     }
 
     /// <summary>Show-Datei öffnen (Kommandozeile, Doppelklick auf .montro).</summary>

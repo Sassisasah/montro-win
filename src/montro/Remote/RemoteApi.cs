@@ -133,6 +133,12 @@ public sealed class RemoteApi
                 var stream = client.GetStream();
                 var req = await HttpRequest.ReadAsync(stream);
                 if (req == null) return;
+                req.RemoteHost = (client.Client.RemoteEndPoint as IPEndPoint)?.Address.MapToIPv4().ToString();
+                if (req.Path.TrimEnd('/') == "/api/cluster/file")
+                {
+                    await ServeFile(stream, req);
+                    return;
+                }
                 var (status, body) = await ui.InvokeAsync(() => Handle(req));
                 await WriteJson(stream, status, body);
             }
@@ -141,6 +147,27 @@ public sealed class RemoteApi
                 DebugLog.Write($"Remote-API: Anfrage fehlgeschlagen – {e.Message}");
             }
         }
+    }
+
+    /// <summary>
+    /// <c>GET /api/cluster/file?name=&lt;datei&gt;&amp;group=&lt;verbund&gt;</c> – Präsentation aus der
+    /// Playlist an einen anderen Rechner des Verbunds ausliefern (gestreamt, auch große Dateien).
+    /// </summary>
+    private async Task ServeFile(NetworkStream stream, HttpRequest req)
+    {
+        string? path = await ui.InvokeAsync(() => state.FileSync.ServableFile(req.Query.GetValueOrDefault("name") ?? "", req.Query.GetValueOrDefault("group")));
+        if (path == null)
+        {
+            await WriteJson(stream, 404, Error("Datei nicht in der Playlist"));
+            return;
+        }
+        await using var f = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete, 1 << 20, useAsync: true);
+        DebugLog.Write($"Verbund: sende „{Path.GetFileName(path)}“ an {req.RemoteHost ?? "?"} ({f.Length / 1_048_576} MB)");
+        string head = "HTTP/1.1 200 OK\r\nContent-Type: application/octet-stream\r\n" +
+                      $"Content-Length: {f.Length}\r\nCache-Control: no-store\r\nConnection: close\r\n\r\n";
+        await stream.WriteAsync(Encoding.ASCII.GetBytes(head));
+        await f.CopyToAsync(stream, 1 << 20);
+        await stream.FlushAsync();
     }
 
     private static async Task WriteJson(NetworkStream stream, int status, object body)
@@ -163,6 +190,9 @@ public sealed class RemoteApi
     private static readonly JsonSerializerOptions Json = new()
     {
         Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+        // Verbund-Antworten (ClusterInfo, SyncManifest) wie am Mac: Feldnamen klein, null weglassen
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+        DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull,
     };
 
     // MARK: - Befehle (Mac: handle)
@@ -184,6 +214,26 @@ public sealed class RemoteApi
                 return (200, Snapshot());
             case "diag":
                 return (200, Diagnostics());
+            case "cluster":
+            {
+                // Verbund (intern, Master ↔ Slave), Antworten wie am Mac
+                var c = state.Cluster;
+                switch (Arg(1))
+                {
+                    case "":
+                        return (200, c.Info());
+                    case "command":
+                        if (Cluster.ClusterJson.Read<Cluster.ClusterCommand>(req.Body) is not { } cmdIn) return Bad("ungültiger Befehl");
+                        return (200, c.Receive(cmdIn, req.RemoteHost));
+                    case "sync":
+                        if (Cluster.ClusterJson.Read<Cluster.ClusterSync>(req.Body) is not { } syncIn) return Bad("ungültiger Abgleich");
+                        return (200, c.Receive(syncIn, req.RemoteHost));
+                    case "manifest":
+                        return (200, state.FileSync.Manifest());
+                    default:
+                        return Bad("unbekannter Verbund-Befehl");
+                }
+            }
             case "next":
                 state.Next(); return Ok();
             case "previous" or "prev":
@@ -353,6 +403,14 @@ public sealed class RemoteApi
             ["status"] = s.StatusMessage,
             ["presentation"] = live?.Title ?? "",
             ["presentationFile"] = live != null ? Path.GetFileName(live.Path).ToLowerInvariant() : "",
+            ["cluster"] = new Dictionary<string, object>
+            {
+                ["role"] = Cluster.ClusterRoles.Key(s.Cluster.Role),
+                ["group"] = s.Cluster.Group,
+                ["name"] = s.Cluster.DeviceName,
+                ["summary"] = s.Cluster.Summary,
+                ["warning"] = s.Cluster.SummaryIsWarning,
+            },
             ["presentationIndex"] = liveIndex,
             ["selected"] = s.Selected?.Title ?? "",
             ["selectedIndex"] = selIndex,
@@ -436,6 +494,9 @@ public sealed class HttpRequest
     public string Path { get; init; } = "/";
     public Dictionary<string, string> Query { get; init; } = new();
     public byte[] Body { get; init; } = [];
+
+    /// <summary>IP-Adresse der Gegenstelle (Verbund: Adresse des Masters)</summary>
+    public string? RemoteHost { get; set; }
 
     public string? JsonText()
     {

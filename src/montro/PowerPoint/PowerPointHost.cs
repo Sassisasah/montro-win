@@ -297,6 +297,35 @@ public sealed class PowerPointHost
     }, 5000, black ? "Schwarz an" : "Schwarz aus");
 
     /// <summary>
+    /// Vor dem Ersetzen durch eine neue Version (Verbund): Ist die Datei in PowerPoint offen, alle
+    /// Kopien schließen – aber nur, wenn keine ungesicherte Bearbeitung dabei ist (dann false,
+    /// Mac: closeIfSaved). Ohne laufendes PowerPoint: true.
+    /// </summary>
+    public Task<bool> CloseIfSavedAsync(string path) => sta.Run(() =>
+    {
+        if (app == null) return true;
+        dynamic a = app;
+        string full = Path.GetFullPath(path);
+        var open = new List<dynamic>();
+        int count = Safe(() => (int)a.Presentations.Count, 0);
+        for (int i = 1; i <= count; i++)
+        {
+            dynamic p = a.Presentations.Item(i);
+            if (string.Equals(Safe(() => (string)p.FullName, ""), full, StringComparison.OrdinalIgnoreCase)) open.Add(p);
+        }
+        foreach (var p in open)
+            if (Safe(() => (int)p.Windows.Count, 0) > 0 && Safe(() => (int)p.Saved, MsoTrue) == MsoFalse) return false;
+        foreach (var p in open)
+        {
+            TrySet("Als gespeichert markieren", () => { p.Saved = MsoTrue; });
+            TrySet("Schließen", () => { p.Close(); });
+        }
+        if (pres != null && Safe(() => (string)pres!.FullName, "") == "") pres = null;
+        if (open.Count > 0) DebugLog.Write($"PowerPoint: „{Path.GetFileName(full)}“ für neue Version geschlossen");
+        return true;
+    }, 10000, "Für neue Version schließen");
+
+    /// <summary>
     /// Datei zum Bearbeiten in PowerPoint öffnen (mit Fenster, beschreibbar). Eine von montro
     /// fensterlos geöffnete Kopie derselben Datei (Vorschaubilder, alte Show) wird vorher geschlossen,
     /// sonst wäre die Bearbeitung schreibgeschützt. Ist sie schon mit Fenster offen, wird sie nur

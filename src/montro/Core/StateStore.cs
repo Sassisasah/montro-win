@@ -30,6 +30,9 @@ public sealed class SavedState
     public bool? RemoteEnabled { get; set; }
     public int? RemotePort { get; set; }
     public bool RemoteLocalOnly { get; set; }
+    /// <summary>Verbund (Rolle, Name, Adressen) und Datei-Abgleich</summary>
+    public Montro.Cluster.SavedCluster? Cluster { get; set; }
+    public Montro.Cluster.SavedFileSync? FileSync { get; set; }
 }
 
 /// <summary>Übergang auf dem Publikumsbildschirm, wenn eine andere Präsentation live geht (Mac: ShowTransition).</summary>

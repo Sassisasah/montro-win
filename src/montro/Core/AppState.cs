@@ -710,6 +710,7 @@ public sealed partial class AppState : Observable
         Video = null;
         StatusMessage = message;
         RefreshAfterShow();
+        _ = FileSync.ApplyAllStaged();
         FollowSelection();
     }
 
@@ -969,6 +970,7 @@ public sealed partial class AppState : Observable
         LoadLayouts(s);
         currentShowPath = s.ShowPath;
         StartRemote(s);
+        StartCluster(s);
         Timer.Settings = s.Timer;
         endBehavior = s.EndBehavior;
         transition = s.Transition;
@@ -1050,6 +1052,8 @@ public sealed partial class AppState : Observable
             RemoteEnabled = RemoteEnabled,
             RemotePort = RemotePort,
             RemoteLocalOnly = RemoteLocalOnly,
+            Cluster = Cluster.Save(),
+            FileSync = FileSync.Save(),
         });
     }
 
@@ -1058,6 +1062,8 @@ public sealed partial class AppState : Observable
         ticker.Stop();
         SaveNow();
         remote?.Stop();
+        Cluster.Shutdown();
+        FileSync.Shutdown();
         outputs.CloseAll();
         TaskbarHider.RestoreAll();
         await ppt.ShutdownAsync();

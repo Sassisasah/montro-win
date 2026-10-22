@@ -100,8 +100,29 @@ curl -X POST "http://127.0.0.1:8765/api/message?text=Noch%202%20Minuten"
 ```
 
 Keine Anmeldung: Ohne „nur von diesem Rechner“ kann jeder im selben Netz steuern. Beim ersten Start
-fragt die Windows-Firewall – Zugriff im privaten Netz erlauben (der Installer trägt später eine
-Regel ein). Der Verbund-Teil (`/api/cluster…`) folgt mit Meilenstein 7.
+fragt die Windows-Firewall – Zugriff erlauben (der Installer trägt später eine Regel ein).
+
+## Verbund mit anderen montro-Rechnern (Meilenstein 7)
+
+Einstellungen (Zahnrad) › **Verbund (mehrere Rechner)**, gleich wie am Mac und mit montro für macOS
+mischbar: Rolle **Einzelplatz / Master / Slave**, Verbundname (auf allen Rechnern gleich), Name
+dieses Rechners, „Rechner automatisch finden“ (DNS-SD/Bonjour). Rechner, die sich nicht von selbst
+finden, unter „IP-Adresse“ eintragen. Die Fernsteuerung muss an und von anderen Rechnern erreichbar
+sein.
+
+- **Master** steuert: Live schalten, Weiter/Zurück, Gehe zu, Blackscreen, Entsperren, Stopp, Timer
+  und Regie-Nachricht gehen an alle Slaves; dazu jede Sekunde der komplette Stand.
+- **Slave** folgt Folie für Folie (Abweichungen werden nach 1,5 s korrigiert). Optionen: Playlist
+  und Dateien vom Master übernehmen (fehlende/geänderte Präsentationen werden geladen, ersetzte
+  Dateien nach `Dokumente\montro\Versionen` gesichert, neue landen in `Dokumente\montro\Verbund`),
+  Bedienung am Slave sperren, Timer und Regie-Nachricht übernehmen.
+- **Zeitweise abkoppeln** (Hinweisleiste über der Playlist): Der Slave folgt nicht, kann bearbeiten
+  und selbst live schalten. Eine geänderte Präsentation geht an den Master, sobald sie hier live war
+  – spätestens bei „Wieder in den Verbund“.
+- **Aktualisieren**: Kommt eine neue Version der gerade laufenden Präsentation, steht sie in der
+  Hinweisleiste bereit. „Aktualisieren“ lädt sie an der aktuellen Folie; ohne Klick wird sie beim
+  nächsten Live-Schalten übernommen.
+- Fällt der Master aus: am Slave „Diesen Rechner zum Master machen“.
 
 ## PowerPoint testen (Meilenstein 1)
 

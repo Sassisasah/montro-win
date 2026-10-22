@@ -163,7 +163,7 @@ public sealed class FileSync : Observable
         {
             await using var f = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete, 1 << 20, useAsync: true);
             using var sha = SHA256.Create();
-            byte[] h = await sha.ComputeHashAsync(f);
+            byte[] h = await sha.ComputeHashAsync(f).ConfigureAwait(false);
             return Convert.ToHexString(h).ToLowerInvariant();
         }
         catch
@@ -322,7 +322,8 @@ public sealed class FileSync : Observable
                     if (h == e.Sha256 || Released.GetValueOrDefault(e.File) == h) continue;
                 }
                 if (staged.TryGetValue(e.File, out var st) && st.Sha256 == e.Sha256) continue;
-                if (await Download(e.File, e.Name, e.Sha256, host, port) is not { } file) continue;
+                // Laden und Prüfsumme im Hintergrund (nicht auf dem UI-Thread)
+                if (await Task.Run(() => Download(e.File, e.Name, e.Sha256, host, port)) is not { } file) continue;
                 await Install(e.File, e.Name, file, e.Sha256, e.Size, Cluster.MasterName ?? "Master");
             }
             MirrorPlaylist(m);
@@ -445,8 +446,10 @@ public sealed class FileSync : Observable
             }
             try
             {
-                Backup(item.Path);
-                File.Copy(file, item.Path, overwrite: true);
+                string target = item.Path;
+                // im Hintergrund kopieren: große Dateien würden sonst die Bedienung (und die Fernsteuerung) anhalten
+                await Task.Run(() => { Backup(target); File.Copy(file, target, overwrite: true); });
+
                 File.Delete(file);
             }
             catch (Exception e)
@@ -467,7 +470,7 @@ public sealed class FileSync : Observable
             string dest = Path.Combine(SyncDirectory, name);
             try
             {
-                File.Copy(file, dest, overwrite: true);
+                await Task.Run(() => File.Copy(file, dest, overwrite: true));
                 File.Delete(file);
             }
             catch (Exception e)

@@ -1,5 +1,11 @@
 # Änderungsprotokoll
 
+## 0.6 – 22.10.2026
+- Neu (Branch `meilenstein-7`): Verbund mehrerer Rechner wie am Mac und mit montro für macOS
+  mischbar – Master/Slave, Finden per DNS-SD, Befehle und Abgleich, Datei-Abgleich mit Sicherung,
+  Abkoppeln zum Bearbeiten, „Aktualisieren“. Einstellungen › Verbund, Hinweisleiste über der
+  Playlist, Abzeichen „Neue Version“ / „Geändert“ / „An Master“.
+
 ## 0.5 – 22.10.2026
 - Neu (Branch `meilenstein-5`): Fernsteuerung per HTTP/JSON wie am Mac (Port 8765, `/api/state`,
   alle Befehle, `/api/diag`) für Companion / Stream Deck. Einstellungen-Fenster mit an/aus, Port und
