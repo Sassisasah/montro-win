@@ -2,6 +2,94 @@
 
 ## Getestet
 
+- **22.10.2026** – Meilenstein 5, Remote-API am Test-PC mit `curl` (nur lokal, 127.0.0.1:8765):
+  `/api/state` vollständig wie am Mac; `select/2`, `message?text=…` (sichtbar), `timer/duration/20`
+  („20:00“), `golive/1` (live, „1/14“, nächste 2), `goto/3` + `next` (Folie 3, Animation 1/5),
+  `blackout/on` (schwarz), `blackout/off`, `stop` („Gestoppt – Ausgänge schwarz“), `diag`
+  (3 Bildschirme, Log); unbekannter Pfad → 404, `goto` ohne Show → 400. Danach mit dem
+  Companion-Modul 2.0.0 (Release auf GitHub) von der Nutzerin bestätigt: „companion geht“.
+- **22.10.2026** – Presets in Show-Dateien Mac → Windows: Prüfung durch die Nutzerin zu Hause steht aus.
+
+- **22.10.2026** – Referent*innenansicht ohne Live-Schalten gestalten (Hinweis der Nutzerin: „hier
+  muss ich immer erstmal die Präsentation starten“): Karte zeigt jetzt die ausgewählte
+  Präsentation. Am Test-PC: Testdeck ausgewählt → Titelfolie, „Folie 1 von 14“, Notizen; Rana Pant
+  ausgewählt → deren Titelfolie, „Folie 1 von 24“, „Keine Notizen“. Baukasten folgt der Auswahl
+  (Preset der Präsentation). Sichtprüfung durch die Nutzerin steht aus.
+
+- **22.10.2026** – Video-Restzeit von der Nutzerin bestätigt („funktioniert“). Auf ihren Wunsch
+  Schleife eingebaut und am Test-PC geprüft (Testdeck, Folie 7, Schleife an): dreimal hintereinander
+  „Ende erreicht, Schleife → von vorn“, je einmal neu gestartet, Lücke am Ende rund 0,2–0,5 s
+  (Ende von PowerPoint abwarten, dann Stopp + Abspielen).
+
+- **22.10.2026** – Show-Dateien (`montro.exe --showtest`, 18 Prüfungen ok): sichern und öffnen
+  (Playlist, Preset-Zuweisung, Ansichten, Ende, Übergang, Timer, Regie-Farben); „mit Präsentationen
+  sichern“, Ordner verschoben, wieder geöffnet (relative Pfade); Show im Mac-Stil (Pfad mit „/“,
+  `#RRGGBBAA`, `countup`, unbekanntes Widget und Feld, Version 2, fehlende Datei). Menü „Show“
+  über UI Automation geöffnet. Eine am Mac gesicherte Show öffnet die Nutzerin unter Windows
+  ohne Probleme („mac showfile öffnen geht“).
+
+- **22.10.2026** – „In PowerPoint bearbeiten“ am Test-PC (UI Automation): Stift beim Testdeck →
+  PowerPoint öffnet die Datei beschreibbar mit Fenster auf dem Laptop-Bildschirm. Speichern in
+  PowerPoint → nach ~3 s „Datei geändert … → neu analysieren“, 1,5 s später 14 neue
+  Vorschaubilder. Sichtprüfung durch die Nutzerin steht aus.
+- **22.10.2026** – Video-Karte am Test-PC über UI Automation (Testdeck live, Folie 7): Pause →
+  `Player.State` 1, Position steht bei 5,4 s; Weiter → läuft ab 5,9 s; Stopp → State 2, 0,0 s;
+  „Abspielen“ → läuft wieder ab 0. Sichtprüfung der Karte durch die Nutzerin steht aus.
+- **22.10.2026** – Baukasten der Referent*innenansicht: von der Nutzerin bedient, „sieht aus als
+  würde der ganze Baukasten funktionieren“. Testbild vorher ok (`--referentenbild` →
+  `baukasten.png`).
+- **22.10.2026** – Live-Bild per Bildschirmfoto: erst schwarz (ohne `CAPTUREBLT`), dann sichtbar,
+  aber laut Nutzerin „eher ein Daumenkino“ (2 Bilder/s, Effekte und Video nicht flüssig).
+  Umgebaut auf DWM-Miniatur des Show-Fensters. Geprüft mit `montro.exe --miniaturtest`: Die
+  Miniatur erscheint auch im „layered“ Ausgabefenster, im Seitenverhältnis eingepasst. Auf dem
+  Verbatim von der Nutzerin bestätigt („cool“). Popup-Modus noch nicht geprüft.
+
+- **22.10.2026** – Referent*innenansicht auf dem zweiten Verbatim: läuft (Nutzerin: „geht“).
+  Die aktuelle Folie war extrem verpixelt: Der Bildspeicher gab das 280-px-Bild der
+  Folienkacheln heraus. Behoben, der Speicher unterscheidet jetzt nach Bildbreite. Danach von
+  der Nutzerin bestätigt: Folie scharf („geht“). Regie-Nachricht erscheint dort ebenfalls
+  („regie geht auch“).
+- **22.10.2026** – Meilenstein 4, Etappe 3 (Referent*innenansicht), Testbilder ohne PowerPoint
+  (`montro.exe --referentenbild`, Technik-Testdeck mit den echten Vorschaubildern): Aufbau wie
+  der Mac-Standard „Windows“ – Timer, Uhr oben, aktuelle Folie groß links, „Folie 3 von 14“ mit
+  Animationspunkten, Regie-Nachricht darunter, rechts „Nächste Folie“ und „Notizen“. Letzte
+  Folie: „Ende der Präsentation“. Popup-Größe 1120×660 passt sich an. Nicht live: Ruhe-Ansicht
+  mit Uhr. Auf dem Verbatim noch nicht geprüft.
+
+- **21.10.2026** – Meilenstein 4, Etappe 2, über UI Automation mit Bildschirmfotos von Verbatim 2:
+  Ausgabe auf „Verbatim MT15 (2)“ gestellt → Verbatim schwarz; Technik-Testdeck live → Folie
+  auf Verbatim 2 (1920×1079, Lage ok); Blackscreen → schwarz, wieder aus → Folie; zweite
+  Präsentation live mit „Über Schwarz“ → während des Wechsels schwarz, danach neue Folie;
+  Stopp → schwarz. Timer-Einstellungen, Regie-Nachricht und Übergang sichtbar wie am Mac.
+- **21.10.2026** – Sichtprüfung (Video der Nutzerin): gewählter Verbatim schwarz, dann die Folie;
+  der andere Verbatim bleibt unberührt. Vorher war das Schwarzbild auf 150 % um den Faktor 1,5
+  zu groß (WPF reagierte auf WM_DPICHANGED) und ragte auf den anderen Verbatim – behoben.
+- **21.10.2026** – Live-Schalten ohne Aufblitzen (gemessen alle 120 ms; vorher schob sich
+  PowerPoint kurz über die Abdeckung) und Taskleiste bleibt unter dem Schwarzbild (Schwarzbild
+  wird alle 250 ms nach oben geholt). Von der Nutzerin bestätigt („passt“).
+- **21.10.2026** – Übergänge „Hart“ (kurz Schwarz, dann neue Folie) und „Über Schwarz“ (alte
+  Folie blendet ab, Schwarz, neue Folie) auf dem Verbatim, mehrere Wechsel hintereinander, Videos
+  der Nutzerin. „Überblenden“ ebenso: alte Folie bleibt als Standbild stehen und blendet direkt
+  in die neue über (auf den Einzelbildern beide überlagert), ohne Schwarz dazwischen.
+- **21.10.2026** – Nach den Korrekturen (Taskleiste ausgeblendet, Schwarzbild dauerhaft unter der
+  Show, scharfes Standbild): Nutzerin „gefällt mir alles gut“. Letzter Rest: kleines Flackern
+  beim Wechsel von der laufenden Folie ins Standbild – Standbild wird jetzt sofort statt
+  eingeblendet gezeigt. Von der Nutzerin bestätigt: „perfekt“.
+- **22.10.2026** – Ende der Präsentation funktioniert (Nutzerin: „geht“). Vorher lief die Show
+  über das Ende hinaus und PowerPoint fragte „Speichern?“ (blockierte dann alles) – behoben.
+- **22.10.2026** – Video (Technik-Testdeck, Folie 7) läuft flüssig. Ein einmaliges Ruckeln lag
+  laut Nutzerin vermutlich an etwas anderem im Hintergrund.
+
+- **21.10.2026** – Meilenstein 4, Etappe 1 (Branch `meilenstein-4`), über UI Automation
+  bedient: 4 Präsentationen per Kommandozeile hinzugefügt, alle in 23 s analysiert und mit
+  Vorschaubildern „bereit“; Technik-Testdeck ausgewählt, „Ausgewählte live schalten“ im
+  Popup-Modus (PowerPoint 960×540 rechts auf dem Laptop, Lage ok), 2× „Weiter“ → Statuszeile
+  „Folie 3 von 14 · Animation 0/5“, Folienübersicht markiert Folie 3, „Stopp“ → „Gestoppt –
+  Ausgänge schwarz“. Bildschirmfoto im Aussehen nah an der Mac-Vorlage.
+- **21.10.2026** – Sichtprüfung durch die Nutzerin: Live schalten aus dem Hauptfenster auf einen
+  Verbatim funktioniert („mega“). Vorher war das Bildschirm-Menü weiß auf weiß (behoben,
+  Kontextmenüs jetzt dunkel).
+
 - **21.10.2026** – Meilenstein 3 (Branch `meilenstein-3`): PPTX-Parser gegen PowerPoint
   verglichen (`--selbsttest --parser`), **0 Abweichungen**:
   - 7 echte Präsentationen vom Desktop der Nutzerin (1 bis 24 Folien, bis 408 MB): Folienzahl,
@@ -79,11 +167,26 @@
 ## Offen
 
 - PowerPoint ohne Lizenz: lässt sich auf dem Test-PC nicht nachstellen.
+- **22.10.2026** – Meilenstein 4, Etappe 3: Referent*innenansicht auf dem zweiten Verbatim mit
+  Timer-Blinken und Ende auf Schwarz prüfen; Popup-Modus (links
+  Referent*innenansicht, rechts PowerPoint).
+- **22.10.2026** – Video-Laufzeit: Die Nutzerin vermisste die Restzeit des Videos (Baustein war
+  noch leer). Jetzt liest montro das Video der Live-Folie über `View.Player(Id)` aus (Position,
+  Länge aus `MediaFormat.Length`). Selbst am Test-PC geprüft (Testdeck live auf Verbatim 3,
+  Referent*innenansicht auf Verbatim 2, Sprung zu Folie 7, Bildschirmfotos): „Testvideo ·
+  Gesamt 00:10 · Rest 00:04“ mit Balken während der Wiedergabe, am Ende Pause-Symbol und
+  „Rest 00:00“. `Player.State` 0 = läuft, 2 = zu Ende (gemessen); „läuft“ nutzt jetzt beides.
+  Die erste Video-Abfrage kam etwa 4 s nach dem Sprung (Video bei 3 s) – beobachten.
+- **22.10.2026** – Live-Bild (DWM-Miniatur) im Popup-Modus prüfen; auf dem Verbatim bestätigt.
+- **21.10.2026** – Meilenstein 4: noch nicht geprüft sind Timer-Einstellungen und Ziehen &
+  Ablegen. „Aktualisieren“ (neue Version aus dem Verbund) folgt mit Meilenstein 7.
+- **22.10.2026** – Sperre gegen Bildschirm-Abschaltung während der Show eingebaut (Log: „Bildschirm-
+  Abschaltung gesperrt“), noch nicht über die eingestellte Abschaltzeit hinaus geprüft.
 - **21.10.2026** – Parser: noch nicht geprüft sind verknüpfte (nicht eingebettete) Videos,
   Videos mit Trigger-Start und andere Videoformate als MP4/MOV (Länge dann 0 = unbekannt).
   Abgleich mit dem Mac-Ergebnis für dieselben Dateien steht aus.
 - Der Selbsttest kann nicht sehen, was ein Monitor wirklich anzeigt. Sichtprüfung bleibt nötig.
 - **20.10.2026** – Während einer Pause schaltete Windows die Bildschirme ab, die Verbatims
-  meldeten sich ab („No signal“). Für Meilenstein 4: Abschaltung während einer Show verhindern
-  (`SetThreadExecutionState(ES_DISPLAY_REQUIRED)`).
+  meldeten sich ab („No signal“). Seit 22.10.2026 verhindert montro das, solange eine
+  Präsentation live ist.
 - Eintrag in der Projekttabelle von `Sassisasah/Developer-Setup` (`README.md`).

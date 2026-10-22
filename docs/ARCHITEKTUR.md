@@ -18,6 +18,30 @@ Der Vertrag dafür steht in [KOMPATIBILITAET.md](KOMPATIBILITAET.md).
 | `src/montro/Themes/Brand.xaml` | Alle Farben (movidal-CD) und Grund-Stile. Keine Systemfarben |
 | `src/montro/Core/AppPaths.cs` | `%APPDATA%\montro` (Zustand), `%LOCALAPPDATA%\montro` (Vorschaubilder, Log) |
 | `src/montro/Core/DebugLog.cs` | Log-Datei `montro.log`, letzte Zeilen im Speicher (später für `/api/diag`) |
+| `src/montro/Core/AppState.cs` | Zentraler Zustand wie am Mac: Playlist, Vorbereitung, Live, Blackscreen, Ende-Sperre, Ausgabe, Timer, Speichern |
+| `src/montro/Core/PresentationItem.cs` | Playlist-Eintrag (Pfad, Meta, Vorschaubilder, Status, LIVE) |
+| `src/montro/Core/TalkTimer.cs` | Redezeit-Timer, portiert aus `TalkTimer.swift` |
+| `src/montro/Core/StateStore.cs` | `%APPDATA%\montro\state.json` lesen und schreiben |
+| `src/montro/Core/Observable.cs` | `INotifyPropertyChanged`-Basis für die Bindungen |
+| `src/montro/MainWindow.xaml(.cs)` | Hauptfenster wie `MainView`/`PlaylistView`/`InspectorView` am Mac |
+| `src/montro/Views/SlideTile.cs` | Kachel der Folienübersicht (Mac: `SlideTile`) |
+| `src/montro/Core/PresenterLayout.cs` | Aufbau der Referent*innenansicht: Bausteine mit normierter Lage, Standard „Windows“ (Mac: `PresenterLayout.swift`) |
+| `src/montro/Views/PresenterView.cs` | Referent*innenansicht mit allen Bausteinen, Fläche 1080 Einheiten hoch (Mac: `PresenterView.swift`) |
+| `src/montro/Display/OutputManager.cs` | Schwarzbild, Übergang und Ausgabefenster der Referent*innenansicht (Bildschirm oder Popup) |
+| `src/montro/Testing/PresenterSnapshot.cs` | `--referentenbild`: Testbilder der Referent*innenansicht ohne PowerPoint |
+| `src/montro/Core/AppState.Layouts.cs` | Standard, Presets, Entwurf und Zuweisung der Referent*innenansicht (Mac: `AppState`, Presets) |
+| `src/montro/Remote/RemoteApi.cs` | Fernsteuerung per HTTP/JSON auf `TcpListener` (Mac: `RemoteAPI.swift`, `docs/REMOTE-API.md` im Mac-Repo), ohne Verbund-Teil |
+| `src/montro/Core/AppState.Remote.cs` | Einstellungen der Fernsteuerung (an/aus, Port, nur lokal) |
+| `src/montro/Views/SettingsWindow.cs` | Einstellungen › Fernsteuerung (Mac: `RemoteAPISection`) |
+| `src/montro/Core/ShowFile.cs` | Show-Datei `.montro` (JSON, Format wie `docs/SHOW-FORMAT.md` im Mac-Repo), Umwandlung der Farben `#RRGGBBAA` ↔ WPF `#AARRGGBB` |
+| `src/montro/Core/AppState.Show.cs` | Show öffnen, sichern, mit Präsentationen sichern, fehlende Dateien suchen (Mac: `ShowFileIO`) |
+| `src/montro/Testing/ShowFileTest.cs` | `--showtest`: Show-Dateien ohne Oberfläche prüfen, auch eine Show im Mac-Stil |
+| `src/montro/Core/AppState.Editing.cs` | „In PowerPoint bearbeiten“ und Dateiwächter (Mac: `FileSync` ohne Verbund) |
+| `src/montro/Views/LayoutBuilderWindow.cs` | Baukasten der Referent*innenansicht (Mac: `LayoutBuilderView`) |
+| `src/montro/Views/ColorMenu.cs` | Farbauswahl-Menü mit den movidal-Farben |
+| `src/montro/Display/LiveThumbnail.cs` | Live-Bild der Show als DWM-Miniatur in einem Element (Mac: `LiveCapture`) |
+| `src/montro/Testing/ThumbnailTest.cs` | `--miniaturtest`: Miniatur in einem „layered“ Fenster prüfen |
+| `src/montro/Views/Converters.cs` | Bindungshilfen (Sichtbarkeit, Bilder ohne Dateisperre) |
 | `src/montro/Core/PresentationMeta.cs` | Ergebnis des Parsers: Folien mit Ausblendung, Notizen, Klicks, Videos (wie `SlideMeta` am Mac) |
 | `src/montro/Pptx/PptxParser.cs` | PPTX-Parser, portiert aus `PPTXParser.swift`: liest das ZIP direkt, ohne PowerPoint |
 | `src/montro/Pptx/MediaDuration.cs` | Videolänge aus dem MP4/MOV-Kopf (`moov/mvhd`), ohne Fremdbibliothek |
@@ -38,7 +62,8 @@ Der Vertrag dafür steht in [KOMPATIBILITAET.md](KOMPATIBILITAET.md).
 ## Oberfläche: wie am Mac (verbindlich)
 
 Die Oberfläche sieht **so gleich wie möglich aus wie montro für Mac**. Vorlage ist der
-SwiftUI-Code im Repo `Sassisasah/montro` (`Sources/montro/Views/MainView.swift`,
+SwiftUI-Code im Repo `Sassisasah/montro`, aktueller Stand (0.36, 21.10.2026) auf dem Branch
+`feature/bearbeiten-abgleich`, nicht `main` (`Sources/montro/Views/MainView.swift`,
 `PlaylistView.swift`, `SlideNavigatorView.swift`, `InspectorView.swift`,
 `TimerControlView.swift`, `MessageControlView.swift`, `PresenterView.swift`,
 `LayoutBuilderView.swift`, `Components.swift`, `Core/Theme.swift`) und der aktuelle Stand der
@@ -115,6 +140,22 @@ Fremdbibliothek. Zählweise absichtlich wie am Mac:
 
 ## Entscheidungen & Stolpersteine
 
+- **Referent*innenansicht auf eigenem Bildschirm:** randloses Fenster in voller Größe, aber
+  „layered“ (`AllowsTransparency`) wie die Abdeckungen. Ein normales randloses Vollbildfenster
+  ginge auf den Verbatims (USB-C, AMD Vega 8) in den Vollbild-Direktmodus und zeigte Schwarz oder
+  Störungen. Kein Fokus, keine Mausklicks, damit Clicker-Tasten bei montro bleiben. Nicht live
+  zeigt es Schwarz (am Mac liegt dort das Schwarzbild darüber). Gezeichnet wird auf einer
+  Fläche von 1080 Einheiten Höhe; die Breite folgt dem Seitenverhältnis, so gelten die
+  Mac-Schriftgrößen unverändert. Die vielen Änderungsmeldungen pro Takt (Timer, Uhr, Blinken)
+  werden zu einem Neuzeichnen zusammengefasst.
+- **Live-Bild:** DWM-Miniatur des Show-Fensters (`DwmRegisterThumbnail`, `Display/LiveThumbnail.cs`),
+  wie die Taskleisten-Vorschau: volle Bildrate, ohne Rechenlast, funktioniert auch im Popup-Modus
+  und im „layered“ Ausgabefenster. Bildschirmfotos (GDI) schafften nur ~2 Bilder/s bei 30–60 ms
+  je Aufnahme („Daumenkino“) und brauchten `CAPTUREBLT`, sonst war die Show schwarz. Die
+  Miniatur liegt über dem WPF-Inhalt ihres Fensters, daher ist das LIVE-Abzeichen der Karte
+  „Live-Folie“ neben die Überschrift gewandert; sie wird auf ScrollViewer und Fenster
+  zugeschnitten. Bei Schwarz, Start und Übergang keine Miniatur, dann das Vorschaubild.
+
 - **Kein `HttpListener`** für die Remote-API (später), weil er für `http://+:8765/` eine
   URL-Reservierung mit Adminrechten braucht. Geplant ist ein eigener kleiner HTTP-Server auf
   `TcpListener`, wie am Mac auf `NWListener`. Das bedeutet keine Fremdbibliothek und volle
@@ -145,6 +186,44 @@ Fremdbibliothek. Zählweise absichtlich wie am Mac:
   PowerPoint allein** (F5). Bildschirmfotos (DWM) zeigten trotzdem die Folie. Mit 1 Pixel
   weniger Höhe kam das Bild an (Test „C/D“ am 20.10.2026). Die fehlende Zeile unten ist schwarz.
   Für das spätere Publikumsfenster (Meilenstein 4) gilt dasselbe.
+- **Vorschaubilder für die Playlist:** `ExportFileThumbnailsAsync` öffnet eine eigene
+  schreibgeschützte Kopie (oder benutzt die schon offene, ohne sie zu schließen), exportiert nach
+  `%TEMP%` und verschiebt dann nach `%LOCALAPPDATA%\montro\thumbs\<ID>`. Laufende Shows bleiben
+  unberührt. Verwaiste Vorschau-Ordner löscht montro beim Start.
+- **Oberfläche testen ohne Maus:** WPF stellt alle Knöpfe und Listen über UI Automation bereit.
+  Damit lässt sich das Hauptfenster aus einem Skript bedienen (Eintrag wählen, „Ausgewählte live
+  schalten“, „Weiter“, Statuszeile lesen), so geprüft am 21.10.2026.
+- **Schwarzbild liegt immer unter oder über der Show:** Auf dem Publikumsbildschirm bleibt das
+  Schwarzbild (layered, volle Bildschirmhöhe) dauerhaft liegen. Ist Schwarz gefragt (nichts live,
+  Blackscreen, Ende auf Schwarz), holt montro es nach oben, sonst liegt es unter dem
+  PowerPoint-Fenster. So scheint beim Umschalten und in der untersten Pixelzeile (Show 1 Pixel
+  niedriger) nie Desktop oder Taskleiste durch. Während eines Übergangs wird nur dessen Abdeckung
+  nach oben geholt, nicht das Schwarzbild – sonst lag es über der neuen Show und das Aufblenden
+  fehlte.
+- **Taskleiste auf dem Publikumsbildschirm:** Wegen der 1 Pixel niedrigeren Fenster gilt der
+  Bildschirm für Windows nicht als „Vollbild“, die Taskleiste (`Shell_SecondaryTrayWnd`) kam
+  immer wieder über Show und Schwarzbild. 1 Pixel *größer* (TEST E) brachte das Verbatim-Problem
+  zurück. Lösung wie am Mac (Dock/Menüleiste ausblenden): montro versteckt das Taskleistenfenster
+  dieses Bildschirms, solange er Ausgabe ist, und zeigt es beim Umstellen, Beenden und nach einem
+  Absturz beim nächsten Start wieder. Keine Windows-Einstellung wird geändert.
+- **Eigene Vollbildfenster auf Bildschirmen mit anderer Skalierung:** WPF vergrößert ein Fenster
+  beim Wechsel auf einen Monitor mit 150 % selbst (WM_DPICHANGED). Schwarzbild- und
+  Übergangsfenster fangen die Meldung ab und werden nur in physischen Pixeln per `SetWindowPos`
+  platziert, ebenfalls 1 Pixel niedriger als der Bildschirm.
+- **„Änderungen speichern?“ nach dem Show-Ende:** Die Show-Einstellungen (Show-Typ,
+  Referentenansicht aus …) markieren die Präsentation als geändert. Endete die Show, schloss
+  PowerPoint die fensterlose Präsentation und fragte nach dem Speichern – der Dialog blockierte
+  danach jeden Befehl. montro setzt deshalb `Presentation.Saved = true` nach den Einstellungen und
+  vor jedem Beenden/Schließen.
+- **Offener PowerPoint-Dialog:** Antwortet PowerPoint nicht (Zeitlimit), sucht montro sichtbare
+  Dialoge von `POWERPNT.EXE` (`#32770`, `NUIDialog`), nennt deren Text in der Statuszeile und holt
+  sie auf den Hauptbildschirm (Mac 0.34).
+- **Tastaturfokus nach dem Start:** `SlideShowSettings.Run()` aktiviert das Show-Fenster; Tasten und
+  Clicker gingen dann direkt an PowerPoint, an der Ende-Sperre vorbei bis „Ende der
+  Bildschirmpräsentation“. Mit externem Publikumsbildschirm holt montro den Fokus danach zurück.
+- **Log der Nutzerin lesen:** Die Claude-App ist ein MSIX-Paket, ihre Prozesse sehen `%LOCALAPPDATA%`
+  umgeleitet (`…\Packages\Claude_…\LocalCache\Local`). Die echte Datei lässt sich über einen per WMI
+  (`Win32_Process.Create`) gestarteten Prozess nach `%TEMP%` kopieren.
 - **Präsentation verschwindet mit dem Show-Ende:** Eine mit `WithWindow:false` geöffnete
   Präsentation schließt PowerPoint selbst, sobald ihre Show beendet wird. Danach liefert jeder
   Zugriff „Object does not exist“ (0x80048010). montro prüft vor Show-Start und Export, ob die
@@ -158,8 +237,10 @@ Fremdbibliothek. Zählweise absichtlich wie am Mac:
 1. PowerPoint-COM-Kern mit Testfenster ✓ (21.10.2026)
 2. *(in 1 enthalten)* Gerüst, Doku, Build über GitHub Actions ✓
 3. PPTX-Parser portieren (Notizen, Klick-Animationen, Videos, ausgeblendete Folien) ✓ (21.10.2026)
-4. Playlist, Inspector, Ausgaben (Schwarzfenster, Popup-Modus), Ende-Sperre ← **als Nächstes**
-5. Remote-API 1:1, Test mit dem Companion-Modul
-6. Referent*innenansicht mit Builder und Presets, Timer, Regie-Nachricht
-7. Übergänge, Verbund (DNS-SD und Sync), gemischter Test mit dem Mac
+4. Playlist, Inspector, Ausgaben (Schwarzfenster, Popup-Modus), Ende-Sperre, dazu (vorgezogen aus 6
+   und 7) Referent*innenansicht mit Baukasten und Presets, Timer, Regie-Nachricht, Übergänge,
+   Video-Karte, „In PowerPoint bearbeiten“, Show-Dateien ✓ (22.10.2026, Branch `meilenstein-4`)
+5. Remote-API 1:1, Test mit dem Companion-Modul ← **in Arbeit** (Branch `meilenstein-5`)
+6. *(in 4 enthalten)*
+7. Verbund (DNS-SD und Sync, „Aktualisieren“), gemischter Test mit dem Mac
 8. Installer mit Firewall-Regel, Info-Fenster, Version aus CHANGELOG

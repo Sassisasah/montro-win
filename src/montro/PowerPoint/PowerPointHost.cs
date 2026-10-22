@@ -40,6 +40,9 @@ public sealed class PowerPointHost
     private string? presPath;
     private bool presWithWindow;
     private IntPtr onTopHwnd;   // platziertes Show-Fenster, das über der Taskleiste bleiben soll
+
+    /// <summary>Fenster der laufenden Show (für das Live-Bild per DWM-Miniatur), Zero = keins.</summary>
+    public volatile IntPtr ShowHwnd;
     // ------------------------------
 
     private CancellationTokenSource? pollCts;
@@ -185,6 +188,9 @@ public sealed class PowerPointHost
             TrySet("PowerPoint-Referentenansicht aus", () => { if ((int)ss.ShowPresenterView != MsoFalse) ss.ShowPresenterView = MsoFalse; });
             TrySet("Alle Folien", () => { if ((int)ss.RangeType != PpShowAll) ss.RangeType = PpShowAll; });
             TrySet("Mit Animationen", () => { if ((int)ss.ShowWithAnimation != MsoTrue) ss.ShowWithAnimation = MsoTrue; });
+            // Die Einstellungen machen die Präsentation „geändert“. Endet die Show, schließt PowerPoint
+            // die fensterlose Präsentation selbst – und fragte dann „Änderungen speichern?“ (21.10.2026).
+            MarkSaved();
 
             if (o.PreselectMonitorInRegistry && o.Target != null)
                 RegistryMonitor.Set(o.Target.DeviceName);
@@ -206,19 +212,27 @@ public sealed class PowerPointHost
     /// Show-Fenster exakt auf die Bounds des Monitors legen: erst über das Objektmodell (Punkt),
     /// dann Ist-Lage in physischen Pixeln prüfen und bis zu 4× per SetWindowPos korrigieren.
     /// </summary>
-    public Task<PlacementResult> PlaceAsync(MonitorInfo m) => sta.Run(() =>
+    public Task<PlacementResult> PlaceAsync(MonitorInfo m)
     {
-        dynamic? w = FindShowWindow();
-        if (w == null) throw new PowerPointException("Keine Bildschirmpräsentation aktiv.");
-        IntPtr hwnd = ShowWindowHandle(w);
-        if (hwnd == IntPtr.Zero) DebugLog.Write("Lage: Fenster der Bildschirmpräsentation nicht gefunden – nur Lage in Punkt möglich");
         // 1 Pixel niedriger als der Bildschirm: Ein Fenster, das den Monitor exakt füllt, gibt
         // Windows im Vollbild-Direktmodus aus (Independent Flip). Auf dem Test-PC (AMD Vega 8,
         // Verbatim MT15 per USB-C) kam dann auf den externen Monitoren nur Schwarz oder ein
         // kaputtes Hintergrundbild an – auch mit PowerPoint allein. Die fehlende Zeile unten
         // ist schwarz und fällt nicht auf.
         var b = m.Bounds;
-        var target = new PixelRect(b.X, b.Y, b.Width, b.Height - 1);
+        return PlaceAsync(new PixelRect(b.X, b.Y, b.Width, b.Height - 1), topmostWanted: true);
+    }
+
+    /// <summary>
+    /// Show-Fenster auf ein beliebiges Rechteck legen (physische Pixel). Ohne <paramref name="topmostWanted"/>
+    /// bleibt es ein normales Fenster (Popup-Modus neben montro).
+    /// </summary>
+    public Task<PlacementResult> PlaceAsync(PixelRect target, bool topmostWanted) => sta.Run(() =>
+    {
+        dynamic? w = FindShowWindow();
+        if (w == null) throw new PowerPointException("Keine Bildschirmpräsentation aktiv.");
+        IntPtr hwnd = ShowWindowHandle(w);
+        if (hwnd == IntPtr.Zero) DebugLog.Write("Lage: Fenster der Bildschirmpräsentation nicht gefunden – nur Lage in Punkt möglich");
         var before = Monitors.WindowRect(hwnd);
         uint sysDpi = Monitors.SystemDpi();
         double f = 72.0 / sysDpi;
@@ -249,8 +263,11 @@ public sealed class PowerPointHost
         bool ok = actual is { } fin && fin.RoughlyEquals(target, 0);
         // Über alles legen: sonst bleibt auf Nebenbildschirmen die Taskleiste über der Show sichtbar
         // (PowerPoint läuft im Hintergrund, Windows blendet die Taskleiste nur für das aktive Vollbildfenster aus)
-        bool topmost = hwnd != IntPtr.Zero && Monitors.MoveWindow(hwnd, target, topmost: true);
+        // Während eines Übergangs direkt unter montros Abdeckung einordnen, sonst blitzt die neue
+        // Folie kurz auf, bevor die Abdeckung wieder nach oben kommt („kommt, geht, kommt wieder“)
+        bool topmost = topmostWanted && hwnd != IntPtr.Zero && Monitors.MoveWindow(hwnd, target, topmost: true, insertAfter: PlaceBelow);
         onTopHwnd = topmost ? hwnd : IntPtr.Zero;
+        ShowHwnd = hwnd;
         // Die Taskleiste kommt kurz nach dem Platzieren gern noch einmal hoch – 1,5 s lang dagegenhalten
         for (int i = 0; topmost && i < 15; i++)
         {
@@ -278,6 +295,63 @@ public sealed class PowerPointHost
         v.State = black ? (int)SlideShowRunState.BlackScreen : (int)SlideShowRunState.Running;
         KeepOnTop();
     }, 5000, black ? "Schwarz an" : "Schwarz aus");
+
+    /// <summary>
+    /// Datei zum Bearbeiten in PowerPoint öffnen (mit Fenster, beschreibbar). Eine von montro
+    /// fensterlos geöffnete Kopie derselben Datei (Vorschaubilder, alte Show) wird vorher geschlossen,
+    /// sonst wäre die Bearbeitung schreibgeschützt. Ist sie schon mit Fenster offen, wird sie nur
+    /// nach vorne geholt.
+    /// </summary>
+    public Task EditAsync(string path) => sta.Run(() =>
+    {
+        dynamic a = App();
+        string full = Path.GetFullPath(path);
+        dynamic? editing = null;
+        int count = Safe(() => (int)a.Presentations.Count, 0);
+        for (int i = count; i >= 1; i--)
+        {
+            dynamic p = a.Presentations.Item(i);
+            if (!string.Equals(Safe(() => (string)p.FullName, ""), full, StringComparison.OrdinalIgnoreCase)) continue;
+            if (Safe(() => (int)p.Windows.Count, 0) > 0 && Safe(() => (int)p.ReadOnly, 0) == MsoFalse)
+            {
+                editing = p;
+                continue;
+            }
+            TrySet("Als gespeichert markieren", () => { p.Saved = MsoTrue; });
+            p.Close();
+            if (pres != null && string.Equals(Safe(() => (string)pres!.FullName, ""), "", StringComparison.Ordinal)) pres = null;   // war montros Kopie (jetzt geschlossen)
+        }
+        // Open(FileName, ReadOnly, Untitled, WithWindow)
+        editing ??= a.Presentations.Open(full, MsoFalse, MsoFalse, MsoTrue);
+        TrySet("Fenster aktivieren", () => { editing.Windows.Item(1).Activate(); });
+        DebugLog.Write($"Bearbeiten: „{Path.GetFileName(full)}“ in PowerPoint geöffnet");
+    }, 30000, "Zum Bearbeiten öffnen");
+
+    public enum VideoCommand { Play, Pause, Stop, Restart }
+
+    /// <summary>Video der aktuellen Folie (Name der Form) abspielen, anhalten oder stoppen (Mac: video.togglePause/stop).</summary>
+    public Task VideoAsync(string name, VideoCommand command) => sta.Run(() =>
+    {
+        dynamic v = View();
+        dynamic shapes = v.Slide.Shapes;
+        int n = (int)shapes.Count;
+        for (int i = 1; i <= n; i++)
+        {
+            dynamic sh = shapes.Item(i);
+            if (Safe(() => (string)sh.Name, "") != name) continue;
+            dynamic player = v.Player((int)sh.Id);
+            switch (command)
+            {
+                case VideoCommand.Play: player.Play(); break;
+                case VideoCommand.Pause: player.Pause(); break;
+                case VideoCommand.Restart: player.Stop(); player.Play(); break;
+                default: player.Stop(); break;
+            }
+            DebugLog.Write($"Video „{name}“: {command}");
+            return;
+        }
+        throw new PowerPointException($"Video „{name}“ ist auf dieser Folie nicht zu finden.");
+    }, 5000, $"Video {command}");
 
     /// <summary>Alle Shows beenden und die Präsentation schließen.</summary>
     public async Task StopAsync()
@@ -340,6 +414,78 @@ public sealed class PowerPointHost
         }
         DebugLog.Write($"PowerPoint: {count} Vorschaubilder ({width}×{height}) nach {dir}");
         return count;
+    }
+
+    /// <summary>
+    /// Vorschaubilder einer beliebigen Datei für die Playlist, ohne laufende Shows oder die
+    /// geöffnete Präsentation anzufassen: eigene schreibgeschützte Kopie öffnen, je Folie ein PNG
+    /// (1280 px) nach <c>%TEMP%</c>, schließen, dann nach <paramref name="dir"/> verschieben.
+    /// Über %TEMP%, weil PowerPoint als eigener Prozess nicht überall hinschreiben darf, wo montro es kann.
+    /// </summary>
+    public async Task<Dictionary<int, string>> ExportFileThumbnailsAsync(string path, string dir, IProgress<(int done, int total)>? progress = null)
+    {
+        string temp = Path.Combine(Path.GetTempPath(), $"montro-thumbs-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(temp);
+        object? handle = null;
+        bool close = false;
+        try
+        {
+            var (count, height) = await sta.Run(() =>
+            {
+                dynamic a = App();
+                string full = Path.GetFullPath(path);
+                dynamic? p = null;
+                // schon offen (z. B. gerade live)? Dann mitbenutzen und auf keinen Fall schließen
+                int open = Safe(() => (int)a.Presentations.Count, 0);
+                for (int i = 1; i <= open && p == null; i++)
+                {
+                    int k = i;
+                    dynamic? q = Safe<dynamic?>(() => a.Presentations.Item(k), null);
+                    if (q != null && string.Equals(Safe(() => (string)q!.FullName, ""), full, StringComparison.OrdinalIgnoreCase))
+                        p = q;
+                }
+                if (p == null)
+                {
+                    p = a.Presentations.Open(full, MsoTrue, MsoFalse, MsoFalse);
+                    close = true;
+                }
+                handle = p;
+                double sw = Safe(() => (double)p.PageSetup.SlideWidth, 960.0);
+                double sh = Safe(() => (double)p.PageSetup.SlideHeight, 540.0);
+                return ((int)p.Slides.Count, (int)Math.Round(1280 * sh / Math.Max(sw, 1)));
+            }, 60000, "Vorschau öffnen");
+
+            for (int i = 1; i <= count; i++)
+            {
+                int index = i;
+                await sta.Run(() =>
+                {
+                    dynamic p = handle!;
+                    p.Slides.Item(index).Export(Path.Combine(temp, $"slide-{index}.png"), "PNG", 1280, height);
+                }, 20000, $"Vorschau Folie {index}");
+                progress?.Report((index, count));
+            }
+
+            Directory.CreateDirectory(dir);
+            var result = new Dictionary<int, string>();
+            for (int i = 1; i <= count; i++)
+            {
+                string src = Path.Combine(temp, $"slide-{i}.png");
+                if (!File.Exists(src)) continue;
+                string dst = Path.Combine(dir, $"slide-{i}.png");
+                File.Move(src, dst, overwrite: true);
+                result[i] = dst;
+            }
+            return result;
+        }
+        finally
+        {
+            if (handle != null && close)
+            {
+                try { await sta.Run(() => { ((dynamic)handle).Close(); }, 10000, "Vorschau schließen"); } catch { }
+            }
+            try { Directory.Delete(temp, recursive: true); } catch { }
+        }
     }
 
     // MARK: - Beenden der App
@@ -443,7 +589,66 @@ public sealed class PowerPointHost
             click = Safe(() => (int)v.GetClickIndex(), 0);
             clicks = Safe(() => (int)v.GetClickCount(), 0);
         }
-        return new ShowState(true, (SlideShowRunState)st, idx, pos, click, clicks);
+        return new ShowState(true, (SlideShowRunState)st, idx, pos, click, clicks, ReadVideo(v, idx));
+    }
+
+    private int videoSlide = -1;
+    private List<(int Id, string Name, double Length)> slideVideos = new();
+    private readonly Dictionary<int, double> lastVideoPos = new();
+    private string lastVideoLog = "";
+
+    /// <summary>
+    /// Video der aktuellen Folie über <c>View.Player(ShapeId)</c>: Position, Länge, läuft es?
+    /// „Läuft“ = <c>Player.State</c> 0 (ppPlaying; 2 = gestoppt/zu Ende, am Test-PC gemessen) oder die
+    /// Position bewegt sich seit der letzten Abfrage. Die Video-Formen werden je Folie einmal gesucht.
+    /// </summary>
+    private VideoState? ReadVideo(dynamic v, int idx)
+    {
+        if (idx <= 0) return null;
+        if (idx != videoSlide)
+        {
+            videoSlide = idx;
+            lastVideoPos.Clear();
+            slideVideos = new();
+            try
+            {
+                dynamic shapes = v.Slide.Shapes;
+                int n = (int)shapes.Count;
+                for (int i = 1; i <= n; i++)
+                {
+                    dynamic sh = shapes.Item(i);
+                    // msoMedia = 16, ppMediaTypeMovie = 3
+                    if (Safe(() => (int)sh.Type, 0) != 16 || Safe(() => (int)sh.MediaType, 0) != 3) continue;
+                    double len = Safe(() => Convert.ToDouble((object)sh.MediaFormat.Length), 0.0) / 1000;
+                    slideVideos.Add(((int)sh.Id, Safe(() => (string)sh.Name, "Video"), len));
+                }
+            }
+            catch (Exception e)
+            {
+                DebugLog.Write($"Video: Formen auf Folie {idx} nicht lesbar – {StaWorker.Describe(e)}");
+            }
+        }
+        VideoState? best = null;
+        foreach (var (id, name, length) in slideVideos)
+        {
+            double p = Safe(() => Convert.ToDouble((object)v.Player(id).CurrentPosition), -1.0);
+            if (p < 0) continue;
+            p /= 1000;
+            int state = Safe(() => Convert.ToInt32((object)v.Player(id).State), -1);
+            bool moving = (state == 0 && p > 0) || (lastVideoPos.TryGetValue(id, out var last) && Math.Abs(p - last) > 0.01);
+            lastVideoPos[id] = p;
+            string log = $"{name}: State {state}, {(moving ? "läuft" : "steht")}";
+            if (log != lastVideoLog)
+            {
+                lastVideoLog = log;
+                DebugLog.Write($"Video {log}, {p:0.0}/{length:0.0} s");
+            }
+            // ein laufendes Video hat Vorrang, sonst eines, das schon begonnen hat
+            if (p <= 0 && !moving) continue;
+            var vs = new VideoState(name, p, length, moving);
+            if (best == null || (moving && !best.Playing)) best = vs;
+        }
+        return best;
     }
 
     private dynamic? FindShowWindow()
@@ -487,9 +692,15 @@ public sealed class PowerPointHost
     /// Folienwechsel oder Fokuswechsel), solange PowerPoint nicht das aktive Fenster ist.
     /// Deshalb nach jedem Befehl und regelmäßig erneut nach oben holen.
     /// </summary>
+    /// <summary>Während eines Übergangs liegt montros Abdeckung über der Show – dann nicht nach oben holen.</summary>
+    public volatile bool KeepOnTopPaused;
+
+    /// <summary>Fenster, unter das die Show beim Platzieren eingeordnet wird (Übergangsabdeckung), sonst Zero.</summary>
+    public IntPtr PlaceBelow;
+
     private void KeepOnTop()
     {
-        if (onTopHwnd == IntPtr.Zero) return;
+        if (onTopHwnd == IntPtr.Zero || KeepOnTopPaused) return;
         if (!Monitors.BringToTop(onTopHwnd)) onTopHwnd = IntPtr.Zero;   // Fenster ist weg
     }
 
@@ -503,6 +714,7 @@ public sealed class PowerPointHost
     private int ExitAllShowsInternal()
     {
         onTopHwnd = IntPtr.Zero;
+        ShowHwnd = IntPtr.Zero;
         if (app == null) return 0;
         dynamic a = app;
         int n = Safe(() => (int)a.SlideShowWindows.Count, 0);
@@ -511,7 +723,9 @@ public sealed class PowerPointHost
         {
             try
             {
-                a.SlideShowWindows.Item(i).View.Exit();
+                dynamic sw = a.SlideShowWindows.Item(i);
+                TrySet("Als gespeichert markieren", () => { sw.Presentation.Saved = MsoTrue; });
+                sw.View.Exit();
                 closed++;
             }
             catch (Exception e)
@@ -552,10 +766,19 @@ public sealed class PowerPointHost
         ownsPres = true;
     }
 
+    /// <summary>Präsentation als „gespeichert“ markieren, damit PowerPoint nie nach dem Speichern fragt.</summary>
+    private void MarkSaved()
+    {
+        if (pres == null) return;
+        dynamic p = pres;
+        TrySet("Als gespeichert markieren", () => { p.Saved = MsoTrue; });
+    }
+
     private void CloseInternal()
     {
         if (pres != null && ownsPres && PresentationAlive())
         {
+            MarkSaved();
             try
             {
                 // per Automation schließt PowerPoint ohne „Speichern?“-Frage

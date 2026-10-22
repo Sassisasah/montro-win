@@ -1,22 +1,585 @@
 <Window x:Class="Montro.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:v="clr-namespace:Montro.Views"
         Title="montro"
-        Width="760" Height="460" MinWidth="560" MinHeight="380"
+        Width="1280" Height="820" MinWidth="900" MinHeight="560"
         WindowStartupLocation="CenterScreen"
+        AllowDrop="True"
         Style="{StaticResource Brand.Window}">
-    <Grid Margin="40">
-        <StackPanel VerticalAlignment="Center">
-            <TextBlock Text="montro" FontSize="48" FontWeight="Light" />
-            <TextBlock Text="für Windows · funktioniert mit Microsoft PowerPoint"
-                       Foreground="{StaticResource Brand.SecondaryText}" FontSize="15" Margin="0,0,0,28" />
-            <TextBlock TextWrapping="Wrap" Margin="0,0,0,24" Foreground="{StaticResource Brand.SecondaryText}"
-                       Text="Meilenstein 1: PowerPoint-Kern. Playlist, Inspector, Referent*innenansicht, Fernsteuerung (Companion) und Verbund mit dem Mac folgen." />
-            <WrapPanel>
-                <Button Content="PowerPoint testen …" Style="{StaticResource Brand.AccentButton}" Click="OnTestPowerPoint" />
-                <Button Content="Log-Ordner öffnen" Click="OnOpenLog" />
-            </WrapPanel>
-            <TextBlock x:Name="VersionLine" Margin="0,28,0,0" Foreground="{StaticResource Brand.SecondaryText}" FontSize="11" />
-        </StackPanel>
+    <Window.Resources>
+        <v:BoolToVisibility x:Key="Vis" />
+        <v:NullToVisibility x:Key="NullVis" />
+        <v:PathToImage x:Key="Img" />
+        <v:BoolToBrush x:Key="BoolBrush" />
+    </Window.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- Werkzeugleiste (Mac: TransportToolbar) -->
+        <Border Grid.Row="0" Background="{StaticResource Brand.Panel}" BorderBrush="{StaticResource Brand.Line}" BorderThickness="0,0,0,1">
+            <DockPanel>
+            <!-- Show-Dateien (Mac: Menü „Ablage“) -->
+            <Button DockPanel.Dock="Left" Style="{StaticResource Brand.Borderless}" Margin="8,3" Padding="6,2" Click="OnShowMenu"
+                    ToolTip="Show öffnen und sichern (Strg+O, Strg+S)">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Style="{StaticResource Brand.Icon}" Text="&#xE8B7;" Margin="0,0,6,0" />
+                    <TextBlock x:Name="ShowCaption" Text="Show" VerticalAlignment="Center" />
+                    <TextBlock Style="{StaticResource Brand.Icon}" Text="&#xE70D;" FontSize="8" Margin="6,0,0,0" />
+                </StackPanel>
+            </Button>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="8,3">
+                <Button Style="{StaticResource Brand.Borderless}" ToolTip="Ausgewählte Präsentation live schalten (Strg+Enter)"
+                        IsEnabled="{Binding CanGoLive}" Click="OnGoLive">
+                    <TextBlock Style="{StaticResource Brand.Icon}" Text="&#xE768;" />
+                </Button>
+                <Button Style="{StaticResource Brand.Borderless}" ToolTip="Präsentation beenden – alle Ausgänge gehen auf Schwarz (Strg+.)"
+                        IsEnabled="{Binding CanStop}" Click="OnStop">
+                    <TextBlock Style="{StaticResource Brand.Icon}" Text="&#xE71A;" />
+                </Button>
+                <Button Style="{StaticResource Brand.Borderless}" ToolTip="Zurück" IsEnabled="{Binding CanControl}" Click="OnPrevious">
+                    <TextBlock Style="{StaticResource Brand.Icon}" Text="&#xE892;" />
+                </Button>
+                <Button Style="{StaticResource Brand.Borderless}" ToolTip="Weiter" IsEnabled="{Binding CanControl}" Click="OnNext">
+                    <TextBlock Style="{StaticResource Brand.Icon}" Text="&#xE893;" />
+                </Button>
+                <Button Style="{StaticResource Brand.Borderless}" ToolTip="Publikumsbildschirm schwarz schalten (B)"
+                        IsEnabled="{Binding IsShowRunning}" Click="OnBlackout">
+                    <TextBlock Style="{StaticResource Brand.Icon}" Text="&#xE7F4;" />
+                </Button>
+                <Button Style="{StaticResource Brand.Borderless}" ToolTip="Steuerung nach dem Präsentationsende wieder freigeben"
+                        Visibility="{Binding IsLocked, Converter={StaticResource Vis}}" Click="OnUnlock">
+                    <TextBlock Style="{StaticResource Brand.Icon}" Text="&#xE785;" Foreground="{StaticResource Brand.Warning}" />
+                </Button>
+                <Button Style="{StaticResource Brand.Borderless}" ToolTip="Einstellungen – Fernsteuerung (Strg+,)" Click="OnSettings" Margin="8,0,0,0">
+                    <TextBlock Style="{StaticResource Brand.Icon}" Text="&#xE713;" />
+                </Button>
+            </StackPanel>
+            </DockPanel>
+        </Border>
+
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" MinWidth="340" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="430" MinWidth="380" MaxWidth="560" />
+            </Grid.ColumnDefinitions>
+
+            <!-- ===== Playlist (Mac: PlaylistView) ===== -->
+            <Grid Grid.Column="0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <DockPanel Grid.Row="0" Margin="14,10">
+                    <Button DockPanel.Dock="Right" Style="{StaticResource Brand.Compact}" ToolTip="PowerPoint-Dateien hinzufügen" Click="OnAdd">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Style="{StaticResource Brand.Icon}" Text="&#xE710;" FontSize="11" Margin="0,0,6,0" />
+                            <TextBlock Text="Hinzufügen" />
+                        </StackPanel>
+                    </Button>
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <TextBlock Text="Playlist" FontSize="17" FontWeight="SemiBold" VerticalAlignment="Center" />
+                        <Border Background="{StaticResource Brand.Highlight}" CornerRadius="8" Padding="6,1" Margin="8,0,0,0" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding Items.Count}" FontSize="11" FontWeight="SemiBold" />
+                        </Border>
+                    </StackPanel>
+                </DockPanel>
+
+                <Border Grid.Row="1" BorderBrush="{StaticResource Brand.Line}" BorderThickness="0,1,0,0">
+                    <Grid>
+                        <ListBox x:Name="Playlist" Style="{StaticResource Brand.Playlist}"
+                                 ItemContainerStyle="{StaticResource Brand.PlaylistItem}"
+                                 ItemsSource="{Binding Items}" SelectedItem="{Binding Selected}"
+                                 MouseDoubleClick="OnPlaylistDoubleClick" KeyDown="OnPlaylistKey"
+                                 ContextMenuOpening="OnPlaylistMenu">
+                            <ListBox.ContextMenu>
+                                <ContextMenu />
+                            </ListBox.ContextMenu>
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="26" />
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <!-- Stift: In PowerPoint bearbeiten (Mac: pencil), nicht während einer Show -->
+                                        <Button Grid.Column="3" Style="{StaticResource Brand.Borderless}" Padding="6,2" Margin="0,0,4,0" VerticalAlignment="Center"
+                                                Click="OnEditInPowerPoint" ToolTipService.ShowOnDisabled="True"
+                                                IsEnabled="{Binding DataContext.CanEdit, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                ToolTip="{Binding DataContext.EditHint, RelativeSource={RelativeSource AncestorType=Window}}">
+                                            <TextBlock Style="{StaticResource Brand.Icon}" Text="&#xE70F;" FontSize="13" />
+                                        </Button>
+                                        <TextBlock Text="{Binding Number}" Foreground="{StaticResource Brand.SecondaryText}"
+                                                   HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,10,0" />
+                                        <Border Grid.Column="1" Width="80" Height="45" Background="Black" CornerRadius="4" ClipToBounds="True"
+                                                BorderThickness="2" BorderBrush="{Binding IsLive, Converter={StaticResource BoolBrush}, ConverterParameter=Brand.Live}">
+                                            <Grid>
+                                                <TextBlock Style="{StaticResource Brand.Icon}" Text="&#xE8A9;" Foreground="{StaticResource Brand.SecondaryText}"
+                                                           HorizontalAlignment="Center" />
+                                                <Image Source="{Binding FirstThumbnail, Converter={StaticResource Img}, ConverterParameter=240}" Stretch="Uniform" />
+                                            </Grid>
+                                        </Border>
+                                        <StackPanel Grid.Column="2" Margin="10,0" VerticalAlignment="Center">
+                                            <TextBlock Text="{Binding Title}" FontWeight="Medium" TextTrimming="CharacterEllipsis" />
+                                            <TextBlock Text="{Binding Subtitle}" Style="{StaticResource Brand.Caption}" TextTrimming="CharacterEllipsis" Margin="0,2,0,0" />
+                                        </StackPanel>
+                                        <Grid Grid.Column="4" VerticalAlignment="Center" Margin="0,0,4,0">
+                                            <!-- LIVE / Vorbereitung / Bereit / Fehler -->
+                                            <Border Background="{StaticResource Brand.Live}" CornerRadius="9" Padding="7,2"
+                                                    Visibility="{Binding IsLive, Converter={StaticResource Vis}}">
+                                                <TextBlock Text="LIVE" FontSize="11" FontWeight="Black" Foreground="White" />
+                                            </Border>
+                                            <StackPanel Visibility="{Binding IsLive, Converter={StaticResource Vis}, ConverterParameter=not}">
+                                                <TextBlock Style="{StaticResource Brand.Icon}" Text="&#xE930;" Foreground="{StaticResource Brand.Ok}" FontSize="15"
+                                                           ToolTip="Bereit" Visibility="{Binding IsReady, Converter={StaticResource Vis}}" />
+                                                <TextBlock Style="{StaticResource Brand.Icon}" Text="&#xE7BA;" Foreground="{StaticResource Brand.Warning}" FontSize="15"
+                                                           ToolTip="{Binding StateText}" Visibility="{Binding IsFailed, Converter={StaticResource Vis}}" />
+                                                <TextBlock Text="{Binding StateText}" Style="{StaticResource Brand.Caption}"
+                                                           Visibility="{Binding IsBusy, Converter={StaticResource Vis}}" />
+                                            </StackPanel>
+                                        </Grid>
+                                    </Grid>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+
+                        <!-- leere Playlist (Mac: EmptyPlaylist) -->
+                        <StackPanel x:Name="EmptyHint" VerticalAlignment="Center" HorizontalAlignment="Center" Visibility="Collapsed">
+                            <Image x:Name="EmptyIcon" Width="96" Height="96" Margin="0,0,0,14" />
+                            <TextBlock Text="PowerPoint-Dateien hierher ziehen" FontSize="17" HorizontalAlignment="Center" />
+                            <TextBlock Text=".pptx · .pptm · .ppsx · .ppsm – beliebig viele" Foreground="{StaticResource Brand.SecondaryText}"
+                                       HorizontalAlignment="Center" Margin="0,6,0,14" />
+                            <Button Content="Dateien auswählen …" HorizontalAlignment="Center" Style="{StaticResource Brand.Compact}" Click="OnAdd" />
+                        </StackPanel>
+
+                        <Border x:Name="DropFrame" BorderBrush="{StaticResource Brand.Accent}" BorderThickness="3" CornerRadius="12"
+                                Margin="6" Visibility="Collapsed" IsHitTestVisible="False" />
+                    </Grid>
+                </Border>
+
+                <!-- Folienübersicht (Mac: SlideNavigatorView) -->
+                <Border Grid.Row="2" BorderBrush="{StaticResource Brand.Line}" BorderThickness="0,1,0,0" Padding="0,8"
+                        Visibility="{Binding NavigatorItem, Converter={StaticResource NullVis}}">
+                    <StackPanel>
+                        <DockPanel Margin="12,0,12,6">
+                            <Button DockPanel.Dock="Right" Style="{StaticResource Brand.Borderless}" Padding="6,2" ToolTip="Gehe zu Folie … (Strg+G)"
+                                    IsEnabled="{Binding CanControl}" Click="OnGoto">
+                                <TextBlock Text="#" FontWeight="SemiBold" />
+                            </Button>
+                            <TextBlock x:Name="NavigatorHint" DockPanel.Dock="Right" Style="{StaticResource Brand.Caption}" VerticalAlignment="Center" Margin="8,0" />
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Style="{StaticResource Brand.Icon}" Text="&#xF0E2;" Margin="0,0,6,0" />
+                                <TextBlock Text="Folien" FontWeight="SemiBold" VerticalAlignment="Center" />
+                                <TextBlock Text="{Binding NavigatorItem.Title}" Style="{StaticResource Brand.Caption}" Margin="8,0,0,0"
+                                           VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                            </StackPanel>
+                        </DockPanel>
+                        <ListBox x:Name="Navigator" Height="118" Background="Transparent" BorderThickness="0" Padding="12,0"
+                                 ItemContainerStyle="{StaticResource Brand.TileItem}"
+                                 ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollBarVisibility="Disabled"
+                                 ItemsSource="{Binding NavigatorItem.Slides}"
+                                 PreviewMouseLeftButtonUp="OnTileClick" MouseDoubleClick="OnTileDoubleClick">
+                            <ListBox.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <VirtualizingStackPanel Orientation="Horizontal" />
+                                </ItemsPanelTemplate>
+                            </ListBox.ItemsPanel>
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <v:SlideTile />
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </StackPanel>
+                </Border>
+
+                <!-- Live schalten / Stopp -->
+                <Border Grid.Row="3" BorderBrush="{StaticResource Brand.Line}" BorderThickness="0,1,0,0" Padding="12">
+                    <DockPanel>
+                        <Button DockPanel.Dock="Right" Style="{StaticResource Brand.Compact}" Padding="14,8" Margin="10,0,0,0"
+                                IsEnabled="{Binding CanStop}" Click="OnStop">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Style="{StaticResource Brand.Icon}" Text="&#xE71A;" FontSize="11" Margin="0,0,6,0" />
+                                <TextBlock Text="Stopp" />
+                            </StackPanel>
+                        </Button>
+                        <Button Style="{StaticResource Brand.Prominent}" IsEnabled="{Binding CanGoLive}" Click="OnGoLive">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Style="{StaticResource Brand.Icon}" Text="&#xE768;" Foreground="White" FontSize="11" Margin="0,0,8,0" />
+                                <TextBlock Text="Ausgewählte live schalten" Foreground="White" />
+                            </StackPanel>
+                        </Button>
+                    </DockPanel>
+                </Border>
+            </Grid>
+
+            <GridSplitter Grid.Column="1" Width="1" Background="{StaticResource Brand.Line}" HorizontalAlignment="Stretch" ResizeBehavior="PreviousAndNext" />
+
+            <!-- ===== Inspector (Mac: InspectorView) ===== -->
+            <ScrollViewer Grid.Column="2" VerticalScrollBarVisibility="Auto" Background="{StaticResource Brand.Background}">
+                <StackPanel Margin="14">
+
+                    <!-- Live-Folie -->
+                    <Border Style="{StaticResource Brand.Card}">
+                        <StackPanel>
+                            <DockPanel Margin="0,0,0,10">
+                                <Button DockPanel.Dock="Right" Style="{StaticResource Brand.Borderless}" Padding="6,2"
+                                        ToolTip="Ausgabe für Live-Folie (Publikum)" Click="OnAudiencePicker">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Style="{StaticResource Brand.Icon}" Text="&#xE7F4;" Foreground="{StaticResource Brand.Accent}" />
+                                        <TextBlock Style="{StaticResource Brand.Icon}" Text="&#xE70D;" FontSize="8" Margin="4,0,0,0" Foreground="{StaticResource Brand.Accent}" />
+                                    </StackPanel>
+                                </Button>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Style="{StaticResource Brand.Icon}" Text="&#xE714;" Foreground="{StaticResource Brand.Accent}" Margin="0,0,6,0" />
+                                    <TextBlock Text="Live-Folie" FontWeight="SemiBold" FontSize="14" />
+                                    <!-- am Mac auf dem Bild; hier daneben, weil das Live-Bild darüber liegt -->
+                                    <Border Background="{StaticResource Brand.Live}" CornerRadius="8" Padding="7,1" Margin="8,0,0,0" VerticalAlignment="Center"
+                                            Visibility="{Binding IsShowRunning, Converter={StaticResource Vis}}">
+                                        <TextBlock Text="LIVE" FontSize="11" FontWeight="Black" Foreground="White" />
+                                    </Border>
+                                </StackPanel>
+                            </DockPanel>
+                            <Border Background="Black" CornerRadius="6" ClipToBounds="True">
+                                <Viewbox Stretch="Uniform">
+                                    <!-- Live-Bild der Show liegt als DWM-Miniatur darüber (verdeckt WPF-Inhalt) -->
+                                    <Grid x:Name="LivePreview" Width="1280" Height="720">
+                                        <Image Source="{Binding CurrentSlideSource}" Stretch="Uniform" RenderOptions.BitmapScalingMode="HighQuality" />
+                                        <Rectangle Fill="#BF000000" Visibility="{Binding LiveOverlayText, Converter={StaticResource NullVis}}" />
+                                        <TextBlock Text="{Binding LiveOverlayText}" Foreground="#80FFFFFF" FontSize="40"
+                                                   HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                    </Grid>
+                                </Viewbox>
+                            </Border>
+                            <TextBlock Text="{Binding LiveStatusLine}" Style="{StaticResource Brand.Caption}" TextWrapping="Wrap" Margin="0,8,0,4" />
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                <TextBlock Style="{StaticResource Brand.Icon}" Text="&#xE737;" FontSize="11" Foreground="{StaticResource Brand.SecondaryText}" Margin="0,0,6,0" />
+                                <TextBlock Text="{Binding AudienceCaption}" Style="{StaticResource Brand.Caption}" />
+                            </StackPanel>
+                            <UniformGrid Columns="2" Margin="0,0,0,8">
+                                <Button Style="{StaticResource Brand.Compact}" Padding="8,7" Margin="0,0,4,0" IsEnabled="{Binding CanControl}" Click="OnPrevious">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Style="{StaticResource Brand.Icon}" Text="&#xE76B;" FontSize="10" Margin="0,0,6,0" />
+                                        <TextBlock Text="Zurück" />
+                                    </StackPanel>
+                                </Button>
+                                <Button Style="{StaticResource Brand.Compact}" Padding="8,7" Margin="4,0,0,0" IsEnabled="{Binding CanControl}" Click="OnNext">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Style="{StaticResource Brand.Icon}" Text="&#xE76C;" FontSize="10" Margin="0,0,6,0" />
+                                        <TextBlock Text="Weiter" />
+                                    </StackPanel>
+                                </Button>
+                            </UniformGrid>
+                            <Button x:Name="BlackoutButton" Style="{StaticResource Brand.Compact}" Padding="8,9"
+                                    Background="{StaticResource Brand.Line}" IsEnabled="{Binding IsShowRunning}" Click="OnBlackout">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Style="{StaticResource Brand.Icon}" Text="&#xE739;" FontSize="11" Margin="0,0,8,0" />
+                                    <TextBlock Text="{Binding BlackoutButtonText}" />
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Referent*innenansicht -->
+                    <Border Style="{StaticResource Brand.Card}">
+                        <StackPanel>
+                            <DockPanel Margin="0,0,0,10">
+                                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                                    <Button Style="{StaticResource Brand.Borderless}" Padding="6,2" Margin="0,0,4,0"
+                                            ToolTip="Ausgabe für die Referent*innenansicht" Click="OnPresenterPicker">
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Style="{StaticResource Brand.Icon}" Text="&#xE7F4;" Foreground="{StaticResource Brand.Accent}" />
+                                            <TextBlock Style="{StaticResource Brand.Icon}" Text="&#xE70D;" FontSize="8" Margin="4,0,0,0" Foreground="{StaticResource Brand.Accent}" />
+                                        </StackPanel>
+                                    </Button>
+                                    <Button Style="{StaticResource Brand.Borderless}" Padding="6,2" ToolTip="Referent*innenansicht konfigurieren" Click="OnBuilder">
+                                        <TextBlock Style="{StaticResource Brand.Icon}" Text="&#xE713;" Foreground="{StaticResource Brand.Accent}" />
+                                    </Button>
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Style="{StaticResource Brand.Icon}" Text="&#xE77B;" Foreground="{StaticResource Brand.Accent}" Margin="0,0,6,0" />
+                                    <TextBlock Text="Referent*innenansicht" FontWeight="SemiBold" FontSize="14" />
+                                </StackPanel>
+                            </DockPanel>
+                            <!-- Vorschau = derselbe Inhalt wie im Ausgabefenster (Mac: PresenterView) -->
+                            <Border CornerRadius="6" ClipToBounds="True" Background="Black">
+                                <Viewbox Stretch="Uniform">
+                                    <Border x:Name="PresenterPreviewHost" Width="1280" Height="720" />
+                                </Viewbox>
+                            </Border>
+                            <DockPanel Margin="0,10,0,0">
+                                <TextBlock DockPanel.Dock="Left" Style="{StaticResource Brand.Icon}" Text="&#xE8E4;" Margin="0,0,6,0" />
+                                <TextBlock DockPanel.Dock="Left" Text="Notizen" VerticalAlignment="Center" />
+                                <Button DockPanel.Dock="Right" Style="{StaticResource Brand.Small}" Margin="6,0,0,0" ToolTip="Notizen größer (Strg+Plus)" Click="OnNotesBigger">
+                                    <TextBlock Text="A" FontSize="13" FontWeight="SemiBold" />
+                                </Button>
+                                <TextBlock DockPanel.Dock="Right" Text="{Binding NotesFontPercent}" Style="{StaticResource Brand.Caption}" Width="44"
+                                           TextAlignment="Right" VerticalAlignment="Center" />
+                                <Slider DockPanel.Dock="Right" Width="110" Minimum="0.4" Maximum="4" Value="{Binding NotesFontScale}" VerticalAlignment="Center" Margin="6,0" />
+                                <Button DockPanel.Dock="Right" Style="{StaticResource Brand.Small}" ToolTip="Notizen kleiner (Strg+Minus)" Click="OnNotesSmaller">
+                                    <TextBlock Text="A" FontSize="9" FontWeight="SemiBold" />
+                                </Button>
+                                <Border />
+                            </DockPanel>
+                            <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                                <TextBlock Style="{StaticResource Brand.Icon}" Text="&#xE737;" FontSize="11" Foreground="{StaticResource Brand.SecondaryText}" Margin="0,0,6,0" />
+                                <TextBlock Text="{Binding PresenterCaption}" Style="{StaticResource Brand.Caption}" />
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Timer (Mac: TimerControlView) -->
+                    <Border Style="{StaticResource Brand.Card}" DataContext="{Binding Timer}">
+                        <StackPanel>
+                            <DockPanel Margin="0,0,0,10">
+                                <TextBlock DockPanel.Dock="Right" Text="{Binding StateLabel}" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource Brand.SecondaryText}" />
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Style="{StaticResource Brand.Icon}" Text="&#xE916;" Foreground="{StaticResource Brand.Accent}" Margin="0,0,6,0" />
+                                    <TextBlock Text="Timer" FontWeight="SemiBold" FontSize="14" />
+                                </StackPanel>
+                            </DockPanel>
+                            <DockPanel>
+                                <TextBlock DockPanel.Dock="Right" Text="{Binding TotalText}" Style="{StaticResource Brand.Caption}" VerticalAlignment="Center" />
+                                <Border Background="#D9000000" CornerRadius="6" Padding="10,0" HorizontalAlignment="Left">
+                                    <TextBlock x:Name="TimerText" Text="{Binding DisplayText}" FontSize="40" FontWeight="Bold"
+                                               Foreground="{Binding ColorBrush}" FontFamily="Segoe UI Variable Display, Segoe UI" />
+                                </Border>
+                            </DockPanel>
+                            <ProgressBar x:Name="TimerProgress" Value="{Binding Progress, Mode=OneWay}" Maximum="1" Margin="0,10,0,10" Foreground="{Binding ColorBrush}" />
+                            <DockPanel>
+                                <ToggleButton DockPanel.Dock="Right" Style="{StaticResource Brand.Toggle}" IsChecked="{Binding ManualBlink}"
+                                              ToolTip="Timer auf Kommando blinken lassen">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Style="{StaticResource Brand.Icon}" Text="&#xE945;" FontSize="11" Margin="0,0,6,0"
+                                                   Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=ToggleButton}}" />
+                                        <TextBlock Text="Blinken" Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=ToggleButton}}" />
+                                    </StackPanel>
+                                </ToggleButton>
+                                <StackPanel Orientation="Horizontal">
+                                    <Button Style="{StaticResource Brand.Compact}" Margin="0,0,6,0" ToolTip="Start / Pause (Strg+T)" Click="OnTimerToggle">
+                                        <TextBlock Text="{Binding PlayGlyph}" Width="16" TextAlignment="Center" />
+                                    </Button>
+                                    <Button Style="{StaticResource Brand.Compact}" Margin="0,0,6,0" ToolTip="Zurücksetzen" Click="OnTimerReset">
+                                        <TextBlock Style="{StaticResource Brand.Icon}" Text="&#xE777;" FontSize="12" />
+                                    </Button>
+                                    <Button Style="{StaticResource Brand.Compact}" Margin="0,0,6,0" Content="−1 min" Tag="-60" Click="OnTimerAdd" />
+                                    <Button Style="{StaticResource Brand.Compact}" Content="+1 min" Tag="60" Click="OnTimerAdd" />
+                                </StackPanel>
+                            </DockPanel>
+                            <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                                <TextBlock Text="Schnell:" Style="{StaticResource Brand.Caption}" VerticalAlignment="Center" Margin="0,0,6,0" />
+                                <Button Style="{StaticResource Brand.Small}" Content="5" Tag="5" Click="OnTimerPreset" />
+                                <Button Style="{StaticResource Brand.Small}" Content="10" Tag="10" Click="OnTimerPreset" />
+                                <Button Style="{StaticResource Brand.Small}" Content="15" Tag="15" Click="OnTimerPreset" />
+                                <Button Style="{StaticResource Brand.Small}" Content="20" Tag="20" Click="OnTimerPreset" />
+                                <Button Style="{StaticResource Brand.Small}" Content="30" Tag="30" Click="OnTimerPreset" />
+                                <Button Style="{StaticResource Brand.Small}" Content="45" Tag="45" Click="OnTimerPreset" />
+                                <Button Style="{StaticResource Brand.Small}" Content="60" Tag="60" Click="OnTimerPreset" />
+                            </StackPanel>
+                            <Expander Style="{StaticResource Brand.Disclosure}" Header="Einstellungen" Margin="0,10,0,0">
+                                <StackPanel x:Name="TimerSettingsPanel">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="100" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition /><RowDefinition /><RowDefinition /><RowDefinition />
+                                        </Grid.RowDefinitions>
+                                        <TextBlock Text="Redezeit" VerticalAlignment="Center" />
+                                        <v:DurationBox x:Name="DurTotal" Grid.Column="1" />
+                                        <Button x:Name="ColNormal" Grid.Column="2" Style="{StaticResource Brand.Small}" Width="34" Height="20" Tag="normal" Click="OnTimerColor" ToolTip="Normalfarbe" />
+                                        <TextBlock Grid.Row="1" Text="1. Warnung ab" VerticalAlignment="Center" />
+                                        <v:DurationBox x:Name="DurWarn1" Grid.Row="1" Grid.Column="1" />
+                                        <Button x:Name="ColWarn1" Grid.Row="1" Grid.Column="2" Style="{StaticResource Brand.Small}" Width="34" Height="20" Tag="w1" Click="OnTimerColor" ToolTip="Farbe in der 1. Warnzeit" />
+                                        <TextBlock Grid.Row="2" Text="2. Warnung ab" VerticalAlignment="Center" />
+                                        <v:DurationBox x:Name="DurWarn2" Grid.Row="2" Grid.Column="1" />
+                                        <Button x:Name="ColWarn2" Grid.Row="2" Grid.Column="2" Style="{StaticResource Brand.Small}" Width="34" Height="20" Tag="w2" Click="OnTimerColor" ToolTip="Farbe in der 2. Warnzeit" />
+                                        <TextBlock Grid.Row="3" Text="Überzogen" VerticalAlignment="Center" />
+                                        <TextBlock Grid.Row="3" Grid.Column="1" Text="Restzeit &lt; 0" Style="{StaticResource Brand.Caption}" VerticalAlignment="Center" Margin="0,6" />
+                                        <Button x:Name="ColOver" Grid.Row="3" Grid.Column="2" Style="{StaticResource Brand.Small}" Width="34" Height="20" Tag="over" Click="OnTimerColor" ToolTip="Farbe beim Überziehen" />
+                                    </Grid>
+                                    <TextBlock Style="{StaticResource Brand.Caption}" TextWrapping="Wrap" Margin="0,6,0,8"
+                                               Text="Warnzeiten sind Restzeiten: z. B. „5 min“ = Farbwechsel, wenn noch 5 Minuten übrig sind." />
+                                    <UniformGrid Columns="2" Margin="0,0,0,8">
+                                        <RadioButton x:Name="ModeDown" Style="{StaticResource Brand.Segment}" Content="Herunterzählen" GroupName="TimerMode" Checked="OnTimerSetting" />
+                                        <RadioButton x:Name="ModeUp" Style="{StaticResource Brand.Segment}" Content="Hochzählen" GroupName="TimerMode" Checked="OnTimerSetting" />
+                                    </UniformGrid>
+                                    <CheckBox x:Name="OptOvertime" Content="Ins Minus laufen (Überziehen anzeigen)" Margin="0,0,0,4" Click="OnTimerSetting" />
+                                    <CheckBox x:Name="OptBlinkOver" Content="Beim Überziehen blinken" Margin="0,0,0,4" Click="OnTimerSetting" />
+                                    <CheckBox x:Name="OptBlinkWarn2" Content="In der 2. Warnzeit blinken" Margin="0,0,0,4" Click="OnTimerSetting" />
+                                    <CheckBox x:Name="OptProgress" Content="Fortschrittsbalken zeigen" Margin="0,0,0,4" Click="OnTimerSetting" />
+                                    <CheckBox x:Name="OptAutoStart" Content="Mit dem Live-Schalten automatisch starten" Click="OnTimerSetting" />
+                                </StackPanel>
+                            </Expander>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Regie-Nachricht (Mac: MessageControlView) -->
+                    <Border Style="{StaticResource Brand.Card}" DataContext="{Binding Message}">
+                        <StackPanel>
+                            <DockPanel Margin="0,0,0,10">
+                                <TextBlock DockPanel.Dock="Right" Text="wird angezeigt" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource Brand.Warning}"
+                                           Visibility="{Binding IsVisible, Converter={StaticResource Vis}}" />
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Style="{StaticResource Brand.Icon}" Text="&#xE8BD;" Foreground="{StaticResource Brand.Accent}" Margin="0,0,6,0" />
+                                    <TextBlock Text="Regie-Nachricht" FontWeight="SemiBold" FontSize="14" />
+                                </StackPanel>
+                            </DockPanel>
+                            <Grid>
+                                <TextBox x:Name="MessageInput" Text="{Binding Draft, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="False"
+                                         TextWrapping="Wrap" MaxHeight="80" KeyDown="OnMessageKey" />
+                                <TextBlock Text="Nachricht an die Referent*in …" Style="{StaticResource Brand.Caption}" Margin="8,0" VerticalAlignment="Center"
+                                           IsHitTestVisible="False" Visibility="{Binding Draft, Converter={StaticResource NullVis}, ConverterParameter=not}" />
+                            </Grid>
+                            <DockPanel Margin="0,8,0,0">
+                                <Button DockPanel.Dock="Right" x:Name="MsgFg" Style="{StaticResource Brand.Small}" Width="34" Height="20" Margin="6,0,0,0"
+                                        Background="{Binding ForegroundBrush}" Tag="fg" Click="OnMessageColor" ToolTip="Textfarbe" />
+                                <Button DockPanel.Dock="Right" x:Name="MsgBg" Style="{StaticResource Brand.Small}" Width="34" Height="20" Margin="6,0,0,0"
+                                        Background="{Binding BackgroundBrush}" Tag="bg" Click="OnMessageColor" ToolTip="Hintergrundfarbe" />
+                                <CheckBox DockPanel.Dock="Right" Content="Blinken" IsChecked="{Binding Blink}" Margin="0" />
+                                <StackPanel Orientation="Horizontal">
+                                    <Button Style="{StaticResource Brand.Compact}" Background="{StaticResource Brand.Accent}" Margin="0,0,6,0"
+                                            IsEnabled="{Binding CanSend}" Click="OnMessageSend">
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Style="{StaticResource Brand.Icon}" Text="&#xE724;" FontSize="11" Margin="0,0,6,0" Foreground="{StaticResource Brand.Background}" />
+                                            <TextBlock Text="Senden" Foreground="{StaticResource Brand.Background}" />
+                                        </StackPanel>
+                                    </Button>
+                                    <Button Style="{StaticResource Brand.Compact}" Content="Ausblenden" IsEnabled="{Binding IsVisible}" Click="OnMessageClear" />
+                                </StackPanel>
+                            </DockPanel>
+                            <Border CornerRadius="6" Padding="8" Margin="0,8,0,0" Background="#40B2F141"
+                                    Visibility="{Binding IsVisible, Converter={StaticResource Vis}}">
+                                <TextBlock Text="{Binding Quoted}" TextWrapping="Wrap" />
+                            </Border>
+                            <ItemsControl ItemsSource="{Binding Presets}" Margin="0,8,0,0">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <UniformGrid Columns="3" />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Button Style="{StaticResource Brand.Small}" Margin="0,0,6,6" Click="OnMessagePreset" Tag="{Binding}"
+                                                ToolTip="{Binding}">
+                                            <Button.ContextMenu>
+                                                <ContextMenu>
+                                                    <MenuItem Header="Vorlage entfernen" Click="OnMessagePresetRemove" Tag="{Binding}" />
+                                                </ContextMenu>
+                                            </Button.ContextMenu>
+                                            <TextBlock Text="{Binding}" TextTrimming="CharacterEllipsis" />
+                                        </Button>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                            <Expander Style="{StaticResource Brand.Disclosure}" Header="Vorlagen bearbeiten" Margin="0,4,0,0">
+                                <StackPanel>
+                                    <DockPanel>
+                                        <Button DockPanel.Dock="Right" Style="{StaticResource Brand.Compact}" Content="Hinzufügen" Margin="6,0,0,0" Click="OnMessagePresetAdd" />
+                                        <TextBox x:Name="NewPresetBox" KeyDown="OnNewPresetKey" />
+                                    </DockPanel>
+                                    <TextBlock Text="Rechtsklick auf eine Vorlage entfernt sie." Style="{StaticResource Brand.Caption}" Margin="0,6,0,0" />
+                                </StackPanel>
+                            </Expander>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Video (Mac: VideoSection), nur wenn die Live-Folie Videos hat; Inhalt in OnStateChanged -->
+                    <Border x:Name="VideoCard" Style="{StaticResource Brand.Card}" Visibility="Collapsed">
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                                <TextBlock Style="{StaticResource Brand.Icon}" Text="&#xE714;" Foreground="{StaticResource Brand.Accent}" Margin="0,0,6,0" />
+                                <TextBlock Text="Video" FontWeight="SemiBold" FontSize="14" />
+                            </StackPanel>
+                            <StackPanel x:Name="VideoCardBody" />
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Übergang zwischen Präsentationen (Mac: TransitionSection) -->
+                    <Border Style="{StaticResource Brand.Card}">
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                                <TextBlock Style="{StaticResource Brand.Icon}" Text="&#xE8AB;" Foreground="{StaticResource Brand.Accent}" Margin="0,0,6,0" />
+                                <TextBlock Text="Übergang zwischen Präsentationen" FontWeight="SemiBold" FontSize="14" />
+                            </StackPanel>
+                            <UniformGrid Columns="3">
+                                <RadioButton x:Name="TrCut" Style="{StaticResource Brand.Segment}" Content="Hart" GroupName="Transition" Checked="OnTransition" />
+                                <RadioButton x:Name="TrBlack" Style="{StaticResource Brand.Segment}" Content="Über Schwarz" GroupName="Transition" Checked="OnTransition" />
+                                <RadioButton x:Name="TrFade" Style="{StaticResource Brand.Segment}" Content="Überblenden" GroupName="Transition" Checked="OnTransition" />
+                            </UniformGrid>
+                            <DockPanel Margin="0,8,0,0" Visibility="{Binding TransitionHasDuration, Converter={StaticResource Vis}}">
+                                <TextBlock DockPanel.Dock="Left" Text="Dauer" VerticalAlignment="Center" Margin="0,0,8,0" />
+                                <TextBlock DockPanel.Dock="Right" Text="{Binding TransitionDurationText}" Width="40" TextAlignment="Right" VerticalAlignment="Center" />
+                                <Slider Minimum="0.3" Maximum="3" TickFrequency="0.1" IsSnapToTickEnabled="True"
+                                        Value="{Binding TransitionDuration}" VerticalAlignment="Center" />
+                            </DockPanel>
+                            <TextBlock Text="{Binding TransitionDetail}" Style="{StaticResource Brand.Caption}" TextWrapping="Wrap" Margin="0,6,0,0" />
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Am Ende der Präsentation (Mac: EndSection) -->
+                    <Border Style="{StaticResource Brand.Card}">
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                                <TextBlock Style="{StaticResource Brand.Icon}" Text="&#xE7C1;" Foreground="{StaticResource Brand.Accent}" Margin="0,0,6,0" />
+                                <TextBlock Text="Am Ende der Präsentation" FontWeight="SemiBold" FontSize="14" />
+                            </StackPanel>
+                            <RadioButton x:Name="EndHold" Content="Auf letzter Folie stehen bleiben" Checked="OnEndBehavior" />
+                            <RadioButton x:Name="EndBlack" Content="Überall auf Schwarz gehen" Checked="OnEndBehavior" />
+                            <TextBlock x:Name="EndDetail" Style="{StaticResource Brand.Caption}" TextWrapping="Wrap" Margin="0,2,0,0" />
+                            <Button Style="{StaticResource Brand.Small}" HorizontalAlignment="Left" Margin="0,8,0,0"
+                                    Visibility="{Binding IsLocked, Converter={StaticResource Vis}}" Click="OnUnlock">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Style="{StaticResource Brand.Icon}" Text="&#xE785;" FontSize="10" Margin="0,0,6,0" />
+                                    <TextBlock Text="Sperre aufheben" />
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </ScrollViewer>
+        </Grid>
+
+        <!-- Statusleiste (Mac: StatusBar) -->
+        <Border Grid.Row="2" Background="{StaticResource Brand.Panel}" BorderBrush="{StaticResource Brand.Line}" BorderThickness="0,1,0,0" Padding="12,5">
+            <DockPanel>
+                <TextBlock DockPanel.Dock="Right" Text="{Binding ExternalScreensText}" FontSize="11" Foreground="{StaticResource Brand.SecondaryText}" Margin="12,0,0,0" />
+                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Visibility="{Binding IsLocked, Converter={StaticResource Vis}}" Margin="12,0,0,0">
+                    <TextBlock Style="{StaticResource Brand.Icon}" Text="&#xE72E;" FontSize="11" Foreground="{StaticResource Brand.Warning}" Margin="0,0,4,0" />
+                    <TextBlock Text="Gesperrt" FontSize="11" Foreground="{StaticResource Brand.Warning}" />
+                </StackPanel>
+                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Visibility="{Binding IsBlackout, Converter={StaticResource Vis}}" Margin="12,0,0,0">
+                    <TextBlock Style="{StaticResource Brand.Icon}" Text="&#xED1A;" FontSize="11" Foreground="{StaticResource Brand.Live}" Margin="0,0,4,0" />
+                    <TextBlock Text="Blackscreen" FontSize="11" Foreground="{StaticResource Brand.Live}" />
+                </StackPanel>
+                <Ellipse Width="8" Height="8" Margin="0,0,10,0" VerticalAlignment="Center">
+                    <Ellipse.Style>
+                        <Style TargetType="Ellipse">
+                            <Setter Property="Fill" Value="#80BBBBBB" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsShowRunning}" Value="True">
+                                    <Setter Property="Fill" Value="{StaticResource Brand.Live}" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Ellipse.Style>
+                </Ellipse>
+                <TextBlock Text="{Binding StatusMessage}" FontSize="11" TextTrimming="CharacterEllipsis" />
+            </DockPanel>
+        </Border>
     </Grid>
 </Window>

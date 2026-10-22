@@ -1,5 +1,48 @@
 # Änderungsprotokoll
 
+## 0.5 – 22.10.2026
+- Neu (Branch `meilenstein-5`): Fernsteuerung per HTTP/JSON wie am Mac (Port 8765, `/api/state`,
+  alle Befehle, `/api/diag`) für Companion / Stream Deck. Einstellungen-Fenster mit an/aus, Port und
+  „nur von diesem Rechner“.
+
+## 0.4 – 21.10.2026
+- Neu (22.10.2026): Referent*innenansicht ohne Live-Schalten gestalten – Karte und Baukasten zeigen
+  die ausgewählte Präsentation mit ihrem Preset.
+- Neu (22.10.2026): Schleife für Videos in der Video-Karte (Wunsch der Nutzerin, gibt es am Mac nicht).
+- Neu (22.10.2026): Show-Dateien `.montro` wie am Mac (öffnen, sichern, mit Präsentationen
+  sichern, fehlende Dateien suchen), mit montro für macOS austauschbar.
+- Neu (22.10.2026): „In PowerPoint bearbeiten“ (Stift, Kontextmenü) mit Dateiwächter – nach dem
+  Speichern erneuert montro Analyse und Vorschaubilder. Preset-Zuweisung im Kontextmenü.
+- Neu (22.10.2026): Video-Karte im Inspector wie am Mac – laufendes Video mit Pause/Stopp,
+  Videos der Folie mit Start und „Abspielen“.
+- Neu (22.10.2026): Video-Laufzeit in der Referent*innenansicht (Name, Gesamt, Rest, Fortschritt),
+  sobald auf der Live-Folie ein Video läuft.
+- Neu (22.10.2026): Baukasten der Referent*innenansicht wie am Mac mit Presets je Präsentation,
+  Entwurf während der Show, Notizen-Schriftgröße im Preset.
+- Neu (Etappe 3, 22.10.2026): Referent*innenansicht wie am Mac (Timer, Uhr, aktuelle und nächste
+  Folie, Foliennummer mit Animationspunkten, Notizen, Regie-Nachricht) auf eigenem Bildschirm
+  oder im Popup-Fenster; Popup-Modus mit Referent*innenansicht links und PowerPoint rechts.
+- Während eine Präsentation live ist, schaltet Windows die Bildschirme nicht mehr ab.
+- Live-Bild: Die aktuelle Folie in Vorschau und Referent*innenansicht zeigt das Show-Fenster
+  flüssig mit Animationen und laufendem Video (DWM-Miniatur), auch im Popup-Modus. Das
+  LIVE-Abzeichen steht jetzt neben „Live-Folie“.
+- Neu (Branch `meilenstein-4`, Etappe 2): Timer-Einstellungen, Regie-Nachricht mit Vorlagen,
+  Farben und Blinken (in der Referent*innenansicht), Übergang zwischen Präsentationen (Hart /
+  Über Schwarz / Überblenden), Publikumsbildschirm schwarz, wenn nichts live ist, beim Start,
+  bei Blackscreen und am Ende. Ausgabe während der Show umstellen startet an gleicher Folie neu.
+- Dunkle Kontextmenüs und Bildlaufleisten wie am Mac.
+- Taskleiste auf dem Publikumsbildschirm wird ausgeblendet, solange er Ausgabe ist (wie Dock und
+  Menüleiste am Mac). Kein Aufblitzen mehr beim Live-Schalten.
+
+## 0.3 – 21.10.2026
+- Neu (Branch `meilenstein-4`, Etappe 1): Hauptfenster wie am Mac. Playlist mit Vorschaubild,
+  „x Folien · y ausgeblendet · z Videos“, Status und LIVE-Markierung; Hinzufügen per Knopf,
+  Ziehen & Ablegen oder Kommandozeile; Reihenfolge per Ziehen; Folienübersicht; „Ausgewählte
+  live schalten“ und „Stopp“; Inspector mit Live-Folie (Bildschirmwahl, Zurück/Weiter,
+  Blackscreen), vorläufiger Referent*innenansicht, Timer und „Am Ende der Präsentation“
+  (Ende-Sperre); Statuszeile; Tastenkürzel wie am Mac. Die Playlist wird gespeichert.
+- Das Testfenster „PowerPoint testen“ ist jetzt über Strg+Umschalt+P erreichbar.
+
 ## 0.2 – 21.10.2026
 - Neu (Branch `meilenstein-3`): PPTX-Parser, portiert aus der Mac-Version. Liest ohne
   PowerPoint Folienreihenfolge, ausgeblendete Folien, Notizen, Klick-Animationen und Videos mit

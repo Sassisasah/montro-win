@@ -13,6 +13,13 @@ Referenz ist immer der Mac-Code im Repo `Sassisasah/montro`:
 `Sources/montro/Services/RemoteAPI.swift`, `ClusterManager.swift` und `docs/REMOTE-API.md`.
 Weicht diese Datei davon ab, gilt der Mac-Code. Dann bitte diese Datei korrigieren.
 
+**Stand 21.10.2026:** Der aktuelle Mac-Code (0.36) liegt auf dem Branch
+`feature/bearbeiten-abgleich`, `main` steht bei 0.31. Seit 0.32 neu und hier noch nicht
+eingearbeitet: Verbund-Dateiabgleich (`GET /api/cluster/manifest`, `GET /api/cluster/file`,
+`ClusterInfo` mit `detached` und `offers`, `apiPort` in Sync/Befehl), Show-Dateien `.montro`
+(`docs/SHOW-FORMAT.md`), „In PowerPoint bearbeiten“ und „Aktualisieren“. Vor Meilenstein 5
+(Remote-API) und 7 (Verbund) gegen diesen Stand abgleichen.
+
 ## 1. Remote-API (für Companion)
 
 - HTTP/1.1 und JSON auf Port **8765** (einstellbar), ohne Anmeldung.

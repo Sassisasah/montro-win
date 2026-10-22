@@ -25,21 +25,55 @@ public partial class App : Application
             Dispatcher.InvokeAsync(async () => Shutdown(await Testing.SelfTest.RunAsync(e.Args)));
             return;
         }
+        if (e.Args.Contains("--showtest"))
+        {
+            ShutdownMode = ShutdownMode.OnExplicitShutdown;
+            base.OnStartup(e);
+            Dispatcher.InvokeAsync(async () => Shutdown(await Testing.ShowFileTest.RunAsync(e.Args)));
+            return;
+        }
+        if (e.Args.Contains("--miniaturtest"))
+        {
+            ShutdownMode = ShutdownMode.OnExplicitShutdown;
+            base.OnStartup(e);
+            Dispatcher.InvokeAsync(async () => Shutdown(await Testing.ThumbnailTest.RunAsync(e.Args)));
+            return;
+        }
+        if (e.Args.Contains("--referentenbild"))
+        {
+            // Testbilder der Referent*innenansicht schreiben und beenden (ohne PowerPoint, ohne Fenster)
+            ShutdownMode = ShutdownMode.OnExplicitShutdown;
+            base.OnStartup(e);
+            Dispatcher.InvokeAsync(() => Shutdown(Testing.PresenterSnapshot.Run(e.Args)));
+            return;
+        }
         base.OnStartup(e);
         // Hauptfenster hier statt per StartupUri, damit der Selbsttest ohne Fenster starten kann
-        new MainWindow().Show();
+        var main = new MainWindow();
+        main.Show();
+        // „Öffnen mit montro“ / Dateien als Argumente: in die Playlist
+        var files = e.Args.Where(a => !a.StartsWith("--") && File.Exists(a)).ToArray();
+        if (files.FirstOrDefault(f => f.EndsWith(Core.ShowFile.Extension, StringComparison.OrdinalIgnoreCase)) is { } show)
+            main.OpenShow(show);
+        var presentations = files.Where(f => !f.EndsWith(Core.ShowFile.Extension, StringComparison.OrdinalIgnoreCase)).ToArray();
+        if (presentations.Length > 0) main.AddFiles(presentations);
     }
 
     private static void OnUnhandled(object sender, DispatcherUnhandledExceptionEventArgs e)
     {
         // Während einer Show darf die App nicht wegen eines Bedienfehlers abstürzen.
         DebugLog.Write($"Fehler in der Oberfläche: {e.Exception}");
-        MessageBox.Show(e.Exception.Message, "montro", MessageBoxButton.OK, MessageBoxImage.Warning);
         e.Handled = true;
+        // Beim Beenden (Fenster schon zu, Ressourcen weg) nur protokollieren, keine Meldung zeigen
+        if (exiting || Current?.MainWindow is not { IsVisible: true }) return;
+        MessageBox.Show(e.Exception.Message, "montro", MessageBoxButton.OK, MessageBoxImage.Warning);
     }
+
+    private static bool exiting;
 
     protected override void OnExit(ExitEventArgs e)
     {
+        exiting = true;
         DebugLog.Write("montro beendet");
         base.OnExit(e);
     }

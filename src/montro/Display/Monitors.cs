@@ -145,9 +145,10 @@ public static class Monitors
     }
 
     /// <summary>Fenster auf eine Lage setzen (physische Pixel), ohne es zu aktivieren; optional über alle anderen.</summary>
-    public static bool MoveWindow(IntPtr hwnd, PixelRect r, bool topmost = false) =>
-        Native.SetWindowPos(hwnd, topmost ? Native.HWND_TOPMOST : IntPtr.Zero, r.X, r.Y, r.Width, r.Height,
-            (topmost ? 0 : Native.SWP_NOZORDER) | Native.SWP_NOACTIVATE | Native.SWP_NOOWNERZORDER);
+    public static bool MoveWindow(IntPtr hwnd, PixelRect r, bool topmost = false, IntPtr insertAfter = default) =>
+        Native.SetWindowPos(hwnd, insertAfter != IntPtr.Zero ? insertAfter : topmost ? Native.HWND_TOPMOST : IntPtr.Zero,
+            r.X, r.Y, r.Width, r.Height,
+            (topmost || insertAfter != IntPtr.Zero ? 0 : Native.SWP_NOZORDER) | Native.SWP_NOACTIVATE | Native.SWP_NOOWNERZORDER);
 
     /// <summary>Fenster wieder ganz nach oben (topmost) holen, ohne Lage, Größe oder Fokus zu ändern.</summary>
     public static bool BringToTop(IntPtr hwnd) =>

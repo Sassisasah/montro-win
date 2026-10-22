@@ -3,9 +3,109 @@
 Ziel ist dieselbe Bedienung wie am Mac (siehe `docs/BEDIENUNG.md` im Repo `Sassisasah/montro`),
 nur mit Strg statt ⌘. Dieser Abschnitt wächst mit jedem Meilenstein.
 
+## Hauptfenster (Meilenstein 4, Etappe 1)
+
+Aufbau wie am Mac: links die **Playlist**, darunter die **Folienübersicht** und der rote Knopf
+**Ausgewählte live schalten** mit **Stopp**, rechts der **Inspector** mit den Karten, unten die
+Statuszeile. Oben rechts: Live schalten, Stopp, Zurück, Weiter, Blackscreen (und Entsperren,
+wenn die Ende-Sperre greift).
+
+- **Hinzufügen:** „+ Hinzufügen“, Dateien ins Fenster ziehen oder `montro.exe datei.pptx …`.
+  Nur `.pptx .pptm .ppsx .ppsm`; eine alte `.ppt` wird mit Hinweis abgelehnt. montro liest jede
+  Datei (Folien, ausgeblendet, Videos) und erzeugt Vorschaubilder. Der grüne Haken heißt
+  „bereit“.
+- **Playlist:** Doppelklick = live schalten. Reihenfolge per Ziehen. Rechtsklick: Live
+  schalten, In PowerPoint bearbeiten, Im Explorer zeigen, Neu analysieren & Vorschaubilder
+  erzeugen, Referent*innenansicht (Preset zuweisen), Aus Playlist entfernen (auch Entf). Die
+  Playlist bleibt nach einem Neustart erhalten (`%APPDATA%\montro\state.json`).
+- **Bearbeiten (Stift in der Zeile):** öffnet die Datei in PowerPoint auf dem Laptop-Bildschirm.
+  Nach dem Speichern (Strg+S) erneuert montro Analyse und Vorschaubilder von selbst. Während
+  einer Show gesperrt; wird die laufende Datei trotzdem geändert, folgt die Erneuerung nach dem
+  Stopp.
+- **Folien:** zeigt die laufende, sonst die ausgewählte Präsentation. Während der Show springt
+  ein Klick zur Folie, sonst startet ein Doppelklick ab dieser Folie. Ausgeblendete Folien sind
+  abgedunkelt, darunter die Nummer wie in „Folie x von n“ und Symbole für Animationen, Video,
+  Notizen. „#“ bzw. Strg+G: Gehe zu Folie.
+- **Live-Folie:** Vorschau der aktuellen Folie, Zeile „Titel · Folie x von n · Animation a/b“,
+  Zurück/Weiter, Blackscreen. Das Bildschirm-Symbol oben rechts wählt die Ausgabe: einen
+  externen Bildschirm oder **Popup-Fenster** (PowerPoint rechts auf dem Laptop, neben der
+  Referent*innenansicht).
+- **Referent*innenansicht:** Aufbau wie am Mac (Standard „Windows“): oben Timer und Uhr, links
+  groß die aktuelle Folie, darunter „Folie x von n“ mit Punkten für die Animationen und die
+  Regie-Nachricht, rechts nächste Folie und Notizen. Die Karte zeigt dieselbe Ansicht verkleinert.
+  Das Bildschirm-Symbol oben rechts wählt die Ausgabe: einen externen Bildschirm (dort randlos,
+  nicht live schwarz, Taskleiste ausgeblendet) oder **Popup-Fenster** – das öffnet sich beim Live
+  schalten bzw. über „Fenster zeigen“. Ein Bildschirm ist entweder Publikum oder
+  Referent*innenansicht; wer ihn neu bekommt, verdrängt die andere Rolle ins Popup. Ohne
+  externen Publikumsbildschirm liegt die Referent*innenansicht links, PowerPoint rechts daneben.
+  Notizen-Schriftgröße 40–400 % (Strg+Plus/Minus/0), gilt sofort und wird im Preset der
+  laufenden Präsentation gespeichert.
+- **Baukasten (Zahnrad in der Karte Referent*innenansicht):** Bausteine ziehen, Ecke unten
+  rechts = Größe, × = ausblenden. Rechts: **Preset** (welche Ansicht bearbeitet wird, speichern,
+  „Als Preset speichern …“, umbenennen, löschen, Zuweisung an die gewählte Präsentation),
+  **Widgets** ein/aus, **Eigenschaften** des gewählten Bausteins (Schriftgröße, Überschrift,
+  Lage in %), **Darstellung** (Hintergrund, Schriftfarbe, Raster 1 %), „Alle Widgets
+  einblenden“, „Standard wiederherstellen“. Ohne Präsentation wirken Änderungen sofort; während
+  einer Präsentation erst mit „Jetzt übernehmen“ oder „Nach der Präsentation übernehmen“.
+  Gespeichert wird mit „In … speichern“ (Strg+S). Beim Live-Schalten startet die Ansicht des
+  Presets der Präsentation, sonst „Standard“. Ohne Show zeigen Karte und Baukasten die in der
+  Playlist ausgewählte Präsentation (erste Folie, Notizen) mit ihrem Preset – so lässt sie sich
+  gestalten, ohne live zu schalten. Ungespeicherte Änderungen bleiben beim Wechsel der Auswahl
+  stehen.
+- **Timer:** Start/Pause (Strg+T), Zurücksetzen, ±1 min, Blinken, Schnellwahl 5–60 min.
+  „Einstellungen“: Redezeit, 1. und 2. Warnung (als Restzeit) mit Farben, Überzogen-Farbe,
+  Herunter- oder Hochzählen, ins Minus laufen, Blinken beim Überziehen bzw. in der 2. Warnzeit,
+  Fortschrittsbalken, automatischer Start beim Live-Schalten.
+- **Regie-Nachricht:** Text eingeben und Senden (Enter) oder eine Vorlage anklicken. Erscheint in
+  der Referent*innenansicht in den gewählten Farben, blinkt nach dem Senden 3 s lang und auf
+  Wunsch dauerhaft. „Ausblenden“ nimmt sie weg. Vorlagen: „Vorlagen bearbeiten“ fügt hinzu,
+  Rechtsklick auf eine Vorlage entfernt sie.
+- **Video:** erscheint, wenn die Live-Folie Videos hat. Oben das laufende Video mit Gesamt- und
+  Restzeit, Pause/Weiter und Stopp, darunter jedes Video der Folie mit Länge, Start (automatisch /
+  Klick n / Trigger) und „Abspielen“. Anders als am Mac liest montro unter Windows die echte
+  Position aus PowerPoint. **Schleife** (Pfeil-Kreis, lila = an): startet das Video am Ende von
+  vorn, bis sie ausgeschaltet wird; in der Referent*innenansicht steht dann „↻“ hinter dem Namen.
+  Gilt bis montro beendet wird. Für eine ganz lückenlose Schleife in PowerPoint selbst
+  „Wiedergabe bis zum Beenden wiederholen“ einstellen.
+- **Übergang zwischen Präsentationen:** Hart / Über Schwarz / Überblenden (Standbild der
+  letzten Folie), Dauer 0,3–3 s. Gilt nur mit externem Publikumsbildschirm.
+- **Schwarze Ausgänge:** Ist ein externer Publikumsbildschirm gewählt, zeigt er Schwarz, solange
+  nichts live ist, während des Starts, bei Blackscreen und bei „Überall auf Schwarz gehen“.
+- **Am Ende der Präsentation:** „Auf letzter Folie stehen bleiben“ oder „Überall auf Schwarz
+  gehen“. Danach ist die Steuerung gesperrt, auch gegen Eingaben direkt in PowerPoint, bis
+  „Entsperren“.
+- **Show (oben links):** Show öffnen … (Strg+O), Show sichern (Strg+S), Show sichern unter …
+  (Strg+Umschalt+S), Show mit Präsentationen sichern … (Ordner mit `<Name>.montro` und Kopien in
+  `Präsentationen\` – für USB-Stick oder einen anderen Rechner, Mac oder Windows), Fehlende
+  Dateien suchen …. Eine Show enthält Playlist, Referent*innenansicht (Standard und Presets) und
+  Show-Einstellungen, nicht die Bildschirm-Zuordnung. Öffnen ersetzt Playlist und Einstellungen,
+  Presets werden ergänzt. Nicht während einer Präsentation. Doppelklick auf eine `.montro`-Datei
+  bzw. `montro.exe show.montro` öffnet sie. Format: `docs/SHOW-FORMAT.md` im Repo `Sassisasah/montro`.
+- **Tasten:** → Bild↓ Leertaste Return N = weiter · ← Bild↑ P = zurück · B . = Blackscreen ·
+  Strg+Return live · Strg+. Stopp · Strg+T Timer · Strg+G Gehe zu · Strg+O/S Show.
+- Werkzeuge: Strg+Umschalt+P öffnet das Testfenster „PowerPoint testen“, Strg+Umschalt+L den
+  Log-Ordner.
+
+## Fernsteuerung (Meilenstein 5)
+
+Zahnrad oben rechts (Strg+,) › **Fernsteuerung (Bitfocus Companion)**: Netzwerk-Schnittstelle an/aus
+(Standard: an), Port (Standard **8765**), „Nur von diesem Rechner erreichbar (127.0.0.1)“. Darunter
+steht, welche Adresse in Companion als Host einzutragen ist. Pfade und Antworten genau wie am Mac
+(`docs/REMOTE-API.md` im Repo `Sassisasah/montro`), z. B.:
+
+```
+curl http://127.0.0.1:8765/api/state
+curl -X POST http://127.0.0.1:8765/api/next
+curl -X POST "http://127.0.0.1:8765/api/message?text=Noch%202%20Minuten"
+```
+
+Keine Anmeldung: Ohne „nur von diesem Rechner“ kann jeder im selben Netz steuern. Beim ersten Start
+fragt die Windows-Firewall – Zugriff im privaten Netz erlauben (der Installer trägt später eine
+Regel ein). Der Verbund-Teil (`/api/cluster…`) folgt mit Meilenstein 7.
+
 ## PowerPoint testen (Meilenstein 1)
 
-Hauptfenster › **PowerPoint testen …** öffnet ein Testfenster für den PowerPoint-Kern:
+Strg+Umschalt+P im Hauptfenster öffnet ein Testfenster für den PowerPoint-Kern:
 
 1. **Datei wählen …**: eine `.pptx`, `.pptm`, `.ppsx` oder `.ppsm`. montro öffnet sie
    schreibgeschützt in PowerPoint. Oben steht die PowerPoint-Version.

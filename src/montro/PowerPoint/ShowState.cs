@@ -18,7 +18,8 @@ public sealed record ShowState(
     int SlideIndex,     // PowerPoint-Folienindex (inkl. ausgeblendeter), 0 = unbekannt / Endbildschirm
     int ShowPosition,   // Position in der Show (View.CurrentShowPosition)
     int Click,          // aktueller Klick in der Folie (0 = vor der ersten Animation)
-    int ClickCount)
+    int ClickCount,
+    VideoState? Video = null)
 {
     public static readonly ShowState None = new(false, SlideShowRunState.None, 0, 0, 0, 0);
 
@@ -35,4 +36,11 @@ public sealed record ShowState(
         SlideShowRunState.Done => "Ende der Bildschirmpräsentation",
         _ => RunState.ToString(),
     };
+}
+
+/// <summary>Video auf der aktuellen Folie (Mac: VideoTracker.playing), Zeiten in Sekunden.</summary>
+public sealed record VideoState(string Name, double Position, double Duration, bool Playing)
+{
+    public double Remaining => Math.Max(Duration - Position, 0);
+    public double Progress => Duration > 0 ? Math.Clamp(Position / Duration, 0, 1) : 0;
 }

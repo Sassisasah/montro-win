@@ -49,6 +49,13 @@ internal static class Native
 
     public delegate bool MonitorEnumProc(IntPtr hMonitor, IntPtr hdc, ref RECT rect, IntPtr data);
 
+    public const uint ES_CONTINUOUS = 0x80000000;
+    public const uint ES_SYSTEM_REQUIRED = 0x00000001;
+    public const uint ES_DISPLAY_REQUIRED = 0x00000002;
+
+    [DllImport("kernel32.dll")]
+    public static extern uint SetThreadExecutionState(uint flags);
+
     [DllImport("user32.dll")]
     public static extern bool EnumDisplayMonitors(IntPtr hdc, IntPtr clip, MonitorEnumProc proc, IntPtr data);
 
@@ -206,6 +213,19 @@ internal static class Native
     // --- Fenster von PowerPoint finden (Selbsttest: offenen Dialog schließen) ---
 
     public const uint WM_CLOSE = 0x0010;
+
+    public const int WM_DPICHANGED = 0x02E0;
+    public const int GWL_EXSTYLE = -20;
+    public const int WS_EX_TRANSPARENT = 0x20;
+    public const int WS_EX_TOOLWINDOW = 0x80;
+    public const int WS_EX_LAYERED = 0x80000;
+    public const int WS_EX_NOACTIVATE = 0x8000000;
+
+    [DllImport("user32.dll", EntryPoint = "GetWindowLongW")]
+    public static extern int GetWindowLong(IntPtr hwnd, int index);
+
+    [DllImport("user32.dll", EntryPoint = "SetWindowLongW")]
+    public static extern int SetWindowLong(IntPtr hwnd, int index, int value);
     public static readonly IntPtr HWND_TOPMOST = new(-1);
 
     [DllImport("user32.dll", CharSet = CharSet.Unicode)]
@@ -221,6 +241,14 @@ internal static class Native
 
     [DllImport("user32.dll", CharSet = CharSet.Unicode)]
     public static extern int GetClassName(IntPtr hwnd, System.Text.StringBuilder name, int max);
+
+    [DllImport("user32.dll")]
+    public static extern bool SetForegroundWindow(IntPtr hwnd);
+
+    public const int SW_RESTORE = 9;
+
+    [DllImport("user32.dll")]
+    public static extern bool ShowWindow(IntPtr hwnd, int cmd);
 
     [DllImport("user32.dll")]
     public static extern bool IsWindowVisible(IntPtr hwnd);
