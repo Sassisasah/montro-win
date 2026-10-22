@@ -43,7 +43,10 @@ public sealed class PathToImage : IValueConverter
         try
         {
             var time = File.GetLastWriteTimeUtc(path);
-            if (Cache.TryGetValue(path, out var hit) && hit.Time == time) return hit.Image;
+            // Schlüssel mit Breite: Sonst bekam die Referent*innenansicht das 280-px-Bild der
+            // Folienkacheln (22.10.2026: „aktuelle Folie extrem verpixelt“)
+            string key = $"{path}|{p}";
+            if (Cache.TryGetValue(key, out var hit) && hit.Time == time) return hit.Image;
             var bmp = new BitmapImage();
             bmp.BeginInit();
             bmp.CacheOption = BitmapCacheOption.OnLoad;
@@ -52,7 +55,7 @@ public sealed class PathToImage : IValueConverter
             if (p is string w && int.TryParse(w, out int width)) bmp.DecodePixelWidth = width;
             bmp.EndInit();
             bmp.Freeze();
-            Cache[path] = (time, bmp);
+            Cache[key] = (time, bmp);
             return bmp;
         }
         catch
