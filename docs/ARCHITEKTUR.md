@@ -30,6 +30,7 @@ Der Vertrag dafür steht in [KOMPATIBILITAET.md](KOMPATIBILITAET.md).
 | `src/montro/Display/OutputManager.cs` | Schwarzbild, Übergang und Ausgabefenster der Referent*innenansicht (Bildschirm oder Popup) |
 | `src/montro/Testing/PresenterSnapshot.cs` | `--referentenbild`: Testbilder der Referent*innenansicht ohne PowerPoint |
 | `src/montro/Core/AppState.Layouts.cs` | Standard, Presets, Entwurf und Zuweisung der Referent*innenansicht (Mac: `AppState`, Presets) |
+| `src/montro/Core/AppState.Editing.cs` | „In PowerPoint bearbeiten“ und Dateiwächter (Mac: `FileSync` ohne Verbund) |
 | `src/montro/Views/LayoutBuilderWindow.cs` | Baukasten der Referent*innenansicht (Mac: `LayoutBuilderView`) |
 | `src/montro/Views/ColorMenu.cs` | Farbauswahl-Menü mit den movidal-Farben |
 | `src/montro/Display/LiveThumbnail.cs` | Live-Bild der Show als DWM-Miniatur in einem Element (Mac: `LiveCapture`) |

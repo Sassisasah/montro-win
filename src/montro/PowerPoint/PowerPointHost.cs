@@ -296,6 +296,37 @@ public sealed class PowerPointHost
         KeepOnTop();
     }, 5000, black ? "Schwarz an" : "Schwarz aus");
 
+    /// <summary>
+    /// Datei zum Bearbeiten in PowerPoint öffnen (mit Fenster, beschreibbar). Eine von montro
+    /// fensterlos geöffnete Kopie derselben Datei (Vorschaubilder, alte Show) wird vorher geschlossen,
+    /// sonst wäre die Bearbeitung schreibgeschützt. Ist sie schon mit Fenster offen, wird sie nur
+    /// nach vorne geholt.
+    /// </summary>
+    public Task EditAsync(string path) => sta.Run(() =>
+    {
+        dynamic a = App();
+        string full = Path.GetFullPath(path);
+        dynamic? editing = null;
+        int count = Safe(() => (int)a.Presentations.Count, 0);
+        for (int i = count; i >= 1; i--)
+        {
+            dynamic p = a.Presentations.Item(i);
+            if (!string.Equals(Safe(() => (string)p.FullName, ""), full, StringComparison.OrdinalIgnoreCase)) continue;
+            if (Safe(() => (int)p.Windows.Count, 0) > 0 && Safe(() => (int)p.ReadOnly, 0) == MsoFalse)
+            {
+                editing = p;
+                continue;
+            }
+            TrySet("Als gespeichert markieren", () => { p.Saved = MsoTrue; });
+            p.Close();
+            if (pres != null && string.Equals(Safe(() => (string)pres!.FullName, ""), "", StringComparison.Ordinal)) pres = null;   // war montros Kopie (jetzt geschlossen)
+        }
+        // Open(FileName, ReadOnly, Untitled, WithWindow)
+        editing ??= a.Presentations.Open(full, MsoFalse, MsoFalse, MsoTrue);
+        TrySet("Fenster aktivieren", () => { editing.Windows.Item(1).Activate(); });
+        DebugLog.Write($"Bearbeiten: „{Path.GetFileName(full)}“ in PowerPoint geöffnet");
+    }, 30000, "Zum Bearbeiten öffnen");
+
     public enum VideoCommand { Play, Pause, Stop }
 
     /// <summary>Video der aktuellen Folie (Name der Form) abspielen, anhalten oder stoppen (Mac: video.togglePause/stop).</summary>

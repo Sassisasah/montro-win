@@ -2,6 +2,10 @@
 
 ## Getestet
 
+- **22.10.2026** – „In PowerPoint bearbeiten“ am Test-PC (UI Automation): Stift beim Testdeck →
+  PowerPoint öffnet die Datei beschreibbar mit Fenster auf dem Laptop-Bildschirm. Speichern in
+  PowerPoint → nach ~3 s „Datei geändert … → neu analysieren“, 1,5 s später 14 neue
+  Vorschaubilder. Sichtprüfung durch die Nutzerin steht aus.
 - **22.10.2026** – Video-Karte am Test-PC über UI Automation (Testdeck live, Folie 7): Pause →
   `Player.State` 1, Position steht bei 5,4 s; Weiter → läuft ab 5,9 s; Stopp → State 2, 0,0 s;
   „Abspielen“ → läuft wieder ab 0. Sichtprüfung der Karte durch die Nutzerin steht aus.
@@ -149,7 +153,7 @@
   Die erste Video-Abfrage kam etwa 4 s nach dem Sprung (Video bei 3 s) – beobachten.
 - **22.10.2026** – Live-Bild (DWM-Miniatur) im Popup-Modus prüfen; auf dem Verbatim bestätigt.
 - **21.10.2026** – Meilenstein 4: noch nicht geprüft sind Timer-Einstellungen und Ziehen &
-  Ablegen. Offen: „In PowerPoint bearbeiten“, „Aktualisieren“, Show-Dateien
+  Ablegen. Offen: Show-Dateien
   `.montro`.
 - **22.10.2026** – Sperre gegen Bildschirm-Abschaltung während der Show eingebaut (Log: „Bildschirm-
   Abschaltung gesperrt“), noch nicht über die eingestellte Abschaltzeit hinaus geprüft.

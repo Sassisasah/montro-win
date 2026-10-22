@@ -1,6 +1,8 @@
 # Änderungsprotokoll
 
 ## 0.4 – 21.10.2026
+- Neu (22.10.2026): „In PowerPoint bearbeiten“ (Stift, Kontextmenü) mit Dateiwächter – nach dem
+  Speichern erneuert montro Analyse und Vorschaubilder. Preset-Zuweisung im Kontextmenü.
 - Neu (22.10.2026): Video-Karte im Inspector wie am Mac – laufendes Video mit Pause/Stopp,
   Videos der Folie mit Start und „Abspielen“.
 - Neu (22.10.2026): Video-Laufzeit in der Referent*innenansicht (Name, Gesamt, Rest, Fortschritt),

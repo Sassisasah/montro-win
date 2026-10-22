@@ -403,6 +403,11 @@ public partial class MainWindow : Window
         }
     }
 
+    private void OnEditInPowerPoint(object sender, RoutedEventArgs e)
+    {
+        if ((sender as FrameworkElement)?.DataContext is PresentationItem item) state.EditInPowerPoint(item);
+    }
+
     private void OnPlaylistMenu(object sender, ContextMenuEventArgs e)
     {
         var item = ItemAt(e.OriginalSource) ?? state.Selected;
@@ -421,9 +426,23 @@ public partial class MainWindow : Window
             return mi;
         }
         menu.Items.Add(Entry("Live schalten", () => _ = state.GoLive(item), !state.IsStarting));
+        menu.Items.Add(Entry("In PowerPoint bearbeiten", () => state.EditInPowerPoint(item), state.CanEdit));
+        var presets = new MenuItem { Header = "Referent*innenansicht" };
+        var standard = new MenuItem { Header = "Standard", IsCheckable = true, IsChecked = state.Preset(item.PresetId) == null };
+        standard.Click += (_, _) => state.AssignPreset(null, item);
+        presets.Items.Add(standard);
+        if (state.LayoutPresets.Count > 0) presets.Items.Add(new Separator());
+        foreach (var p in state.LayoutPresets)
+        {
+            var mi = new MenuItem { Header = p.Name, IsCheckable = true, IsChecked = item.PresetId == p.Id };
+            Guid id = p.Id;
+            mi.Click += (_, _) => state.AssignPreset(id, item);
+            presets.Items.Add(mi);
+        }
         menu.Items.Add(Entry("Im Explorer zeigen", () =>
             Process.Start(new ProcessStartInfo("explorer.exe", $"/select,\"{item.Path}\"") { UseShellExecute = true })));
         menu.Items.Add(Entry("Neu analysieren & Vorschaubilder erzeugen", () => state.Regenerate(item), item != state.LiveItem));
+        menu.Items.Add(presets);
         menu.Items.Add(new Separator());
         menu.Items.Add(Entry("Aus Playlist entfernen", () => state.Remove(item), item != state.LiveItem));
     }

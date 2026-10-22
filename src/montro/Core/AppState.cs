@@ -373,7 +373,7 @@ public sealed partial class AppState : Observable
         Raise(nameof(CanControl), nameof(CanGoLive), nameof(CanStop), nameof(CurrentSlideMeta),
             nameof(NavigatorItem), nameof(SlidePositionText), nameof(LiveStatusLine), nameof(CurrentSlideImage),
             nameof(NextSlideImage), nameof(LiveOverlayText), nameof(BlackoutButtonText), nameof(CurrentNotes),
-            nameof(CurrentSlideSource));
+            nameof(CurrentSlideSource), nameof(CanEdit), nameof(EditHint));
         UpdateLiveSource();
         UpdateOutputs();
     }
@@ -533,6 +533,7 @@ public sealed partial class AppState : Observable
             ErrorRaised?.Invoke($"Die Datei „{Path.GetFileName(item.Path)}“ wurde nicht gefunden.");
             return;
         }
+        await RefreshIfChanged(item);
         // Übergang: Publikumsbildschirm abdecken (Standbild bzw. Schwarz), darunter umschalten
         var style = AudienceScreen == null ? ShowTransition.Cut : Transition;
         bool covered = false;
@@ -676,6 +677,7 @@ public sealed partial class AppState : Observable
         ClickInSlide = 0;
         Video = null;
         StatusMessage = message;
+        RefreshAfterShow();
     }
 
     public void Next()
@@ -842,6 +844,7 @@ public sealed partial class AppState : Observable
     private void Tick()
     {
         Timer.Tick();
+        WatchFiles();
         // Show-Fenster kann nach dem Platzieren erst gefunden werden, Übergang endet → nachziehen
         UpdateLiveSource();
         Message.Tick();

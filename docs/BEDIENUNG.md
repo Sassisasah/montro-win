@@ -15,9 +15,13 @@ wenn die Ende-Sperre greift).
   Datei (Folien, ausgeblendet, Videos) und erzeugt Vorschaubilder. Der grüne Haken heißt
   „bereit“.
 - **Playlist:** Doppelklick = live schalten. Reihenfolge per Ziehen. Rechtsklick: Live
-  schalten, Im Explorer zeigen, Neu analysieren & Vorschaubilder erzeugen, Aus Playlist
-  entfernen (auch Entf). Die Playlist bleibt nach einem Neustart erhalten
-  (`%APPDATA%\montro\state.json`).
+  schalten, In PowerPoint bearbeiten, Im Explorer zeigen, Neu analysieren & Vorschaubilder
+  erzeugen, Referent*innenansicht (Preset zuweisen), Aus Playlist entfernen (auch Entf). Die
+  Playlist bleibt nach einem Neustart erhalten (`%APPDATA%\montro\state.json`).
+- **Bearbeiten (Stift in der Zeile):** öffnet die Datei in PowerPoint auf dem Laptop-Bildschirm.
+  Nach dem Speichern (Strg+S) erneuert montro Analyse und Vorschaubilder von selbst. Während
+  einer Show gesperrt; wird die laufende Datei trotzdem geändert, folgt die Erneuerung nach dem
+  Stopp.
 - **Folien:** zeigt die laufende, sonst die ausgewählte Präsentation. Während der Show springt
   ein Klick zur Folie, sonst startet ein Doppelklick ab dieser Folie. Ausgeblendete Folien sind
   abgedunkelt, darunter die Nummer wie in „Folie x von n“ und Symbole für Animationen, Video,

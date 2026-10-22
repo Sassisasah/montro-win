@@ -98,7 +98,15 @@
                                             <ColumnDefinition Width="Auto" />
                                             <ColumnDefinition Width="*" />
                                             <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="Auto" />
                                         </Grid.ColumnDefinitions>
+                                        <!-- Stift: In PowerPoint bearbeiten (Mac: pencil), nicht während einer Show -->
+                                        <Button Grid.Column="3" Style="{StaticResource Brand.Borderless}" Padding="6,2" Margin="0,0,4,0" VerticalAlignment="Center"
+                                                Click="OnEditInPowerPoint" ToolTipService.ShowOnDisabled="True"
+                                                IsEnabled="{Binding DataContext.CanEdit, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                ToolTip="{Binding DataContext.EditHint, RelativeSource={RelativeSource AncestorType=Window}}">
+                                            <TextBlock Style="{StaticResource Brand.Icon}" Text="&#xE70F;" FontSize="13" />
+                                        </Button>
                                         <TextBlock Text="{Binding Number}" Foreground="{StaticResource Brand.SecondaryText}"
                                                    HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,10,0" />
                                         <Border Grid.Column="1" Width="80" Height="45" Background="Black" CornerRadius="4" ClipToBounds="True"
@@ -113,7 +121,7 @@
                                             <TextBlock Text="{Binding Title}" FontWeight="Medium" TextTrimming="CharacterEllipsis" />
                                             <TextBlock Text="{Binding Subtitle}" Style="{StaticResource Brand.Caption}" TextTrimming="CharacterEllipsis" Margin="0,2,0,0" />
                                         </StackPanel>
-                                        <Grid Grid.Column="3" VerticalAlignment="Center" Margin="0,0,4,0">
+                                        <Grid Grid.Column="4" VerticalAlignment="Center" Margin="0,0,4,0">
                                             <!-- LIVE / Vorbereitung / Bereit / Fehler -->
                                             <Border Background="{StaticResource Brand.Live}" CornerRadius="9" Padding="7,2"
                                                     Visibility="{Binding IsLive, Converter={StaticResource Vis}}">
