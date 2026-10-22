@@ -1,6 +1,8 @@
 # Änderungsprotokoll
 
 ## 0.4 – 21.10.2026
+- Neu (22.10.2026): Referent*innenansicht ohne Live-Schalten gestalten – Karte und Baukasten zeigen
+  die ausgewählte Präsentation mit ihrem Preset.
 - Neu (22.10.2026): Schleife für Videos in der Video-Karte (Wunsch der Nutzerin, gibt es am Mac nicht).
 - Neu (22.10.2026): Show-Dateien `.montro` wie am Mac (öffnen, sichern, mit Präsentationen
   sichern, fehlende Dateien suchen), mit montro für macOS austauschbar.

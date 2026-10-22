@@ -137,7 +137,9 @@ public sealed partial class AppState : Observable
         get => selected;
         set
         {
-            if (Set(ref selected, value)) Raise(nameof(NavigatorItem), nameof(CanGoLive));
+            if (!Set(ref selected, value)) return;
+            Raise(nameof(NavigatorItem), nameof(CanGoLive));
+            FollowSelection();
         }
     }
 
@@ -681,6 +683,7 @@ public sealed partial class AppState : Observable
         Video = null;
         StatusMessage = message;
         RefreshAfterShow();
+        FollowSelection();
     }
 
     public void Next()

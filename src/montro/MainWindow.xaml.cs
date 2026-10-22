@@ -51,7 +51,7 @@ public partial class MainWindow : Window
         UpdateEmpty();
         UpdateNavigatorHint();
         UpdateBlackoutButton();
-        PresenterPreviewHost.Child = new PresenterOutputView(state);
+        PresenterPreviewHost.Child = new PresenterOutputView(state) { PreviewWhenIdle = true };
         UpdateTitle();
         state.ShowLoaded += () =>
         {

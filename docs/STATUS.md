@@ -2,6 +2,12 @@
 
 ## Getestet
 
+- **22.10.2026** – Referent*innenansicht ohne Live-Schalten gestalten (Hinweis der Nutzerin: „hier
+  muss ich immer erstmal die Präsentation starten“): Karte zeigt jetzt die ausgewählte
+  Präsentation. Am Test-PC: Testdeck ausgewählt → Titelfolie, „Folie 1 von 14“, Notizen; Rana Pant
+  ausgewählt → deren Titelfolie, „Folie 1 von 24“, „Keine Notizen“. Baukasten folgt der Auswahl
+  (Preset der Präsentation). Sichtprüfung durch die Nutzerin steht aus.
+
 - **22.10.2026** – Video-Restzeit von der Nutzerin bestätigt („funktioniert“). Auf ihren Wunsch
   Schleife eingebaut und am Test-PC geprüft (Testdeck, Folie 7, Schleife an): dreimal hintereinander
   „Ende erreicht, Schleife → von vorn“, je einmal neu gestartet, Lücke am Ende rund 0,2–0,5 s

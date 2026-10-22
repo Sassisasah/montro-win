@@ -15,6 +15,54 @@ public sealed partial class AppState
     private Guid? builderTarget;   // null = Standard
     private bool applyDraftAfterShow;
 
+    // MARK: - Was die Referent*innenansicht zeigt
+
+    /// <summary>
+    /// Präsentation der Referent*innenansicht: die laufende, sonst die in der Playlist ausgewählte –
+    /// so lässt sich die Ansicht einer Präsentation gestalten, ohne sie live zu schalten.
+    /// </summary>
+    public PresentationItem? PresenterItem => LiveItem ?? Selected;
+
+    /// <summary>Folie der Referent*innenansicht: live die aktuelle, sonst die erste sichtbare.</summary>
+    public int PresenterSlide => LiveItem != null ? CurrentSlide : Selected?.FirstVisible ?? 0;
+
+    public SlideMeta? PresenterSlideMeta => PresenterItem?.Slide(PresenterSlide);
+
+    public System.Windows.Media.ImageSource? PresenterSlideSource => LiveItem != null
+        ? CurrentSlideSource
+        : Images.Convert(Selected?.Thumbnail(PresenterSlide), typeof(System.Windows.Media.ImageSource), null,
+            System.Globalization.CultureInfo.InvariantCulture) as System.Windows.Media.ImageSource;
+
+    public string? PresenterNextImage =>
+        PresenterItem is { } item && item.NextVisible(PresenterSlide) is int n ? item.Thumbnail(n) : null;
+
+    public bool PresenterAtEnd => PresenterItem is { } item && item.NextVisible(PresenterSlide) == null;
+
+    public string PresenterNotes => PresenterSlideMeta?.Notes ?? "";
+
+    public string PresenterPositionText
+    {
+        get
+        {
+            if (PresenterItem is not { } item) return "–";
+            int pos = item.VisiblePosition(PresenterSlide) ?? PresenterSlide;
+            return $"Folie {pos} von {item.VisibleCount}";
+        }
+    }
+
+    /// <summary>
+    /// Ohne Show folgt der Baukasten der Auswahl in der Playlist: Er bearbeitet das Preset der
+    /// gewählten Präsentation (sonst „Standard“), und die Karte zeigt es. Ungespeicherte Änderungen
+    /// am Entwurf bleiben dabei stehen.
+    /// </summary>
+    private void FollowSelection()
+    {
+        if (IsShowRunning || IsStarting || Selected is not { } item || HasUnsavedChanges) return;
+        var target = TargetOf(item);
+        if (target == builderTarget && draftLayout.SameAs(LayoutFor(target))) return;
+        SelectBuilderTarget(target);
+    }
+
     /// <summary>Gespeicherte Vorlagen (Mac: layoutPresets).</summary>
     public ObservableCollection<LayoutPreset> LayoutPresets { get; } = new();
 
@@ -173,7 +221,8 @@ public sealed partial class AppState
     {
         item.PresetId = Preset(id) != null ? id : null;
         // Zuweisung an die laufende Präsentation: Ziel folgt, Ausgabe bleibt bis zur Übernahme
-        if (item == LiveItem) SelectBuilderTarget(item.PresetId);
+        // Zuweisung an die laufende bzw. (ohne Show) ausgewählte Präsentation: Ziel folgt
+        if (item == (LiveItem ?? Selected)) SelectBuilderTarget(item.PresetId);
         QueueSave();
         RaiseLayoutState();
     }
@@ -212,7 +261,8 @@ public sealed partial class AppState
             p.Layout.EnsureAllKinds();
             LayoutPresets.Add(p);
         }
-        layout = standardLayout.Clone();
+        draftLayout = standardLayout.Clone();
+        FollowSelection();
         draftLayout = standardLayout.Clone();
     }
 }

@@ -48,7 +48,10 @@ wenn die Ende-Sperre greift).
   einblenden“, „Standard wiederherstellen“. Ohne Präsentation wirken Änderungen sofort; während
   einer Präsentation erst mit „Jetzt übernehmen“ oder „Nach der Präsentation übernehmen“.
   Gespeichert wird mit „In … speichern“ (Strg+S). Beim Live-Schalten startet die Ansicht des
-  Presets der Präsentation, sonst „Standard“.
+  Presets der Präsentation, sonst „Standard“. Ohne Show zeigen Karte und Baukasten die in der
+  Playlist ausgewählte Präsentation (erste Folie, Notizen) mit ihrem Preset – so lässt sie sich
+  gestalten, ohne live zu schalten. Ungespeicherte Änderungen bleiben beim Wechsel der Auswahl
+  stehen.
 - **Timer:** Start/Pause (Strg+T), Zurücksetzen, ±1 min, Blinken, Schnellwahl 5–60 min.
   „Einstellungen“: Redezeit, 1. und 2. Warnung (als Restzeit) mit Farben, Überzogen-Farbe,
   Herunter- oder Hochzählen, ins Minus laufen, Blinken beim Überziehen bzw. in der 2. Warnzeit,

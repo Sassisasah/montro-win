@@ -71,6 +71,9 @@ public sealed class PresenterOutputView : Border
     /// <summary>Auf eigenem Bildschirm: nicht live schwarz statt Ruhe-Ansicht (Mac: Schwarzbild darüber).</summary>
     public bool BlackWhenIdle { get; init; }
 
+    /// <summary>In der Karte: ohne Show die ausgewählte Präsentation zeigen (zum Gestalten), statt der Ruhe-Ansicht.</summary>
+    public bool PreviewWhenIdle { get; init; }
+
     private bool refreshQueued;
 
     private void OnChanged(object? sender, PropertyChangedEventArgs e)
@@ -157,7 +160,7 @@ public sealed class PresenterOutputView : Border
     /// <summary>Alle Anzeigen aus dem Zustand neu setzen (Takt alle 250 ms und bei Änderungen).</summary>
     public void Refresh()
     {
-        bool live = editing || state.IsShowRunning || state.IsStarting;
+        bool live = editing || state.IsShowRunning || state.IsStarting || (PreviewWhenIdle && state.PresenterItem != null);
         var bg = PresenterWidget.Hex(L.Background, Brushes.Black);
         surface.Background = bg;
         System.Windows.Documents.TextElement.SetForeground(surface, TextBrush);
@@ -338,7 +341,7 @@ internal sealed class CurrentSlideWidget : PresenterWidget
 
     public override void Update(AppState s)
     {
-        frame.Set(s.CurrentSlideSource, "Keine Folie live", s.IsBlackout || s.IsEndBlack);
+        frame.Set(s.PresenterSlideSource, "Keine Folie live", s.IsBlackout || s.IsEndBlack);
         frame.SetLive(Editing ? IntPtr.Zero : s.LiveSource);
     }
 }
@@ -355,8 +358,8 @@ internal sealed class NextSlideWidget : PresenterWidget
 
     public override void Update(AppState s)
     {
-        bool atEnd = s.LiveItem is { } item && item.NextVisible(s.CurrentSlide) == null;
-        frame.Set(atEnd ? null : Image(s.NextSlideImage), atEnd ? "Ende der Präsentation" : "–");
+        bool atEnd = s.PresenterAtEnd;
+        frame.Set(atEnd ? null : Image(s.PresenterNextImage), atEnd ? "Ende der Präsentation" : "–");
     }
 }
 
@@ -384,7 +387,7 @@ internal sealed class NotesWidget : PresenterWidget
 
     public override void Update(AppState s)
     {
-        string notes = s.CurrentNotes;
+        string notes = s.PresenterNotes;
         double size = 30 * Fs;
         if (text.Text != (notes.Length == 0 ? "Keine Notizen" : notes)) text.Text = notes.Length == 0 ? "Keine Notizen" : notes;
         text.Opacity = notes.Length == 0 ? 0.35 : 1;
@@ -417,8 +420,8 @@ internal sealed class SlideCounterWidget : PresenterWidget
 
     public override void Update(AppState s)
     {
-        position.Text = s.SlidePositionText;
-        int clicks = s.CurrentSlideMeta?.ClickCount ?? 0;
+        position.Text = s.PresenterPositionText;
+        int clicks = s.PresenterSlideMeta?.ClickCount ?? 0;
         if (dots.Children.Count != clicks)
         {
             dots.Children.Clear();
