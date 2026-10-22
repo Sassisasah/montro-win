@@ -2,6 +2,9 @@
 
 ## Getestet
 
+- **22.10.2026** – Video-Karte am Test-PC über UI Automation (Testdeck live, Folie 7): Pause →
+  `Player.State` 1, Position steht bei 5,4 s; Weiter → läuft ab 5,9 s; Stopp → State 2, 0,0 s;
+  „Abspielen“ → läuft wieder ab 0. Sichtprüfung der Karte durch die Nutzerin steht aus.
 - **22.10.2026** – Baukasten der Referent*innenansicht: von der Nutzerin bedient, „sieht aus als
   würde der ganze Baukasten funktionieren“. Testbild vorher ok (`--referentenbild` →
   `baukasten.png`).
