@@ -40,6 +40,9 @@ public sealed class PowerPointHost
     private string? presPath;
     private bool presWithWindow;
     private IntPtr onTopHwnd;   // platziertes Show-Fenster, das über der Taskleiste bleiben soll
+
+    /// <summary>Fenster der laufenden Show (für das Live-Bild per DWM-Miniatur), Zero = keins.</summary>
+    public volatile IntPtr ShowHwnd;
     // ------------------------------
 
     private CancellationTokenSource? pollCts;
@@ -264,6 +267,7 @@ public sealed class PowerPointHost
         // Folie kurz auf, bevor die Abdeckung wieder nach oben kommt („kommt, geht, kommt wieder“)
         bool topmost = topmostWanted && hwnd != IntPtr.Zero && Monitors.MoveWindow(hwnd, target, topmost: true, insertAfter: PlaceBelow);
         onTopHwnd = topmost ? hwnd : IntPtr.Zero;
+        ShowHwnd = hwnd;
         // Die Taskleiste kommt kurz nach dem Platzieren gern noch einmal hoch – 1,5 s lang dagegenhalten
         for (int i = 0; topmost && i < 15; i++)
         {
@@ -594,6 +598,7 @@ public sealed class PowerPointHost
     private int ExitAllShowsInternal()
     {
         onTopHwnd = IntPtr.Zero;
+        ShowHwnd = IntPtr.Zero;
         if (app == null) return 0;
         dynamic a = app;
         int n = Safe(() => (int)a.SlideShowWindows.Count, 0);

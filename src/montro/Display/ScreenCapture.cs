@@ -48,42 +48,6 @@ public sealed class ScreenShot
         }
     }
 
-    /// <summary>
-    /// Verkleinertes Live-Bild eines Bereichs für Vorschau und Referent*innenansicht (Mac:
-    /// LiveCapture). Mit CAPTUREBLT: Ohne bleibt die PowerPoint-Show schwarz (22.10.2026, die Show
-    /// zeichnet über DWM). Die Abdeckungen liegen beim Live-Bild unter der Show.
-    /// </summary>
-    public static BitmapSource CaptureScaled(PixelRect r, int maxWidth)
-    {
-        int w = Math.Min(maxWidth, r.Width);
-        int h = (int)Math.Round((double)r.Height * w / r.Width);
-        IntPtr screen = Native.GetDC(IntPtr.Zero);
-        IntPtr mem = Native.CreateCompatibleDC(screen);
-        IntPtr bmp = Native.CreateCompatibleBitmap(screen, w, h);
-        IntPtr old = Native.SelectObject(mem, bmp);
-        try
-        {
-            // Volle Größe wie beim Standbild fürs Überblenden (dort am Verbatim bewährt), sonst verkleinern
-            if (w == r.Width)
-                Native.BitBlt(mem, 0, 0, w, h, screen, r.X, r.Y, Native.SRCCOPY | Native.CAPTUREBLT);
-            else
-            {
-                Native.SetStretchBltMode(mem, Native.HALFTONE);
-                Native.StretchBlt(mem, 0, 0, w, h, screen, r.X, r.Y, r.Width, r.Height, Native.SRCCOPY | Native.CAPTUREBLT);
-            }
-            Native.SelectObject(mem, old);
-            var src = Imaging.CreateBitmapSourceFromHBitmap(bmp, IntPtr.Zero, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions());
-            src.Freeze();
-            return src;
-        }
-        finally
-        {
-            Native.DeleteObject(bmp);
-            Native.DeleteDC(mem);
-            Native.ReleaseDC(IntPtr.Zero, screen);
-        }
-    }
-
     public Color Pixel(int x, int y)
     {
         int i = y * stride + x * 4;

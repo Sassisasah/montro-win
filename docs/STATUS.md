@@ -2,10 +2,11 @@
 
 ## Getestet
 
-- **22.10.2026** – Live-Bild, erster Versuch: Das Bild der aktuellen Folie blieb schwarz
-  (Nutzerin). Aufnahme ohne `CAPTUREBLT` erfasst die PowerPoint-Show nicht. Jetzt wie das
-  bewährte Standbild fürs Überblenden: volle Größe mit `CAPTUREBLT`; das Log nennt die Farbe in
-  der Bildmitte. Erneuter Test steht aus.
+- **22.10.2026** – Live-Bild per Bildschirmfoto: erst schwarz (ohne `CAPTUREBLT`), dann sichtbar,
+  aber laut Nutzerin „eher ein Daumenkino“ (2 Bilder/s, Effekte und Video nicht flüssig).
+  Umgebaut auf DWM-Miniatur des Show-Fensters. Geprüft mit `montro.exe --miniaturtest`: Die
+  Miniatur erscheint auch im „layered“ Ausgabefenster, im Seitenverhältnis eingepasst. Test auf
+  dem Verbatim steht aus.
 
 - **22.10.2026** – Referent*innenansicht auf dem zweiten Verbatim: läuft (Nutzerin: „geht“).
   Die aktuelle Folie war extrem verpixelt: Der Bildspeicher gab das 280-px-Bild der
@@ -134,10 +135,8 @@
   Timer-Blinken und Ende auf Schwarz prüfen; Popup-Modus (links
   Referent*innenansicht, rechts PowerPoint). Video-Laufzeit bleibt leer, bis die
   Video-Erkennung kommt.
-- **22.10.2026** – Live-Bild eingebaut, noch nicht auf dem Verbatim geprüft: Aktuelle Folie in
-  Live-Folie-Karte und Referent*innenansicht zeigt zweimal pro Sekunde den Publikumsbildschirm
-  (Animationsstand, Video). Aufnahme im Hintergrund, am Test-PC 30–60 ms je Bild (gemessen am
-  Laptop-Bildschirm). Im Popup-Modus weiter das Vorschaubild.
+- **22.10.2026** – Live-Bild (DWM-Miniatur) in Live-Folie-Karte und Referent*innenansicht auf dem
+  Verbatim und im Popup-Modus prüfen: Animationen, Video flüssig, Schwarz/Übergang.
 - **21.10.2026** – Meilenstein 4: noch nicht geprüft sind Timer-Einstellungen und Ziehen &
   Ablegen. Offen: Builder und Presets der Referent*innenansicht, Video-Karte, „In PowerPoint
   bearbeiten“, „Aktualisieren“, Show-Dateien `.montro`.

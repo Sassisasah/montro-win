@@ -204,14 +204,6 @@ internal static class Native
     [DllImport("gdi32.dll")]
     public static extern bool BitBlt(IntPtr dest, int x, int y, int w, int h, IntPtr src, int sx, int sy, int rop);
 
-    public const int HALFTONE = 4;
-
-    [DllImport("gdi32.dll")]
-    public static extern int SetStretchBltMode(IntPtr hdc, int mode);
-
-    [DllImport("gdi32.dll")]
-    public static extern bool StretchBlt(IntPtr dest, int x, int y, int w, int h, IntPtr src, int sx, int sy, int sw, int sh, int rop);
-
     [DllImport("gdi32.dll")]
     public static extern bool DeleteObject(IntPtr obj);
 

@@ -18,6 +18,7 @@ public partial class MainWindow : Window
     private PowerPointTestWindow? testWindow;
     private bool shutdownDone;
     private Point dragStart;
+    private readonly Display.LiveThumbnail liveThumb;
     private PresentationItem? dragItem;
 
     public MainWindow()
@@ -51,6 +52,7 @@ public partial class MainWindow : Window
         UpdateNavigatorHint();
         UpdateBlackoutButton();
         PresenterPreviewHost.Child = new PresenterOutputView(state);
+        liveThumb = new Display.LiveThumbnail(LivePreview);
 
         PreviewKeyDown += OnKey;
         DragEnter += OnDragOver;
@@ -91,6 +93,9 @@ public partial class MainWindow : Window
                 break;
             case nameof(AppState.CurrentSlide):
                 ScrollNavigatorToCurrent();
+                break;
+            case nameof(AppState.LiveSource):
+                liveThumb.Source = state.LiveSource;
                 break;
             case nameof(AppState.BlinkPhase):
                 UpdateBlink();

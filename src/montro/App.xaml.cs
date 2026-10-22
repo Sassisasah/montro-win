@@ -25,6 +25,13 @@ public partial class App : Application
             Dispatcher.InvokeAsync(async () => Shutdown(await Testing.SelfTest.RunAsync(e.Args)));
             return;
         }
+        if (e.Args.Contains("--miniaturtest"))
+        {
+            ShutdownMode = ShutdownMode.OnExplicitShutdown;
+            base.OnStartup(e);
+            Dispatcher.InvokeAsync(async () => Shutdown(await Testing.ThumbnailTest.RunAsync(e.Args)));
+            return;
+        }
         if (e.Args.Contains("--referentenbild"))
         {
             // Testbilder der Referent*innenansicht schreiben und beenden (ohne PowerPoint, ohne Fenster)

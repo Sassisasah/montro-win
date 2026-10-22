@@ -258,9 +258,14 @@ internal sealed class SlideFrame : Panel
             Child = inner,
         };
         Children.Add(frame);
+        live = new Display.LiveThumbnail(inner);
     }
 
     private readonly Border frame;
+    private readonly Display.LiveThumbnail live;
+
+    /// <summary>Show-Fenster als Live-Bild über dem Vorschaubild (Zero = nur Vorschaubild).</summary>
+    public void SetLive(IntPtr showWindow) => live.Source = showWindow;
 
     public void Set(ImageSource? source, string placeholderText, bool black = false)
     {
@@ -304,8 +309,11 @@ internal sealed class CurrentSlideWidget : PresenterWidget
         Children.Add(WithTitle("Aktuelle Folie", frame));
     }
 
-    public override void Update(AppState s) =>
+    public override void Update(AppState s)
+    {
         frame.Set(s.CurrentSlideSource, "Keine Folie live", s.IsBlackout || s.IsEndBlack);
+        frame.SetLive(s.LiveSource);
+    }
 }
 
 internal sealed class NextSlideWidget : PresenterWidget

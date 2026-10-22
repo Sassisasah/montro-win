@@ -29,6 +29,8 @@ Der Vertrag dafür steht in [KOMPATIBILITAET.md](KOMPATIBILITAET.md).
 | `src/montro/Views/PresenterView.cs` | Referent*innenansicht mit allen Bausteinen, Fläche 1080 Einheiten hoch (Mac: `PresenterView.swift`) |
 | `src/montro/Display/OutputManager.cs` | Schwarzbild, Übergang und Ausgabefenster der Referent*innenansicht (Bildschirm oder Popup) |
 | `src/montro/Testing/PresenterSnapshot.cs` | `--referentenbild`: Testbilder der Referent*innenansicht ohne PowerPoint |
+| `src/montro/Display/LiveThumbnail.cs` | Live-Bild der Show als DWM-Miniatur in einem Element (Mac: `LiveCapture`) |
+| `src/montro/Testing/ThumbnailTest.cs` | `--miniaturtest`: Miniatur in einem „layered“ Fenster prüfen |
 | `src/montro/Views/Converters.cs` | Bindungshilfen (Sichtbarkeit, Bilder ohne Dateisperre) |
 | `src/montro/Core/PresentationMeta.cs` | Ergebnis des Parsers: Folien mit Ausblendung, Notizen, Klicks, Videos (wie `SlideMeta` am Mac) |
 | `src/montro/Pptx/PptxParser.cs` | PPTX-Parser, portiert aus `PPTXParser.swift`: liest das ZIP direkt, ohne PowerPoint |
@@ -136,11 +138,13 @@ Fremdbibliothek. Zählweise absichtlich wie am Mac:
   Fläche von 1080 Einheiten Höhe; die Breite folgt dem Seitenverhältnis, so gelten die
   Mac-Schriftgrößen unverändert. Die vielen Änderungsmeldungen pro Takt (Timer, Uhr, Blinken)
   werden zu einem Neuzeichnen zusammengefasst.
-- **Live-Bild:** GDI `BitBlt` des Publikumsbildschirms in voller Größe **mit `CAPTUREBLT`**
-  (ohne blieb das Bild der PowerPoint-Show schwarz, 22.10.2026), alle 500 ms und
-  direkt nach jedem Wechsel, im Hintergrund-Thread (30–60 ms je Aufnahme). Nicht bei Schwarz,
-  Start oder Übergang, und nicht im Popup-Modus (dort könnten andere Fenster das
-  PowerPoint-Fenster überdecken) – dann das Vorschaubild.
+- **Live-Bild:** DWM-Miniatur des Show-Fensters (`DwmRegisterThumbnail`, `Display/LiveThumbnail.cs`),
+  wie die Taskleisten-Vorschau: volle Bildrate, ohne Rechenlast, funktioniert auch im Popup-Modus
+  und im „layered“ Ausgabefenster. Bildschirmfotos (GDI) schafften nur ~2 Bilder/s bei 30–60 ms
+  je Aufnahme („Daumenkino“) und brauchten `CAPTUREBLT`, sonst war die Show schwarz. Die
+  Miniatur liegt über dem WPF-Inhalt ihres Fensters, daher ist das LIVE-Abzeichen der Karte
+  „Live-Folie“ neben die Überschrift gewandert; sie wird auf ScrollViewer und Fenster
+  zugeschnitten. Bei Schwarz, Start und Übergang keine Miniatur, dann das Vorschaubild.
 
 - **Kein `HttpListener`** für die Remote-API (später), weil er für `http://+:8765/` eine
   URL-Reservierung mit Adminrechten braucht. Geplant ist ein eigener kleiner HTTP-Server auf

@@ -223,20 +223,21 @@
                                 <StackPanel Orientation="Horizontal">
                                     <TextBlock Style="{StaticResource Brand.Icon}" Text="&#xE714;" Foreground="{StaticResource Brand.Accent}" Margin="0,0,6,0" />
                                     <TextBlock Text="Live-Folie" FontWeight="SemiBold" FontSize="14" />
+                                    <!-- am Mac auf dem Bild; hier daneben, weil das Live-Bild darüber liegt -->
+                                    <Border Background="{StaticResource Brand.Live}" CornerRadius="8" Padding="7,1" Margin="8,0,0,0" VerticalAlignment="Center"
+                                            Visibility="{Binding IsShowRunning, Converter={StaticResource Vis}}">
+                                        <TextBlock Text="LIVE" FontSize="11" FontWeight="Black" Foreground="White" />
+                                    </Border>
                                 </StackPanel>
                             </DockPanel>
                             <Border Background="Black" CornerRadius="6" ClipToBounds="True">
                                 <Viewbox Stretch="Uniform">
-                                    <Grid Width="1280" Height="720">
+                                    <!-- Live-Bild der Show liegt als DWM-Miniatur darüber (verdeckt WPF-Inhalt) -->
+                                    <Grid x:Name="LivePreview" Width="1280" Height="720">
                                         <Image Source="{Binding CurrentSlideSource}" Stretch="Uniform" RenderOptions.BitmapScalingMode="HighQuality" />
                                         <Rectangle Fill="#BF000000" Visibility="{Binding LiveOverlayText, Converter={StaticResource NullVis}}" />
                                         <TextBlock Text="{Binding LiveOverlayText}" Foreground="#80FFFFFF" FontSize="40"
                                                    HorizontalAlignment="Center" VerticalAlignment="Center" />
-                                        <Border Background="{StaticResource Brand.Live}" CornerRadius="16" Padding="14,4" Margin="16"
-                                                HorizontalAlignment="Left" VerticalAlignment="Top"
-                                                Visibility="{Binding IsShowRunning, Converter={StaticResource Vis}}">
-                                            <TextBlock Text="LIVE" FontSize="26" FontWeight="Black" Foreground="White" />
-                                        </Border>
                                     </Grid>
                                 </Viewbox>
                             </Border>
