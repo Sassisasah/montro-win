@@ -133,8 +133,12 @@
 - PowerPoint ohne Lizenz: lässt sich auf dem Test-PC nicht nachstellen.
 - **22.10.2026** – Meilenstein 4, Etappe 3: Referent*innenansicht auf dem zweiten Verbatim mit
   Timer-Blinken und Ende auf Schwarz prüfen; Popup-Modus (links
-  Referent*innenansicht, rechts PowerPoint). Video-Laufzeit bleibt leer, bis die
-  Video-Erkennung kommt.
+  Referent*innenansicht, rechts PowerPoint).
+- **22.10.2026** – Video-Laufzeit: Die Nutzerin vermisste die Restzeit des Videos (Baustein war
+  noch leer). Jetzt liest montro das Video der Live-Folie über `View.Player(Id)` aus (Position,
+  Länge aus `MediaFormat.Length`, „läuft“ = Position bewegt sich). Testbild ok (Name, Gesamt,
+  Rest rot ab 10 s, Balken). Mit echtem Video noch nicht geprüft; das Log zeigt die Werte von
+  `Player.State`.
 - **22.10.2026** – Live-Bild (DWM-Miniatur) im Popup-Modus prüfen; auf dem Verbatim bestätigt.
 - **22.10.2026** – Baukasten der Referent*innenansicht: Testbild ok (`--referentenbild` →
   `baukasten.png`). Noch nicht bedient: Ziehen und Skalieren, Ein-/Ausschalten, Eigenschaften,

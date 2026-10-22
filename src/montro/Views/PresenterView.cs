@@ -492,14 +492,67 @@ internal sealed class ClockWidget : PresenterWidget
 internal sealed class VideoTimeWidget : PresenterWidget
 {
     private Border? placeholder;
+    private readonly Border box;
+    private readonly TextBlock glyph = new() { FontFamily = new FontFamily("Segoe Fluent Icons, Segoe MDL2 Assets"), VerticalAlignment = VerticalAlignment.Center };
+    private readonly TextBlock name = new() { Opacity = 0.7, TextTrimming = TextTrimming.CharacterEllipsis, VerticalAlignment = VerticalAlignment.Center };
+    private readonly TextBlock total = new() { Opacity = 0.7, VerticalAlignment = VerticalAlignment.Center };
+    private readonly TextBlock rest = new() { FontWeight = FontWeights.Bold, VerticalAlignment = VerticalAlignment.Center };
+    private readonly ProgressLine progress;
 
-    public VideoTimeWidget(WidgetConfig c) : base(c) { }
+    /// <summary>Name, „Gesamt“, „Rest“ (rot ab 10 s) und Fortschritt (Mac: VideoTimeWidget).</summary>
+    public VideoTimeWidget(WidgetConfig c) : base(c)
+    {
+        foreach (var t in new[] { glyph, name, total, rest }) t.FontSize = 30 * Fs;
+        glyph.FontSize = 24 * Fs;
+        var row = new DockPanel { LastChildFill = true };
+        glyph.Margin = new Thickness(0, 0, 14 * Fs, 0);
+        total.Margin = new Thickness(8 * Fs, 0, 14 * Fs, 0);
+        DockPanel.SetDock(glyph, Dock.Left);
+        DockPanel.SetDock(rest, Dock.Right);
+        DockPanel.SetDock(total, Dock.Right);
+        row.Children.Add(glyph);
+        row.Children.Add(rest);
+        row.Children.Add(total);
+        row.Children.Add(name);
+        progress = new ProgressLine(Math.Max(3, 6 * Fs)) { Margin = new Thickness(0, 4 * Fs, 0, 0) };
+        var stack = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
+        stack.Children.Add(new Viewbox { Stretch = Stretch.Uniform, StretchDirection = StretchDirection.DownOnly, Child = row, HorizontalAlignment = HorizontalAlignment.Stretch });
+        stack.Children.Add(progress);
+        box = new Border
+        {
+            Background = new SolidColorBrush(Color.FromArgb(18, 255, 255, 255)),
+            CornerRadius = new CornerRadius(8 * Fs),
+            Padding = new Thickness(12 * Fs, 0, 12 * Fs, 0),
+            Child = stack,
+            Visibility = Visibility.Collapsed,
+        };
+        Children.Add(box);
+        // Zeile so breit wie der Baustein, damit „Rest“ rechts steht
+        SizeChanged += (_, _) => row.Width = Math.Max(ActualWidth - 24 * Fs, 10);
+    }
 
     public override void Update(AppState s)
     {
-        if (!Editing || placeholder != null) return;
-        placeholder = Placeholder("Video-Laufzeit (sichtbar, sobald ein Video läuft)");
-        Children.Add(placeholder);
+        if (s.Video is not { } v)
+        {
+            box.Visibility = Visibility.Collapsed;
+            if (Editing && placeholder == null)
+            {
+                placeholder = Placeholder("Video-Laufzeit (sichtbar, sobald ein Video läuft)");
+                Children.Add(placeholder);
+            }
+            if (placeholder != null) placeholder.Visibility = Visibility.Visible;
+            return;
+        }
+        if (placeholder != null) placeholder.Visibility = Visibility.Collapsed;
+        box.Visibility = Visibility.Visible;
+        glyph.Text = v.Playing ? "" : "";   // Play / Pause
+        name.Text = v.Name;
+        total.Text = v.Duration > 0 ? $"Gesamt {TimeFormat.Clock(v.Duration)}" : "";
+        rest.Text = v.Duration > 0 ? $"Rest {TimeFormat.Clock(v.Remaining)}" : TimeFormat.Clock(v.Position, roundUp: false);
+        rest.Foreground = v.Duration > 0 && v.Remaining <= 10 ? Live : null;
+        if (rest.Foreground == null) rest.ClearValue(TextBlock.ForegroundProperty);
+        progress.Set(v.Progress, Accent);
     }
 }
 

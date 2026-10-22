@@ -125,6 +125,8 @@ public sealed partial class AppState : Observable
 
     internal void SimulateStopped() => IsShowRunning = false;
 
+    internal void SimulateVideo(VideoState v) => Video = v;
+
     // MARK: - Eigenschaften
 
     public PresentationItem? Selected
@@ -150,6 +152,12 @@ public sealed partial class AppState : Observable
 
     public int CurrentSlide { get => currentSlide; private set { if (Set(ref currentSlide, value)) RaiseDerived(); } }
     public int ClickInSlide { get => clickInSlide; private set { if (Set(ref clickInSlide, value)) RaiseDerived(); } }
+
+    private VideoState? video;
+
+    /// <summary>Video der Live-Folie, sobald es läuft bzw. begonnen hat (Mac: video.playing).</summary>
+    public VideoState? Video { get => video; private set => Set(ref video, value); }
+
     public bool IsShowRunning
     {
         get => isShowRunning;
@@ -666,6 +674,7 @@ public sealed partial class AppState : Observable
         LiveItem = null;
         CurrentSlide = 0;
         ClickInSlide = 0;
+        Video = null;
         StatusMessage = message;
     }
 
@@ -800,6 +809,7 @@ public sealed partial class AppState : Observable
         }
         if (s.SlideIndex > 0) CurrentSlide = s.SlideIndex;
         ClickInSlide = s.Click;
+        Video = s.Video;
         if (!IsEndBlack) IsBlackout = s.IsBlack;
     }
 

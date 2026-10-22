@@ -36,6 +36,7 @@ public static class PresenterSnapshot
         state.Timer.SetDuration(15);
         state.Timer.Start();
         state.Message.Send("Noch 5 Minuten");
+        state.SimulateVideo(new Montro.PowerPoint.VideoState("Testvideo", 3.2, 10.0, true));
 
         Render(new PresenterOutputView(state), 1920, 1080, Path.Combine(outDir, "referent-vollbild.png"));
         Render(new PresenterOutputView(state), 1120, 660, Path.Combine(outDir, "referent-popup.png"));

@@ -1,6 +1,8 @@
 # Änderungsprotokoll
 
 ## 0.4 – 21.10.2026
+- Neu (22.10.2026): Video-Laufzeit in der Referent*innenansicht (Name, Gesamt, Rest, Fortschritt),
+  sobald auf der Live-Folie ein Video läuft.
 - Neu (22.10.2026): Baukasten der Referent*innenansicht wie am Mac mit Presets je Präsentation,
   Entwurf während der Show, Notizen-Schriftgröße im Preset.
 - Neu (Etappe 3, 22.10.2026): Referent*innenansicht wie am Mac (Timer, Uhr, aktuelle und nächste

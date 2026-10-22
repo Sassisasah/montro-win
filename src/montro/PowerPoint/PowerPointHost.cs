@@ -532,7 +532,66 @@ public sealed class PowerPointHost
             click = Safe(() => (int)v.GetClickIndex(), 0);
             clicks = Safe(() => (int)v.GetClickCount(), 0);
         }
-        return new ShowState(true, (SlideShowRunState)st, idx, pos, click, clicks);
+        return new ShowState(true, (SlideShowRunState)st, idx, pos, click, clicks, ReadVideo(v, idx));
+    }
+
+    private int videoSlide = -1;
+    private List<(int Id, string Name, double Length)> slideVideos = new();
+    private readonly Dictionary<int, double> lastVideoPos = new();
+    private string lastVideoLog = "";
+
+    /// <summary>
+    /// Video der aktuellen Folie über <c>View.Player(ShapeId)</c>: Position, Länge, läuft es?
+    /// „Läuft“ = Position bewegt sich seit der letzten Abfrage (die Werte von
+    /// <c>Player.State</c> werden nur protokolliert). Die Video-Formen werden je Folie einmal gesucht.
+    /// </summary>
+    private VideoState? ReadVideo(dynamic v, int idx)
+    {
+        if (idx <= 0) return null;
+        if (idx != videoSlide)
+        {
+            videoSlide = idx;
+            lastVideoPos.Clear();
+            slideVideos = new();
+            try
+            {
+                dynamic shapes = v.Slide.Shapes;
+                int n = (int)shapes.Count;
+                for (int i = 1; i <= n; i++)
+                {
+                    dynamic sh = shapes.Item(i);
+                    // msoMedia = 16, ppMediaTypeMovie = 3
+                    if (Safe(() => (int)sh.Type, 0) != 16 || Safe(() => (int)sh.MediaType, 0) != 3) continue;
+                    double len = Safe(() => Convert.ToDouble((object)sh.MediaFormat.Length), 0.0) / 1000;
+                    slideVideos.Add(((int)sh.Id, Safe(() => (string)sh.Name, "Video"), len));
+                }
+            }
+            catch (Exception e)
+            {
+                DebugLog.Write($"Video: Formen auf Folie {idx} nicht lesbar – {StaWorker.Describe(e)}");
+            }
+        }
+        VideoState? best = null;
+        foreach (var (id, name, length) in slideVideos)
+        {
+            double p = Safe(() => Convert.ToDouble((object)v.Player(id).CurrentPosition), -1.0);
+            if (p < 0) continue;
+            p /= 1000;
+            int state = Safe(() => Convert.ToInt32((object)v.Player(id).State), -1);
+            bool moving = lastVideoPos.TryGetValue(id, out var last) && Math.Abs(p - last) > 0.01;
+            lastVideoPos[id] = p;
+            string log = $"{name}: State {state}, {(moving ? "läuft" : "steht")}";
+            if (log != lastVideoLog)
+            {
+                lastVideoLog = log;
+                DebugLog.Write($"Video {log}, {p:0.0}/{length:0.0} s");
+            }
+            // ein laufendes Video hat Vorrang, sonst eines, das schon begonnen hat
+            if (p <= 0 && !moving) continue;
+            var vs = new VideoState(name, p, length, moving);
+            if (best == null || (moving && !best.Playing)) best = vs;
+        }
+        return best;
     }
 
     private dynamic? FindShowWindow()
