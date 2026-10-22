@@ -2,6 +2,9 @@
 
 ## Getestet
 
+- **22.10.2026** – Baukasten der Referent*innenansicht: von der Nutzerin bedient, „sieht aus als
+  würde der ganze Baukasten funktionieren“. Testbild vorher ok (`--referentenbild` →
+  `baukasten.png`).
 - **22.10.2026** – Live-Bild per Bildschirmfoto: erst schwarz (ohne `CAPTUREBLT`), dann sichtbar,
   aber laut Nutzerin „eher ein Daumenkino“ (2 Bilder/s, Effekte und Video nicht flüssig).
   Umgebaut auf DWM-Miniatur des Show-Fensters. Geprüft mit `montro.exe --miniaturtest`: Die
@@ -142,10 +145,6 @@
   „Rest 00:00“. `Player.State` 0 = läuft, 2 = zu Ende (gemessen); „läuft“ nutzt jetzt beides.
   Die erste Video-Abfrage kam etwa 4 s nach dem Sprung (Video bei 3 s) – beobachten.
 - **22.10.2026** – Live-Bild (DWM-Miniatur) im Popup-Modus prüfen; auf dem Verbatim bestätigt.
-- **22.10.2026** – Baukasten der Referent*innenansicht: Testbild ok (`--referentenbild` →
-  `baukasten.png`). Noch nicht bedient: Ziehen und Skalieren, Ein-/Ausschalten, Eigenschaften,
-  Presets speichern/umbenennen/löschen/zuweisen, Entwurf während der Show (Jetzt / nach der
-  Präsentation übernehmen), Notizen-Schriftgröße landet im Preset.
 - **21.10.2026** – Meilenstein 4: noch nicht geprüft sind Timer-Einstellungen und Ziehen &
   Ablegen. Offen: Video-Karte, „In PowerPoint bearbeiten“, „Aktualisieren“, Show-Dateien
   `.montro`.
