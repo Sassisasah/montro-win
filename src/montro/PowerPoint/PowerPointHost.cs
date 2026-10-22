@@ -542,8 +542,8 @@ public sealed class PowerPointHost
 
     /// <summary>
     /// Video der aktuellen Folie über <c>View.Player(ShapeId)</c>: Position, Länge, läuft es?
-    /// „Läuft“ = Position bewegt sich seit der letzten Abfrage (die Werte von
-    /// <c>Player.State</c> werden nur protokolliert). Die Video-Formen werden je Folie einmal gesucht.
+    /// „Läuft“ = <c>Player.State</c> 0 (ppPlaying; 2 = gestoppt/zu Ende, am Test-PC gemessen) oder die
+    /// Position bewegt sich seit der letzten Abfrage. Die Video-Formen werden je Folie einmal gesucht.
     /// </summary>
     private VideoState? ReadVideo(dynamic v, int idx)
     {
@@ -578,7 +578,7 @@ public sealed class PowerPointHost
             if (p < 0) continue;
             p /= 1000;
             int state = Safe(() => Convert.ToInt32((object)v.Player(id).State), -1);
-            bool moving = lastVideoPos.TryGetValue(id, out var last) && Math.Abs(p - last) > 0.01;
+            bool moving = (state == 0 && p > 0) || (lastVideoPos.TryGetValue(id, out var last) && Math.Abs(p - last) > 0.01);
             lastVideoPos[id] = p;
             string log = $"{name}: State {state}, {(moving ? "läuft" : "steht")}";
             if (log != lastVideoLog)

@@ -136,9 +136,11 @@
   Referent*innenansicht, rechts PowerPoint).
 - **22.10.2026** – Video-Laufzeit: Die Nutzerin vermisste die Restzeit des Videos (Baustein war
   noch leer). Jetzt liest montro das Video der Live-Folie über `View.Player(Id)` aus (Position,
-  Länge aus `MediaFormat.Length`, „läuft“ = Position bewegt sich). Testbild ok (Name, Gesamt,
-  Rest rot ab 10 s, Balken). Mit echtem Video noch nicht geprüft; das Log zeigt die Werte von
-  `Player.State`.
+  Länge aus `MediaFormat.Length`). Selbst am Test-PC geprüft (Testdeck live auf Verbatim 3,
+  Referent*innenansicht auf Verbatim 2, Sprung zu Folie 7, Bildschirmfotos): „Testvideo ·
+  Gesamt 00:10 · Rest 00:04“ mit Balken während der Wiedergabe, am Ende Pause-Symbol und
+  „Rest 00:00“. `Player.State` 0 = läuft, 2 = zu Ende (gemessen); „läuft“ nutzt jetzt beides.
+  Die erste Video-Abfrage kam etwa 4 s nach dem Sprung (Video bei 3 s) – beobachten.
 - **22.10.2026** – Live-Bild (DWM-Miniatur) im Popup-Modus prüfen; auf dem Verbatim bestätigt.
 - **22.10.2026** – Baukasten der Referent*innenansicht: Testbild ok (`--referentenbild` →
   `baukasten.png`). Noch nicht bedient: Ziehen und Skalieren, Ein-/Ausschalten, Eigenschaften,
