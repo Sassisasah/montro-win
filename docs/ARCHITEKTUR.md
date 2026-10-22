@@ -136,7 +136,8 @@ Fremdbibliothek. Zählweise absichtlich wie am Mac:
   Fläche von 1080 Einheiten Höhe; die Breite folgt dem Seitenverhältnis, so gelten die
   Mac-Schriftgrößen unverändert. Die vielen Änderungsmeldungen pro Takt (Timer, Uhr, Blinken)
   werden zu einem Neuzeichnen zusammengefasst.
-- **Live-Bild:** GDI `StretchBlt` des Publikumsbildschirms auf 1280 px Breite, alle 500 ms und
+- **Live-Bild:** GDI `BitBlt` des Publikumsbildschirms in voller Größe **mit `CAPTUREBLT`**
+  (ohne blieb das Bild der PowerPoint-Show schwarz, 22.10.2026), alle 500 ms und
   direkt nach jedem Wechsel, im Hintergrund-Thread (30–60 ms je Aufnahme). Nicht bei Schwarz,
   Start oder Übergang, und nicht im Popup-Modus (dort könnten andere Fenster das
   PowerPoint-Fenster überdecken) – dann das Vorschaubild.

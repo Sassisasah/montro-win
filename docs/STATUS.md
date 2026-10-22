@@ -2,6 +2,11 @@
 
 ## Getestet
 
+- **22.10.2026** – Live-Bild, erster Versuch: Das Bild der aktuellen Folie blieb schwarz
+  (Nutzerin). Aufnahme ohne `CAPTUREBLT` erfasst die PowerPoint-Show nicht. Jetzt wie das
+  bewährte Standbild fürs Überblenden: volle Größe mit `CAPTUREBLT`; das Log nennt die Farbe in
+  der Bildmitte. Erneuter Test steht aus.
+
 - **22.10.2026** – Referent*innenansicht auf dem zweiten Verbatim: läuft (Nutzerin: „geht“).
   Die aktuelle Folie war extrem verpixelt: Der Bildspeicher gab das 280-px-Bild der
   Folienkacheln heraus. Behoben, der Speicher unterscheidet jetzt nach Bildbreite. Danach von

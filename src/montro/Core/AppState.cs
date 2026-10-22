@@ -352,6 +352,19 @@ public sealed class AppState : Observable
 
     private bool capturing;
 
+    /// <summary>Farbe in der Bildmitte fürs Log (schwarzes Live-Bild erkennen).</summary>
+    private static string CenterColor(System.Windows.Media.Imaging.BitmapSource img)
+    {
+        try
+        {
+            var px = new byte[4];
+            var bgra = new System.Windows.Media.Imaging.FormatConvertedBitmap(img, System.Windows.Media.PixelFormats.Bgra32, null, 0);
+            bgra.CopyPixels(new System.Windows.Int32Rect(bgra.PixelWidth / 2, bgra.PixelHeight / 2, 1, 1), px, 4, 0);
+            return $"#{px[2]:X2}{px[1]:X2}{px[0]:X2}";
+        }
+        catch { return "?"; }
+    }
+
     /// <summary>
     /// Live-Bild aufnehmen. Das Lesen des Bildschirms dauert am Test-PC 30–60 ms, daher im
     /// Hintergrund, damit Bedienung und Takt nicht stocken.
@@ -371,8 +384,8 @@ public sealed class AppState : Observable
         try
         {
             var sw = System.Diagnostics.Stopwatch.StartNew();
-            var img = await Task.Run(() => ScreenShot.CaptureScaled(screen.Bounds, 1280));
-            if (first) DebugLog.Write($"Live-Bild aufgenommen in {sw.ElapsedMilliseconds} ms");
+            var img = await Task.Run(() => ScreenShot.CaptureScaled(screen.Bounds, screen.Bounds.Width));
+            if (first) DebugLog.Write($"Live-Bild aufgenommen in {sw.ElapsedMilliseconds} ms, Mitte {CenterColor(img)}");
             // inzwischen schwarz oder gestoppt → verwerfen
             liveImage = CanCaptureLive ? img : null;
             Raise(nameof(CurrentSlideSource));
