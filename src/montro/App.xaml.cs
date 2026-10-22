@@ -38,12 +38,17 @@ public partial class App : Application
     {
         // Während einer Show darf die App nicht wegen eines Bedienfehlers abstürzen.
         DebugLog.Write($"Fehler in der Oberfläche: {e.Exception}");
-        MessageBox.Show(e.Exception.Message, "montro", MessageBoxButton.OK, MessageBoxImage.Warning);
         e.Handled = true;
+        // Beim Beenden (Fenster schon zu, Ressourcen weg) nur protokollieren, keine Meldung zeigen
+        if (exiting || Current?.MainWindow is not { IsVisible: true }) return;
+        MessageBox.Show(e.Exception.Message, "montro", MessageBoxButton.OK, MessageBoxImage.Warning);
     }
+
+    private static bool exiting;
 
     protected override void OnExit(ExitEventArgs e)
     {
+        exiting = true;
         DebugLog.Write("montro beendet");
         base.OnExit(e);
     }

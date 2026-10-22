@@ -456,7 +456,7 @@ public sealed class AppState : Observable
         catch (Exception e)
         {
             StatusMessage = "Start fehlgeschlagen";
-            ErrorRaised?.Invoke(StaWorker.Describe(e));
+            ErrorRaised?.Invoke(ExplainPowerPointError(e));
         }
         finally
         {
@@ -493,9 +493,14 @@ public sealed class AppState : Observable
     public async Task Stop()
     {
         if (!IsShowRunning && !IsStarting) return;
+        string message = "Gestoppt – Ausgänge schwarz";
         try { await ppt.StopAsync(); }
-        catch (Exception e) { DebugLog.Write($"Stopp: {StaWorker.Describe(e)}"); }
-        MarkStopped("Gestoppt – Ausgänge schwarz");
+        catch (Exception e)
+        {
+            message = ExplainPowerPointError(e);
+            DebugLog.Write($"Stopp: {message}");
+        }
+        MarkStopped(message);
     }
 
     private void MarkStopped(string message)
@@ -606,7 +611,22 @@ public sealed class AppState : Observable
     private async void Send(Func<Task> command)
     {
         try { await command(); }
-        catch (Exception e) { StatusMessage = StaWorker.Describe(e); }
+        catch (Exception e) { StatusMessage = ExplainPowerPointError(e); }
+    }
+
+    /// <summary>
+    /// Fehlertext für die Statuszeile. Antwortet PowerPoint nicht, weil ein Dialog offen ist
+    /// (z. B. „Änderungen speichern?“), den Dialog benennen und auf den Laptop holen.
+    /// </summary>
+    private static string ExplainPowerPointError(Exception e)
+    {
+        string msg = StaWorker.Describe(e);
+        if (e.GetBaseException() is not TimeoutException) return msg;
+        var dialogs = PowerPointDialogs.Describe();
+        if (dialogs.Count == 0) return msg;
+        PowerPointDialogs.BringToFront();
+        DebugLog.Write($"PowerPoint-Dialog offen: {string.Join(" | ", dialogs)}");
+        return $"PowerPoint wartet auf eine Antwort im Dialog „{dialogs[0]}“ – bitte dort beantworten.";
     }
 
     /// <summary>Neuer Show-Zustand aus der Abfrage-Schleife (UI-Thread).</summary>

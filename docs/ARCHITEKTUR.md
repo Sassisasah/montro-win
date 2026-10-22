@@ -178,6 +178,20 @@ Fremdbibliothek. Zählweise absichtlich wie am Mac:
   beim Wechsel auf einen Monitor mit 150 % selbst (WM_DPICHANGED). Schwarzbild- und
   Übergangsfenster fangen die Meldung ab und werden nur in physischen Pixeln per `SetWindowPos`
   platziert, ebenfalls 1 Pixel niedriger als der Bildschirm.
+- **„Änderungen speichern?“ nach dem Show-Ende:** Die Show-Einstellungen (Show-Typ,
+  Referentenansicht aus …) markieren die Präsentation als geändert. Endete die Show, schloss
+  PowerPoint die fensterlose Präsentation und fragte nach dem Speichern – der Dialog blockierte
+  danach jeden Befehl. montro setzt deshalb `Presentation.Saved = true` nach den Einstellungen und
+  vor jedem Beenden/Schließen.
+- **Offener PowerPoint-Dialog:** Antwortet PowerPoint nicht (Zeitlimit), sucht montro sichtbare
+  Dialoge von `POWERPNT.EXE` (`#32770`, `NUIDialog`), nennt deren Text in der Statuszeile und holt
+  sie auf den Hauptbildschirm (Mac 0.34).
+- **Tastaturfokus nach dem Start:** `SlideShowSettings.Run()` aktiviert das Show-Fenster; Tasten und
+  Clicker gingen dann direkt an PowerPoint, an der Ende-Sperre vorbei bis „Ende der
+  Bildschirmpräsentation“. Mit externem Publikumsbildschirm holt montro den Fokus danach zurück.
+- **Log der Nutzerin lesen:** Die Claude-App ist ein MSIX-Paket, ihre Prozesse sehen `%LOCALAPPDATA%`
+  umgeleitet (`…\Packages\Claude_…\LocalCache\Local`). Die echte Datei lässt sich über einen per WMI
+  (`Win32_Process.Create`) gestarteten Prozess nach `%TEMP%` kopieren.
 - **Präsentation verschwindet mit dem Show-Ende:** Eine mit `WithWindow:false` geöffnete
   Präsentation schließt PowerPoint selbst, sobald ihre Show beendet wird. Danach liefert jeder
   Zugriff „Object does not exist“ (0x80048010). montro prüft vor Show-Start und Export, ob die

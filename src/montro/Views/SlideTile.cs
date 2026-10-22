@@ -40,7 +40,7 @@ public sealed class SlideTile : StackPanel
 
         var line = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Center, Margin = new Thickness(0, 3, 0, 0) };
         icons.FontFamily = (FontFamily)Application.Current.FindResource("Brand.IconFont");
-        icons.Foreground = (Brush)Application.Current.FindResource("Brand.SecondaryText");
+        icons.Foreground = Res("Brand.SecondaryText");
         line.Children.Add(number);
         line.Children.Add(icons);
         Children.Add(line);
@@ -59,6 +59,10 @@ public sealed class SlideTile : StackPanel
         };
     }
 
+    /// <summary>Farbe aus den App-Ressourcen; beim Beenden sind die schon weg (dann grau statt Fehler).</summary>
+    private static Brush Res(string key) =>
+        Application.Current?.TryFindResource(key) as Brush ?? Brushes.Gray;
+
     private void OnState(object? s, PropertyChangedEventArgs e)
     {
         if (e.PropertyName is nameof(AppState.CurrentSlide) or nameof(AppState.NavigatorItem) or nameof(AppState.CanControl))
@@ -75,9 +79,9 @@ public sealed class SlideTile : StackPanel
 
         image.Source = Images.Convert(item?.Thumbnail(slide.Index), typeof(ImageSource), "280", System.Globalization.CultureInfo.InvariantCulture) as ImageSource;
         fallback.Text = slide.Index.ToString();
-        fallback.Foreground = (Brush)Application.Current.FindResource("Brand.SecondaryText");
+        fallback.Foreground = Res("Brand.SecondaryText");
         hiddenOverlay.Visibility = slide.Hidden ? Visibility.Visible : Visibility.Collapsed;
-        frame.BorderBrush = (Brush)Application.Current.FindResource(isCurrent ? "Brand.Live" : "Brand.Line");
+        frame.BorderBrush = Res(isCurrent ? "Brand.Live" : "Brand.Line");
         frame.BorderThickness = new Thickness(isCurrent ? 3 : 1);
         number.Text = pos?.ToString() ?? "–";
         number.FontWeight = isCurrent ? FontWeights.Bold : FontWeights.Normal;
