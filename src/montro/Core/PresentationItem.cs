@@ -56,6 +56,9 @@ public sealed class PresentationItem : Observable
 
     public bool IsLive { get => isLive; set => Set(ref isLive, value); }
 
+    /// <summary>Zugewiesene Vorlage der Referent*innenansicht, null = Standard (Mac: presetID).</summary>
+    public Guid? PresetId { get; set; }
+
     public bool IsReady => State == PrepState.Ready;
     public bool IsFailed => State == PrepState.Failed;
     public bool IsBusy => State is PrepState.Pending or PrepState.Preparing;

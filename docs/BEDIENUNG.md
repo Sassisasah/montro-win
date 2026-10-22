@@ -34,7 +34,17 @@ wenn die Ende-Sperre greift).
   schalten bzw. über „Fenster zeigen“. Ein Bildschirm ist entweder Publikum oder
   Referent*innenansicht; wer ihn neu bekommt, verdrängt die andere Rolle ins Popup. Ohne
   externen Publikumsbildschirm liegt die Referent*innenansicht links, PowerPoint rechts daneben.
-  Notizen-Schriftgröße 40–400 % (Strg+Plus/Minus/0). Builder und Presets folgen.
+  Notizen-Schriftgröße 40–400 % (Strg+Plus/Minus/0), gilt sofort und wird im Preset der
+  laufenden Präsentation gespeichert.
+- **Baukasten (Zahnrad in der Karte Referent*innenansicht):** Bausteine ziehen, Ecke unten
+  rechts = Größe, × = ausblenden. Rechts: **Preset** (welche Ansicht bearbeitet wird, speichern,
+  „Als Preset speichern …“, umbenennen, löschen, Zuweisung an die gewählte Präsentation),
+  **Widgets** ein/aus, **Eigenschaften** des gewählten Bausteins (Schriftgröße, Überschrift,
+  Lage in %), **Darstellung** (Hintergrund, Schriftfarbe, Raster 1 %), „Alle Widgets
+  einblenden“, „Standard wiederherstellen“. Ohne Präsentation wirken Änderungen sofort; während
+  einer Präsentation erst mit „Jetzt übernehmen“ oder „Nach der Präsentation übernehmen“.
+  Gespeichert wird mit „In … speichern“ (Strg+S). Beim Live-Schalten startet die Ansicht des
+  Presets der Präsentation, sonst „Standard“.
 - **Timer:** Start/Pause (Strg+T), Zurücksetzen, ±1 min, Blinken, Schnellwahl 5–60 min.
   „Einstellungen“: Redezeit, 1. und 2. Warnung (als Restzeit) mit Farben, Überzogen-Farbe,
   Herunter- oder Hochzählen, ins Minus laufen, Blinken beim Überziehen bzw. in der 2. Warnzeit,

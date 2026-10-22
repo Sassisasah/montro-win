@@ -1,6 +1,8 @@
 # Änderungsprotokoll
 
 ## 0.4 – 21.10.2026
+- Neu (22.10.2026): Baukasten der Referent*innenansicht wie am Mac mit Presets je Präsentation,
+  Entwurf während der Show, Notizen-Schriftgröße im Preset.
 - Neu (Etappe 3, 22.10.2026): Referent*innenansicht wie am Mac (Timer, Uhr, aktuelle und nächste
   Folie, Foliennummer mit Animationspunkten, Notizen, Regie-Nachricht) auf eigenem Bildschirm
   oder im Popup-Fenster; Popup-Modus mit Referent*innenansicht links und PowerPoint rechts.

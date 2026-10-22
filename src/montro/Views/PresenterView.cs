@@ -26,10 +26,15 @@ public sealed class PresenterOutputView : Border
     private readonly Rectangle endBlack = new() { Fill = Brushes.Black };
     private readonly List<PresenterWidget> widgets = new();
     private bool subscribed;
+    private readonly bool editing;
 
-    public PresenterOutputView(AppState state)
+    /// <summary>Gezeigter Aufbau: im Baukasten der Entwurf, sonst die live geschaltete Ansicht.</summary>
+    private PresenterLayout L => editing ? state.DraftLayout : state.Layout;
+
+    public PresenterOutputView(AppState state, bool editing = false)
     {
         this.state = state;
+        this.editing = editing;
         Background = Brushes.Black;
         ClipToBounds = true;
         surface.Children.Add(canvas);
@@ -70,7 +75,7 @@ public sealed class PresenterOutputView : Border
 
     private void OnChanged(object? sender, PropertyChangedEventArgs e)
     {
-        if (e.PropertyName == nameof(AppState.Layout)) BuildWidgets();
+        if (e.PropertyName == (editing ? nameof(AppState.DraftLayout) : nameof(AppState.Layout))) BuildWidgets();
         // Viele Meldungen pro Takt (Timer, Uhr, Blinken) → einmal gesammelt neu zeichnen
         if (refreshQueued) return;
         refreshQueued = true;
@@ -81,7 +86,7 @@ public sealed class PresenterOutputView : Border
         }, System.Windows.Threading.DispatcherPriority.Render);
     }
 
-    private Brush TextBrush => PresenterWidget.Hex(state.Layout.TextColor, Brushes.White);
+    private Brush TextBrush => PresenterWidget.Hex(L.TextColor, Brushes.White);
 
     private void BuildIdle()
     {
@@ -114,7 +119,7 @@ public sealed class PresenterOutputView : Border
     {
         canvas.Children.Clear();
         widgets.Clear();
-        foreach (var cfg in state.Layout.Widgets.Where(w => w.Enabled))
+        foreach (var cfg in L.Widgets.Where(w => w.Enabled))
         {
             PresenterWidget w = cfg.Kind switch
             {
@@ -127,6 +132,7 @@ public sealed class PresenterOutputView : Border
                 WidgetKind.VideoTime => new VideoTimeWidget(cfg),
                 _ => new MessageWidget(cfg),
             };
+            w.Editing = editing;
             widgets.Add(w);
             canvas.Children.Add(w);
         }
@@ -151,13 +157,13 @@ public sealed class PresenterOutputView : Border
     /// <summary>Alle Anzeigen aus dem Zustand neu setzen (Takt alle 250 ms und bei Änderungen).</summary>
     public void Refresh()
     {
-        bool live = state.IsShowRunning || state.IsStarting;
-        var bg = PresenterWidget.Hex(state.Layout.Background, Brushes.Black);
+        bool live = editing || state.IsShowRunning || state.IsStarting;
+        var bg = PresenterWidget.Hex(L.Background, Brushes.Black);
         surface.Background = bg;
         System.Windows.Documents.TextElement.SetForeground(surface, TextBrush);
         canvas.Visibility = live ? Visibility.Visible : Visibility.Collapsed;
         idle.Visibility = live ? Visibility.Collapsed : Visibility.Visible;
-        endBlack.Visibility = state.IsEndBlack || (BlackWhenIdle && !live) ? Visibility.Visible : Visibility.Collapsed;
+        endBlack.Visibility = !editing && (state.IsEndBlack || (BlackWhenIdle && !live)) ? Visibility.Visible : Visibility.Collapsed;
         if (!live)
         {
             idleClock.Text = state.Clock.ToString("HH:mm:ss");
@@ -175,11 +181,32 @@ public abstract class PresenterWidget : Grid
     public WidgetConfig Config { get; }
     protected double Fs => Config.FontScale;
 
+    /// <summary>Im Baukasten: Platzhalter statt leerer Bausteine, kein Live-Bild.</summary>
+    public bool Editing { get; set; }
+
     protected PresenterWidget(WidgetConfig config)
     {
         Config = config;
         ClipToBounds = true;
     }
+
+    /// <summary>Grauer Platzhalter im Baukasten (Mac: PlaceholderBox).</summary>
+    protected Border Placeholder(string text) => new()
+    {
+        Background = new SolidColorBrush(Color.FromArgb(10, 255, 255, 255)),
+        CornerRadius = new CornerRadius(8 * Fs),
+        Child = new TextBlock
+        {
+            Text = text,
+            FontSize = 20 * Fs,
+            Opacity = 0.4,
+            TextAlignment = TextAlignment.Center,
+            TextWrapping = TextWrapping.Wrap,
+            HorizontalAlignment = HorizontalAlignment.Center,
+            VerticalAlignment = VerticalAlignment.Center,
+            Margin = new Thickness(8),
+        },
+    };
 
     public abstract void Update(AppState state);
 
@@ -312,7 +339,7 @@ internal sealed class CurrentSlideWidget : PresenterWidget
     public override void Update(AppState s)
     {
         frame.Set(s.CurrentSlideSource, "Keine Folie live", s.IsBlackout || s.IsEndBlack);
-        frame.SetLive(s.LiveSource);
+        frame.SetLive(Editing ? IntPtr.Zero : s.LiveSource);
     }
 }
 
@@ -358,7 +385,7 @@ internal sealed class NotesWidget : PresenterWidget
     public override void Update(AppState s)
     {
         string notes = s.CurrentNotes;
-        double size = 30 * Fs * s.NotesFontScale;
+        double size = 30 * Fs;
         if (text.Text != (notes.Length == 0 ? "Keine Notizen" : notes)) text.Text = notes.Length == 0 ? "Keine Notizen" : notes;
         text.Opacity = notes.Length == 0 ? 0.35 : 1;
         text.FontSize = size;
@@ -464,9 +491,16 @@ internal sealed class ClockWidget : PresenterWidget
 /// <summary>Video-Laufzeit: erscheint, sobald ein Video läuft (Video-Erkennung folgt mit der Video-Karte).</summary>
 internal sealed class VideoTimeWidget : PresenterWidget
 {
+    private Border? placeholder;
+
     public VideoTimeWidget(WidgetConfig c) : base(c) { }
 
-    public override void Update(AppState s) { }
+    public override void Update(AppState s)
+    {
+        if (!Editing || placeholder != null) return;
+        placeholder = Placeholder("Video-Laufzeit (sichtbar, sobald ein Video läuft)");
+        Children.Add(placeholder);
+    }
 }
 
 internal sealed class MessageWidget : PresenterWidget
@@ -484,10 +518,24 @@ internal sealed class MessageWidget : PresenterWidget
         SizeChanged += (_, _) => text.MaxWidth = Math.Max(ActualWidth - 28 * Fs, 10);
     }
 
+    private Border? placeholder;
+
+    private Border AddPlaceholder()
+    {
+        var p = Placeholder("Regie-Nachricht (sichtbar, sobald gesendet)");
+        Children.Add(p);
+        return p;
+    }
+
     public override void Update(AppState s)
     {
         var m = s.Message;
         box.Visibility = m.IsVisible ? Visibility.Visible : Visibility.Collapsed;
+        if (Editing)
+        {
+            placeholder ??= AddPlaceholder();
+            placeholder.Visibility = m.IsVisible ? Visibility.Collapsed : Visibility.Visible;
+        }
         if (!m.IsVisible) return;
         text.Text = m.Text;
         text.Foreground = m.ForegroundBrush;

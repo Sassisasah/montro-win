@@ -86,4 +86,22 @@ public sealed class PresenterLayout
         Background = Background,
         TextColor = TextColor,
     };
+
+    /// <summary>Ändert einen Baustein (Mac: update(kind)).</summary>
+    public void Update(WidgetKind kind, Action<WidgetConfig> change)
+    {
+        if (Config(kind) is { } c) change(c);
+    }
+
+    /// <summary>Inhaltlich gleich (für „nicht gespeichert“ und „Entwurf geändert“).</summary>
+    public bool SameAs(PresenterLayout? other) =>
+        other != null && System.Text.Json.JsonSerializer.Serialize(this) == System.Text.Json.JsonSerializer.Serialize(other);
+}
+
+/// <summary>Gespeicherte Referent*innenansicht mit Namen, einer Präsentation zuweisbar (Mac: LayoutPreset).</summary>
+public sealed class LayoutPreset
+{
+    public Guid Id { get; set; } = Guid.NewGuid();
+    public string Name { get; set; } = "";
+    public PresenterLayout Layout { get; set; } = PresenterLayout.WindowsDefault();
 }

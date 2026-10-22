@@ -282,8 +282,9 @@
                                             <TextBlock Style="{StaticResource Brand.Icon}" Text="&#xE70D;" FontSize="8" Margin="4,0,0,0" Foreground="{StaticResource Brand.Accent}" />
                                         </StackPanel>
                                     </Button>
-                                    <TextBlock Style="{StaticResource Brand.Icon}" Text="&#xE713;" Foreground="{StaticResource Brand.SecondaryText}" VerticalAlignment="Center"
-                                               ToolTip="Referent*innenansicht konfigurieren: folgt mit dem Layout-Builder" />
+                                    <Button Style="{StaticResource Brand.Borderless}" Padding="6,2" ToolTip="Referent*innenansicht konfigurieren" Click="OnBuilder">
+                                        <TextBlock Style="{StaticResource Brand.Icon}" Text="&#xE713;" Foreground="{StaticResource Brand.Accent}" />
+                                    </Button>
                                 </StackPanel>
                                 <StackPanel Orientation="Horizontal">
                                     <TextBlock Style="{StaticResource Brand.Icon}" Text="&#xE77B;" Foreground="{StaticResource Brand.Accent}" Margin="0,0,6,0" />

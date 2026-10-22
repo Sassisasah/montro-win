@@ -44,6 +44,16 @@ public static class PresenterSnapshot
         var idle = AppState.ForPreview(item, 1, 0);
         idle.SimulateStopped();
         Render(new PresenterOutputView(idle), 1920, 1080, Path.Combine(outDir, "referent-nicht-live.png"));
+        // Baukasten mit ausgewähltem Baustein (Inhalt ohne Fenster gezeichnet)
+        var builder = new LayoutBuilderWindow(state);
+        builder.SelectForTest(WidgetKind.Notes);
+        if (builder.Content is FrameworkElement content)
+        {
+            builder.Content = null;
+            var host = new System.Windows.Controls.Border { Background = (Brush)Application.Current.FindResource("Brand.Background"), Child = content };
+            System.Windows.Documents.TextElement.SetForeground(host, (Brush)Application.Current.FindResource("Brand.Text"));
+            Render(host, 1200, 720, Path.Combine(outDir, "baukasten.png"));
+        }
         DebugLog.Write($"Referent*innenansicht: Testbilder in {outDir} (Folie {slide.Index})");
         return 0;
     }

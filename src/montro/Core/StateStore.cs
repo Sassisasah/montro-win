@@ -12,9 +12,12 @@ public sealed class SavedState
     public string? AudienceDevice { get; set; }
     /// <summary>Bildschirm der Referent*innenansicht, null = Popup-Fenster</summary>
     public string? PresenterDevice { get; set; }
+    /// <summary>Referent*innenansicht „Standard“ (Präsentationen ohne Vorlage)</summary>
     public PresenterLayout? Layout { get; set; }
+    public List<LayoutPreset>? LayoutPresets { get; set; }
     public TimerSettings Timer { get; set; } = new();
     public EndBehavior EndBehavior { get; set; } = EndBehavior.HoldLastSlide;
+    /// <summary>Nur noch zum Übernehmen alter Stände; die Schriftgröße steckt im Baustein „Notizen“.</summary>
     public double NotesFontScale { get; set; } = 1.0;
     public ShowTransition Transition { get; set; } = ShowTransition.Black;
     public double TransitionDuration { get; set; } = 1.0;
@@ -34,6 +37,7 @@ public sealed class SavedItem
     public PresentationMeta? Meta { get; set; }
     public Dictionary<int, string> Thumbnails { get; set; } = new();
     public DateTime FileTime { get; set; }
+    public Guid? PresetId { get; set; }
 }
 
 public enum EndBehavior { HoldLastSlide, BlackEverywhere }

@@ -171,28 +171,8 @@ public partial class MainWindow : Window
     }
 
     /// <summary>Farben wie die Mac-Voreinstellungen plus movidal-CD (Mac: ColorPicker).</summary>
-    private static readonly (string Name, string Hex)[] Palette =
-    [
-        ("White Noise", "#F5F5F5"), ("Gelb", "#FFC71F"), ("Orange", "#FF8C1A"), ("Rot", "#F53838"),
-        ("Bass Lime", "#B2F141"), ("Grün", "#38D675"), ("Cloud Purple", "#B088FB"), ("Static Lavender", "#E8DFFC"),
-        ("Live-Rot", "#F2465A"), ("Warnung", "#FFB13D"), ("Dark Matter", "#202020"), ("Schwarz", "#000000"),
-    ];
-
-    private void PickColor(UIElement target, string current, Action<string> apply)
-    {
-        var menu = new ContextMenu { PlacementTarget = target, Placement = System.Windows.Controls.Primitives.PlacementMode.Bottom };
-        foreach (var (name, hex) in Palette)
-        {
-            var row = new StackPanel { Orientation = Orientation.Horizontal };
-            row.Children.Add(new Border { Width = 18, Height = 12, CornerRadius = new CornerRadius(3), Background = Swatch(hex), Margin = new Thickness(0, 0, 8, 0), BorderBrush = Brushes.Gray, BorderThickness = new Thickness(1) });
-            row.Children.Add(new TextBlock { Text = name });
-            var mi = new MenuItem { Header = row, IsCheckable = true, IsChecked = string.Equals(hex, current, StringComparison.OrdinalIgnoreCase) };
-            string h = hex;
-            mi.Click += (_, _) => apply(h);
-            menu.Items.Add(mi);
-        }
-        menu.IsOpen = true;
-    }
+    private static void PickColor(UIElement target, string current, Action<string> apply) =>
+        ColorMenu.Show(target, current, apply);
 
     private void OnTimerColor(object sender, RoutedEventArgs e)
     {
@@ -481,6 +461,21 @@ public partial class MainWindow : Window
     }
 
     // MARK: - Referent*innenansicht, Timer, Ende
+
+    private LayoutBuilderWindow? builder;
+
+    /// <summary>Baukasten der Referent*innenansicht öffnen (nur einmal).</summary>
+    private void OnBuilder(object sender, RoutedEventArgs e)
+    {
+        if (builder is { IsLoaded: true })
+        {
+            builder.Activate();
+            return;
+        }
+        builder = new LayoutBuilderWindow(state) { Owner = this };
+        builder.Closed += (_, _) => builder = null;
+        builder.Show();
+    }
 
     /// <summary>Ausgabe der Referent*innenansicht wählen (Mac: Bildschirm-Menü in der Karte).</summary>
     private void OnPresenterPicker(object sender, RoutedEventArgs e)

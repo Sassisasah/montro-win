@@ -11,7 +11,7 @@ namespace Montro.Core;
 /// Blackscreen, Ende-Sperre, Timer, Ausgaben. Läuft auf dem UI-Thread; PowerPoint wird nur über
 /// <see cref="PowerPointHost"/> angesprochen.
 /// </summary>
-public sealed class AppState : Observable
+public sealed partial class AppState : Observable
 {
     public static readonly (double Min, double Max) NotesFontRange = (0.4, 4.0);
 
@@ -35,7 +35,6 @@ public sealed class AppState : Observable
     private string? presenterDevice;
     private PresenterLayout layout = PresenterLayout.WindowsDefault();
     private EndBehavior endBehavior = EndBehavior.HoldLastSlide;
-    private double notesFontScale = 1.0;
     private int? lockSlide;
     private DateTime clock = DateTime.Now;
     private bool blinkPhase = true;
@@ -181,18 +180,11 @@ public sealed class AppState : Observable
 
     public EndBehavior EndBehavior { get => endBehavior; set { if (Set(ref endBehavior, value)) QueueSave(); } }
 
+    /// <summary>Schriftgröße der Notizen = Baustein „Notizen“ der laufenden Ansicht (Mac: notesFontScale).</summary>
     public double NotesFontScale
     {
-        get => notesFontScale;
-        set
-        {
-            double v = Math.Round(Math.Clamp(value, NotesFontRange.Min, NotesFontRange.Max), 2);
-            if (Set(ref notesFontScale, v))
-            {
-                Raise(nameof(NotesFontPercent));
-                QueueSave();
-            }
-        }
+        get => Layout.Config(WidgetKind.Notes)?.FontScale ?? 1;
+        set => SetNotesFont(value);
     }
 
     public string NotesFontPercent => $"{Math.Round(NotesFontScale * 100)} %";
@@ -269,13 +261,13 @@ public sealed class AppState : Observable
 
     public string PresenterCaption => PresenterScreen is { } m ? $"Ausgabe: {m.FriendlyName} ({m.Number})" : "Ausgabe: Popup-Fenster";
 
-    /// <summary>Aufbau der Referent*innenansicht (Mac: layout).</summary>
+    /// <summary>Live geschalteter Aufbau der Referent*innenansicht (Mac: layout).</summary>
     public PresenterLayout Layout
     {
         get => layout;
-        set
+        private set
         {
-            if (Set(ref layout, value)) QueueSave();
+            if (Set(ref layout, value)) Raise(nameof(NotesFontScale), nameof(NotesFontPercent));
         }
     }
 
@@ -555,6 +547,8 @@ public sealed class AppState : Observable
             covered = true;
         }
 
+        // Referent*innenansicht der Präsentation (Vorlage oder Standard) mitstarten
+        UseLayoutOf(item);
         IsStarting = true;
         StatusMessage = $"Starte „{item.Title}“ …";
         IsLocked = false;
@@ -663,6 +657,7 @@ public sealed class AppState : Observable
 
     private void MarkStopped(string message)
     {
+        ApplyDraftAfterStop();
         IsShowRunning = false;
         IsBlackout = false;
         IsLocked = false;
@@ -839,7 +834,7 @@ public sealed class AppState : Observable
         var s = StateStore.Load();
         foreach (var si in s.Items)
         {
-            var item = new PresentationItem { Id = si.Id, Path = si.Path, Title = si.Title };
+            var item = new PresentationItem { Id = si.Id, Path = si.Path, Title = si.Title, PresetId = si.PresetId };
             item.Meta = si.Meta;
             item.Thumbnails = si.Thumbnails;
             bool fresh = File.Exists(si.Path) && File.GetLastWriteTimeUtc(si.Path) == si.FileTime
@@ -852,14 +847,9 @@ public sealed class AppState : Observable
         Selected = Items.FirstOrDefault(i => i.Id == s.Selection) ?? Items.FirstOrDefault();
         audienceDevice = s.AudienceDevice;
         presenterDevice = s.PresenterDevice == s.AudienceDevice ? null : s.PresenterDevice;
-        if (s.Layout is { Widgets.Count: > 0 } savedLayout)
-        {
-            savedLayout.EnsureAllKinds();
-            layout = savedLayout;
-        }
+        LoadLayouts(s);
         Timer.Settings = s.Timer;
         endBehavior = s.EndBehavior;
-        notesFontScale = s.NotesFontScale;
         transition = s.Transition;
         transitionDuration = Math.Clamp(s.TransitionDuration, 0.3, 3);
         if (s.MessagePresets is { Count: > 0 } presets)
@@ -921,14 +911,15 @@ public sealed class AppState : Observable
                 Meta = i.Meta,
                 Thumbnails = i.Thumbnails,
                 FileTime = File.Exists(i.Path) ? File.GetLastWriteTimeUtc(i.Path) : default,
+                PresetId = i.PresetId,
             }).ToList(),
             Selection = Selected?.Id,
             AudienceDevice = AudienceDevice,
             PresenterDevice = PresenterDevice,
-            Layout = Layout,
+            Layout = StandardLayout,
+            LayoutPresets = LayoutPresets.ToList(),
             Timer = Timer.Settings,
             EndBehavior = EndBehavior,
-            NotesFontScale = NotesFontScale,
             Transition = Transition,
             TransitionDuration = TransitionDuration,
             MessagePresets = Message.Presets.ToList(),

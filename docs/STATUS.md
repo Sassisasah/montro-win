@@ -135,11 +135,14 @@
   Timer-Blinken und Ende auf Schwarz prüfen; Popup-Modus (links
   Referent*innenansicht, rechts PowerPoint). Video-Laufzeit bleibt leer, bis die
   Video-Erkennung kommt.
-- **22.10.2026** – Live-Bild (DWM-Miniatur) im Popup-Modus prüfen; auf dem Verbatim bestätigt. Bisher:
-  Verbatim und im Popup-Modus prüfen: Animationen, Video flüssig, Schwarz/Übergang.
+- **22.10.2026** – Live-Bild (DWM-Miniatur) im Popup-Modus prüfen; auf dem Verbatim bestätigt.
+- **22.10.2026** – Baukasten der Referent*innenansicht: Testbild ok (`--referentenbild` →
+  `baukasten.png`). Noch nicht bedient: Ziehen und Skalieren, Ein-/Ausschalten, Eigenschaften,
+  Presets speichern/umbenennen/löschen/zuweisen, Entwurf während der Show (Jetzt / nach der
+  Präsentation übernehmen), Notizen-Schriftgröße landet im Preset.
 - **21.10.2026** – Meilenstein 4: noch nicht geprüft sind Timer-Einstellungen und Ziehen &
-  Ablegen. Offen: Builder und Presets der Referent*innenansicht, Video-Karte, „In PowerPoint
-  bearbeiten“, „Aktualisieren“, Show-Dateien `.montro`.
+  Ablegen. Offen: Video-Karte, „In PowerPoint bearbeiten“, „Aktualisieren“, Show-Dateien
+  `.montro`.
 - **22.10.2026** – Sperre gegen Bildschirm-Abschaltung während der Show eingebaut (Log: „Bildschirm-
   Abschaltung gesperrt“), noch nicht über die eingestellte Abschaltzeit hinaus geprüft.
 - **21.10.2026** – Parser: noch nicht geprüft sind verknüpfte (nicht eingebettete) Videos,
