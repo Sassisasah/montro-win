@@ -5,8 +5,8 @@
 - **22.10.2026** – Live-Bild per Bildschirmfoto: erst schwarz (ohne `CAPTUREBLT`), dann sichtbar,
   aber laut Nutzerin „eher ein Daumenkino“ (2 Bilder/s, Effekte und Video nicht flüssig).
   Umgebaut auf DWM-Miniatur des Show-Fensters. Geprüft mit `montro.exe --miniaturtest`: Die
-  Miniatur erscheint auch im „layered“ Ausgabefenster, im Seitenverhältnis eingepasst. Test auf
-  dem Verbatim steht aus.
+  Miniatur erscheint auch im „layered“ Ausgabefenster, im Seitenverhältnis eingepasst. Auf dem
+  Verbatim von der Nutzerin bestätigt („cool“). Popup-Modus noch nicht geprüft.
 
 - **22.10.2026** – Referent*innenansicht auf dem zweiten Verbatim: läuft (Nutzerin: „geht“).
   Die aktuelle Folie war extrem verpixelt: Der Bildspeicher gab das 280-px-Bild der
@@ -135,7 +135,7 @@
   Timer-Blinken und Ende auf Schwarz prüfen; Popup-Modus (links
   Referent*innenansicht, rechts PowerPoint). Video-Laufzeit bleibt leer, bis die
   Video-Erkennung kommt.
-- **22.10.2026** – Live-Bild (DWM-Miniatur) in Live-Folie-Karte und Referent*innenansicht auf dem
+- **22.10.2026** – Live-Bild (DWM-Miniatur) im Popup-Modus prüfen; auf dem Verbatim bestätigt. Bisher:
   Verbatim und im Popup-Modus prüfen: Animationen, Video flüssig, Schwarz/Übergang.
 - **21.10.2026** – Meilenstein 4: noch nicht geprüft sind Timer-Einstellungen und Ziehen &
   Ablegen. Offen: Builder und Presets der Referent*innenansicht, Video-Karte, „In PowerPoint
