@@ -84,6 +84,12 @@ public sealed class AppState : Observable
     /// <summary>Wird gesetzt, wenn eine Meldung als Dialog erscheinen soll (Mac: lastError).</summary>
     public event Action<string>? ErrorRaised;
 
+    /// <summary>
+    /// montro soll den Tastaturfokus zurückholen: PowerPoint aktiviert beim Start sein Show-Fenster,
+    /// dann gingen Clicker-Tasten direkt an PowerPoint – an der Ende-Sperre vorbei.
+    /// </summary>
+    public event Action? FocusRequested;
+
     public AppState()
     {
         ppt.StateChanged += OnShowState;
@@ -438,6 +444,9 @@ public sealed class AppState : Observable
             ClickInSlide = 0;
             IsShowRunning = true;
             StatusMessage = $"Live: {item.Title}";
+            // Mit eigenem Publikumsbildschirm bedient man über montro (Tasten, Clicker); im
+            // Popup-Modus bleibt PowerPoint vorne wie am Mac.
+            if (screen != null) FocusRequested?.Invoke();
             if (Timer.Settings.AutoStartWithPresentation)
             {
                 Timer.Reset();

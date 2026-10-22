@@ -33,6 +33,11 @@ public partial class MainWindow : Window
             if (e.PropertyName == nameof(TalkTimer.ShouldBlink)) UpdateBlink();
         };
         state.ErrorRaised += msg => MessageBox.Show(this, msg, "Hinweis", MessageBoxButton.OK, MessageBoxImage.Information);
+        state.FocusRequested += () =>
+        {
+            Activate();
+            Focus();
+        };
         SystemEvents.DisplaySettingsChanged += OnDisplaysChanged;
 
         (state.EndBehavior == EndBehavior.HoldLastSlide ? EndHold : EndBlack).IsChecked = true;

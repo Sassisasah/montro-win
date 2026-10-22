@@ -185,6 +185,9 @@ public sealed class PowerPointHost
             TrySet("PowerPoint-Referentenansicht aus", () => { if ((int)ss.ShowPresenterView != MsoFalse) ss.ShowPresenterView = MsoFalse; });
             TrySet("Alle Folien", () => { if ((int)ss.RangeType != PpShowAll) ss.RangeType = PpShowAll; });
             TrySet("Mit Animationen", () => { if ((int)ss.ShowWithAnimation != MsoTrue) ss.ShowWithAnimation = MsoTrue; });
+            // Die Einstellungen machen die Präsentation „geändert“. Endet die Show, schließt PowerPoint
+            // die fensterlose Präsentation selbst – und fragte dann „Änderungen speichern?“ (21.10.2026).
+            MarkSaved();
 
             if (o.PreselectMonitorInRegistry && o.Target != null)
                 RegistryMonitor.Set(o.Target.DeviceName);
@@ -599,7 +602,9 @@ public sealed class PowerPointHost
         {
             try
             {
-                a.SlideShowWindows.Item(i).View.Exit();
+                dynamic sw = a.SlideShowWindows.Item(i);
+                TrySet("Als gespeichert markieren", () => { sw.Presentation.Saved = MsoTrue; });
+                sw.View.Exit();
                 closed++;
             }
             catch (Exception e)
@@ -640,10 +645,19 @@ public sealed class PowerPointHost
         ownsPres = true;
     }
 
+    /// <summary>Präsentation als „gespeichert“ markieren, damit PowerPoint nie nach dem Speichern fragt.</summary>
+    private void MarkSaved()
+    {
+        if (pres == null) return;
+        dynamic p = pres;
+        TrySet("Als gespeichert markieren", () => { p.Saved = MsoTrue; });
+    }
+
     private void CloseInternal()
     {
         if (pres != null && ownsPres && PresentationAlive())
         {
+            MarkSaved();
             try
             {
                 // per Automation schließt PowerPoint ohne „Speichern?“-Frage
