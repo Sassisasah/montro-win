@@ -469,6 +469,7 @@ public sealed partial class AppState : Observable
     private void Renumber()
     {
         for (int i = 0; i < Items.Count; i++) Items[i].Number = i + 1;
+        RefreshPresetNames();
     }
 
     public void Regenerate(PresentationItem item)

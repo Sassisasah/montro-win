@@ -67,6 +67,11 @@ public sealed class PresentationItem : Observable
     /// <summary>Verbund: „Neue Version“, „Geändert“, „An Master“ (Mac: syncBadges), null = keins.</summary>
     public string? SyncBadge { get => syncBadge; set => Set(ref syncBadge, value); }
 
+    private string? presetName;
+
+    /// <summary>Name des zugewiesenen Presets der Referent*innenansicht (Abzeichen in der Playlist), null = Standard.</summary>
+    public string? PresetName { get => presetName; set => Set(ref presetName, value); }
+
     public bool IsReady => State == PrepState.Ready;
     public bool IsFailed => State == PrepState.Failed;
     public bool IsBusy => State is PrepState.Pending or PrepState.Preparing;

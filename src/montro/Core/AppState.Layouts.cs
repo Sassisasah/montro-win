@@ -106,9 +106,18 @@ public sealed partial class AppState
         RaiseLayoutState();
     }
 
-    private void RaiseLayoutState() =>
+    private void RaiseLayoutState()
+    {
         Raise(nameof(DraftLayout), nameof(HasDraftChanges), nameof(HasUnsavedChanges), nameof(BuilderTarget),
             nameof(ApplyDraftAfterShow));
+        RefreshPresetNames();
+    }
+
+    /// <summary>Preset-Namen für die Abzeichen in der Playlist nachziehen (Mac: Preset-Kapsel in der Zeile).</summary>
+    public void RefreshPresetNames()
+    {
+        foreach (var item in Items) item.PresetName = Preset(item.PresetId)?.Name;
+    }
 
     /// <summary>Beim Live-Schalten: Ansicht der Präsentation (Vorlage oder Standard) übernehmen.</summary>
     private void UseLayoutOf(PresentationItem item)
@@ -261,8 +270,9 @@ public sealed partial class AppState
             p.Layout.EnsureAllKinds();
             LayoutPresets.Add(p);
         }
+        layout = standardLayout.Clone();
         draftLayout = standardLayout.Clone();
         FollowSelection();
-        draftLayout = standardLayout.Clone();
+        RefreshPresetNames();
     }
 }
