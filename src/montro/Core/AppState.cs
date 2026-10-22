@@ -231,7 +231,7 @@ public sealed partial class AppState : Observable
                 blackKey = "?";
                 UpdateOutputs();
                 // Ausgabe nur beim Start wählbar → laufende Show an gleicher Stelle neu starten (wie am Mac)
-                if (IsShowRunning && LiveItem is { } live) _ = GoLive(live, CurrentSlide);
+                if (IsShowRunning && LiveItem is { } live) _ = StartShow(live, CurrentSlide);
             }
         }
     }
@@ -422,7 +422,10 @@ public sealed partial class AppState : Observable
 
     // MARK: - Playlist
 
-    public void Add(IEnumerable<string> paths)
+    public void Add(IEnumerable<string> paths) => Add(paths, select: true);
+
+    /// <summary>Dateien hinzufügen; <paramref name="select"/> = die letzte gleich auswählen.</summary>
+    public void Add(IEnumerable<string> paths, bool select)
     {
         PresentationItem? added = null;
         foreach (var raw in paths)
@@ -440,7 +443,7 @@ public sealed partial class AppState : Observable
             added = item;
         }
         Renumber();
-        if (added != null) Selected = added;
+        if (added != null && (select || Selected == null)) Selected = added;
         QueueSave();
         _ = PrepareAll();
     }
@@ -530,15 +533,36 @@ public sealed partial class AppState : Observable
         if (Selected != null) _ = GoLive(Selected);
     }
 
-    public async Task GoLive(PresentationItem item, int? startAt = null)
+    /// <summary>
+    /// Live schalten (Bedienung, Fernsteuerung, Verbund). Am Slave mit Sperre nur vom Master; als
+    /// Master geht der Befehl an alle Slaves. Doppelklick auf die laufende Präsentation mit
+    /// bereitliegender neuer Version = „Aktualisieren“ (Mac: goLive).
+    /// </summary>
+    public Task GoLive(PresentationItem item, int? startAt = null)
+    {
+        if (!LocalControlAllowed()) return Task.CompletedTask;
+        if (item == LiveItem && IsShowRunning && startAt == null && !Cluster.ApplyingRemote && FileSync.StagedVersion(item) != null)
+        {
+            ReloadLiveWithNewVersion();
+            return Task.CompletedTask;
+        }
+        Cluster.Forward("golive", item.Path, startAt);
+        return StartShow(item, startAt);
+    }
+
+    /// <summary>Show starten ohne Weitergabe an den Verbund (Mac: goLiveAsync).</summary>
+    private async Task StartShow(PresentationItem item, int? startAt = null)
     {
         if (IsStarting) return;
+        // bereitliegende neue Version (Verbund) einspielen, frisch gespeicherte Änderungen analysieren
+        await FileSync.ApplyStaged(item);
         if (!File.Exists(item.Path))
         {
             ErrorRaised?.Invoke($"Die Datei „{Path.GetFileName(item.Path)}“ wurde nicht gefunden.");
             return;
         }
         await RefreshIfChanged(item);
+        if (startAt is int s && item.Meta != null && item.Slide(s) == null) startAt = item.LastVisible;
         // Übergang: Publikumsbildschirm abdecken (Standbild bzw. Schwarz), darunter umschalten
         var style = AudienceScreen == null ? ShowTransition.Cut : Transition;
         bool covered = false;
@@ -593,6 +617,7 @@ public sealed partial class AppState : Observable
             ClickInSlide = 0;
             IsShowRunning = true;
             StatusMessage = $"Live: {item.Title}";
+            FileSync.WentLive(item);
             // Mit eigenem Publikumsbildschirm bedient man über montro (Tasten, Clicker); im
             // Popup-Modus bleibt PowerPoint vorne wie am Mac.
             if (screen != null) FocusRequested?.Invoke();
@@ -658,6 +683,8 @@ public sealed partial class AppState : Observable
 
     public async Task Stop()
     {
+        if (!LocalControlAllowed()) return;
+        Cluster.Forward("stop");
         if (!IsShowRunning && !IsStarting) return;
         string message = "Gestoppt – Ausgänge schwarz";
         try { await ppt.StopAsync(); }
@@ -688,7 +715,10 @@ public sealed partial class AppState : Observable
 
     public void Next()
     {
-        if (!CanControl || LiveItem is not { } item) return;
+        if (ReloadingInPlace) { Cluster.Forward("next"); return; }   // Klicks gehen an die Slaves
+        if (ForwardOnlyIfMasterIdle("next")) return;
+        if (!LocalControlAllowed() || !CanControl || LiveItem is not { } item) return;
+        Cluster.Forward("next");
         if (IsBlackout)
         {
             SetBlackout(false);
@@ -706,7 +736,10 @@ public sealed partial class AppState : Observable
 
     public void Previous()
     {
-        if (!CanControl || LiveItem is not { } item) return;
+        if (ReloadingInPlace) { Cluster.Forward("previous"); return; }
+        if (ForwardOnlyIfMasterIdle("previous")) return;
+        if (!LocalControlAllowed() || !CanControl || LiveItem is not { } item) return;
+        Cluster.Forward("previous");
         if (IsBlackout)
         {
             SetBlackout(false);
@@ -719,7 +752,8 @@ public sealed partial class AppState : Observable
     /// <summary>Direkt zu einer Folie springen (PowerPoint-Index, inkl. ausgeblendeter).</summary>
     public void Jump(int index)
     {
-        if (!CanControl || LiveItem?.Slide(index) == null) return;
+        if (!LocalControlAllowed() || !CanControl || LiveItem?.Slide(index) == null) return;
+        Cluster.Forward("goto", slide: index);
         DebugLog.Write($"Sprung zu Folie {index}");
         Send(() => ppt.GotoAsync(index));
     }
@@ -737,7 +771,16 @@ public sealed partial class AppState : Observable
         Jump(visible[n - 1].Index);
     }
 
-    public void ToggleBlackout() => SetBlackout(!IsBlackout);
+    public void ToggleBlackout()
+    {
+        // Master ohne eigene Show: Slaves schalten selbst um (ihren Zustand kennt der Master nicht)
+        if (Cluster.Role == Montro.Cluster.ClusterRole.Master && !IsShowRunning && !IsStarting && Cluster.AnySlaveLive)
+        {
+            Cluster.Forward("blackout");
+            return;
+        }
+        SetBlackout(!IsBlackout);
+    }
 
     // MARK: - Video (Mac: VideoSection)
 
@@ -792,13 +835,17 @@ public sealed partial class AppState : Observable
 
     public void SetBlackout(bool on)
     {
-        if (!IsShowRunning) return;
+        if (ForwardOnlyIfMasterIdle("blackout", on)) return;
+        if (!LocalControlAllowed() || !IsShowRunning) return;
+        Cluster.Forward("blackout", on: on);
         IsBlackout = on;
         Send(() => ppt.SetBlackAsync(on));
     }
 
     public void Unlock()
     {
+        if (!LocalControlAllowed()) return;
+        Cluster.Forward("unlock");
         bool wasBlack = IsEndBlack;
         IsLocked = false;
         IsEndBlack = false;
