@@ -17,8 +17,12 @@
   - Erster Versuch: Die Debug-Version war von der Windows-Firewall blockiert (öffentliches Netz);
     die Version aus `publish` ist freigegeben. Große Dateien wurden auf dem UI-Thread kopiert und
     gehasht – montro hing dabei kurz; jetzt im Hintergrund.
-  - Noch offen: PC als Master mit dem Mac als Slave, Abkoppeln/Wiederverbinden mit Übergabe einer
-    geänderten Datei, „Aktualisieren“ (neue Version während der Show).
+  - Umgekehrt, PC als Master und Mac als Slave: Mac meldet „Slave von „Windows-Laptop“ ·
+    verbunden“, PC „Master · 1/1 Slave(s) synchron“. Über die Fernsteuerung des PCs: live, Gehe zu
+    Folie 3 + weiter, Blackscreen, Regie-Nachricht, Timer (beide „06:58“), nächste Präsentation,
+    Stopp – der Mac folgt jedes Mal.
+  - Noch offen: Abkoppeln/Wiederverbinden mit Übergabe einer geänderten Datei, „Aktualisieren“
+    (neue Version während der Show).
 
 - **22.10.2026** – Meilenstein 5, Remote-API am Test-PC mit `curl` (nur lokal, 127.0.0.1:8765):
   `/api/state` vollständig wie am Mac; `select/2`, `message?text=…` (sichtbar), `timer/duration/20`
