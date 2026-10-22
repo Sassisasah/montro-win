@@ -85,6 +85,7 @@ public partial class MainWindow : Window
             case nameof(AppState.IsShowRunning):
                 UpdateBlackoutButton();
                 UpdateNavigatorHint();
+                UpdateVideoCard();
                 break;
             case nameof(AppState.CanControl):
             case nameof(AppState.NavigatorItem):
@@ -93,6 +94,10 @@ public partial class MainWindow : Window
                 break;
             case nameof(AppState.CurrentSlide):
                 ScrollNavigatorToCurrent();
+                break;
+            case nameof(AppState.Video):
+            case nameof(AppState.CurrentSlideMeta):
+                UpdateVideoCard();
                 break;
             case nameof(AppState.LiveSource):
                 liveThumb.Source = state.LiveSource;
@@ -118,6 +123,93 @@ public partial class MainWindow : Window
         bool isLive = state.NavigatorItem != null && state.NavigatorItem == state.LiveItem && state.IsShowRunning;
         NavigatorHint.Text = isLive ? (state.IsLocked ? "gesperrt" : "Klick = springen") : "Doppelklick = ab hier live";
         NavigatorHint.Foreground = (Brush)FindResource(isLive && state.IsLocked ? "Brand.Warning" : "Brand.SecondaryText");
+    }
+
+    // MARK: - Video-Karte (Mac: VideoSection)
+
+    private SlideMeta? videoCardSlide;
+    private StackPanel? videoPlaying;
+    private TextBlock? videoName, videoTimes, videoPauseGlyph;
+    private ProgressBar? videoProgress;
+
+    /// <summary>
+    /// Laufendes Video mit Pause/Stopp und Fortschritt, darunter die Videos der Folie mit Start
+    /// (automatisch / Klick n / Trigger) und „Abspielen“. Anders als am Mac meldet PowerPoint unter
+    /// Windows die Position – daher kein Video-Timer zum Starten, sondern echtes Abspielen.
+    /// </summary>
+    private void UpdateVideoCard()
+    {
+        var slide = state.IsShowRunning ? state.CurrentSlideMeta : null;
+        var videos = slide?.Videos ?? [];
+        VideoCard.Visibility = state.Video != null || videos.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
+        if (VideoCard.Visibility != Visibility.Visible) return;
+        if (videoPlaying == null || !ReferenceEquals(slide, videoCardSlide))
+        {
+            videoCardSlide = slide;
+            VideoCardBody.Children.Clear();
+            videoPlaying = new StackPanel { Margin = new Thickness(0, 0, 0, 8) };
+            var row = new DockPanel();
+            var stop = new Button { Style = (Style)FindResource("Brand.Compact"), ToolTip = "Video stoppen", Margin = new Thickness(6, 0, 0, 0), Content = Glyph("") };
+            stop.Click += (_, _) => state.StopVideo();
+            videoPauseGlyph = Glyph("");
+            var pause = new Button { Style = (Style)FindResource("Brand.Compact"), ToolTip = "Pause / Weiter", Content = videoPauseGlyph };
+            pause.Click += (_, _) => state.ToggleVideoPause();
+            DockPanel.SetDock(stop, Dock.Right);
+            DockPanel.SetDock(pause, Dock.Right);
+            row.Children.Add(stop);
+            row.Children.Add(pause);
+            var texts = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
+            videoName = new TextBlock { TextTrimming = TextTrimming.CharacterEllipsis };
+            videoTimes = new TextBlock { Style = (Style)FindResource("Brand.Caption") };
+            texts.Children.Add(videoName);
+            texts.Children.Add(videoTimes);
+            row.Children.Add(texts);
+            videoPlaying.Children.Add(row);
+            videoProgress = new ProgressBar { Height = 4, Maximum = 1, Margin = new Thickness(0, 6, 0, 0), Foreground = (Brush)FindResource("Brand.Accent"), Background = (Brush)FindResource("Brand.Line"), BorderThickness = new Thickness(0) };
+            videoPlaying.Children.Add(videoProgress);
+            VideoCardBody.Children.Add(videoPlaying);
+            foreach (var v in videos)
+            {
+                var line = new DockPanel { Margin = new Thickness(0, 0, 0, 4) };
+                var play = new Button { Style = (Style)FindResource("Brand.Small"), Content = "Abspielen", Margin = new Thickness(8, 0, 0, 0) };
+                string name = v.Name;
+                play.Click += (_, _) => state.PlayVideo(name);
+                DockPanel.SetDock(play, Dock.Right);
+                line.Children.Add(play);
+                var info = new TextBlock { Text = StartText(v), Style = (Style)FindResource("Brand.Caption"), VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(8, 0, 0, 0) };
+                DockPanel.SetDock(info, Dock.Right);
+                line.Children.Add(info);
+                var icon = Glyph("");
+                icon.Foreground = (Brush)FindResource("Brand.SecondaryText");
+                icon.Margin = new Thickness(0, 0, 6, 0);
+                DockPanel.SetDock(icon, Dock.Left);
+                line.Children.Add(icon);
+                line.Children.Add(new TextBlock { Text = v.Name, TextTrimming = TextTrimming.CharacterEllipsis, VerticalAlignment = VerticalAlignment.Center });
+                VideoCardBody.Children.Add(line);
+            }
+        }
+        if (state.Video is { } p)
+        {
+            videoPlaying.Visibility = Visibility.Visible;
+            videoName!.Text = p.Name;
+            videoTimes!.Text = $"Gesamt {TimeFormat.Clock(p.Duration)} · Rest {TimeFormat.Clock(p.Remaining)}";
+            videoPauseGlyph!.Text = p.Playing ? "" : "";
+            videoProgress!.Value = p.Progress;
+        }
+        else videoPlaying.Visibility = Visibility.Collapsed;
+    }
+
+    private TextBlock Glyph(string glyph) => new() { Text = glyph, Style = (Style)FindResource("Brand.Icon"), FontSize = 11 };
+
+    private static string StartText(VideoMeta v)
+    {
+        string length = v.Duration > 0 ? TimeFormat.Clock(v.Duration) : "Länge ?";
+        return v.StartClick switch
+        {
+            null => $"{length} · Trigger",
+            0 => $"{length} · automatisch",
+            int c => $"{length} · Klick {c}",
+        };
     }
 
     private void UpdateBlink() =>

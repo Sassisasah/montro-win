@@ -53,6 +53,10 @@ wenn die Ende-Sperre greift).
   der Referent*innenansicht in den gewählten Farben, blinkt nach dem Senden 3 s lang und auf
   Wunsch dauerhaft. „Ausblenden“ nimmt sie weg. Vorlagen: „Vorlagen bearbeiten“ fügt hinzu,
   Rechtsklick auf eine Vorlage entfernt sie.
+- **Video:** erscheint, wenn die Live-Folie Videos hat. Oben das laufende Video mit Gesamt- und
+  Restzeit, Pause/Weiter und Stopp, darunter jedes Video der Folie mit Länge, Start (automatisch /
+  Klick n / Trigger) und „Abspielen“. Anders als am Mac liest montro unter Windows die echte
+  Position aus PowerPoint.
 - **Übergang zwischen Präsentationen:** Hart / Über Schwarz / Überblenden (Standbild der
   letzten Folie), Dauer 0,3–3 s. Gilt nur mit externem Publikumsbildschirm.
 - **Schwarze Ausgänge:** Ist ein externer Publikumsbildschirm gewählt, zeigt er Schwarz, solange

@@ -146,7 +146,7 @@
   Die erste Video-Abfrage kam etwa 4 s nach dem Sprung (Video bei 3 s) – beobachten.
 - **22.10.2026** – Live-Bild (DWM-Miniatur) im Popup-Modus prüfen; auf dem Verbatim bestätigt.
 - **21.10.2026** – Meilenstein 4: noch nicht geprüft sind Timer-Einstellungen und Ziehen &
-  Ablegen. Offen: Video-Karte, „In PowerPoint bearbeiten“, „Aktualisieren“, Show-Dateien
+  Ablegen. Offen: „In PowerPoint bearbeiten“, „Aktualisieren“, Show-Dateien
   `.montro`.
 - **22.10.2026** – Sperre gegen Bildschirm-Abschaltung während der Show eingebaut (Log: „Bildschirm-
   Abschaltung gesperrt“), noch nicht über die eingestellte Abschaltzeit hinaus geprüft.

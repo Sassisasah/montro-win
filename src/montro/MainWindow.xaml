@@ -476,6 +476,17 @@
                         </StackPanel>
                     </Border>
 
+                    <!-- Video (Mac: VideoSection), nur wenn die Live-Folie Videos hat; Inhalt in OnStateChanged -->
+                    <Border x:Name="VideoCard" Style="{StaticResource Brand.Card}" Visibility="Collapsed">
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                                <TextBlock Style="{StaticResource Brand.Icon}" Text="&#xE714;" Foreground="{StaticResource Brand.Accent}" Margin="0,0,6,0" />
+                                <TextBlock Text="Video" FontWeight="SemiBold" FontSize="14" />
+                            </StackPanel>
+                            <StackPanel x:Name="VideoCardBody" />
+                        </StackPanel>
+                    </Border>
+
                     <!-- Übergang zwischen Präsentationen (Mac: TransitionSection) -->
                     <Border Style="{StaticResource Brand.Card}">
                         <StackPanel>

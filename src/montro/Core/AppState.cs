@@ -731,6 +731,25 @@ public sealed partial class AppState : Observable
 
     public void ToggleBlackout() => SetBlackout(!IsBlackout);
 
+    // MARK: - Video (Mac: VideoSection)
+
+    /// <summary>Video der Live-Folie abspielen (Name der Form wie im PPTX).</summary>
+    public void PlayVideo(string name)
+    {
+        if (IsShowRunning) Send(() => ppt.VideoAsync(name, PowerPointHost.VideoCommand.Play));
+    }
+
+    public void ToggleVideoPause()
+    {
+        if (Video is { } v && IsShowRunning)
+            Send(() => ppt.VideoAsync(v.Name, v.Playing ? PowerPointHost.VideoCommand.Pause : PowerPointHost.VideoCommand.Play));
+    }
+
+    public void StopVideo()
+    {
+        if (Video is { } v && IsShowRunning) Send(() => ppt.VideoAsync(v.Name, PowerPointHost.VideoCommand.Stop));
+    }
+
     public void SetBlackout(bool on)
     {
         if (!IsShowRunning) return;

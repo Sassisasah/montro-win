@@ -296,6 +296,31 @@ public sealed class PowerPointHost
         KeepOnTop();
     }, 5000, black ? "Schwarz an" : "Schwarz aus");
 
+    public enum VideoCommand { Play, Pause, Stop }
+
+    /// <summary>Video der aktuellen Folie (Name der Form) abspielen, anhalten oder stoppen (Mac: video.togglePause/stop).</summary>
+    public Task VideoAsync(string name, VideoCommand command) => sta.Run(() =>
+    {
+        dynamic v = View();
+        dynamic shapes = v.Slide.Shapes;
+        int n = (int)shapes.Count;
+        for (int i = 1; i <= n; i++)
+        {
+            dynamic sh = shapes.Item(i);
+            if (Safe(() => (string)sh.Name, "") != name) continue;
+            dynamic player = v.Player((int)sh.Id);
+            switch (command)
+            {
+                case VideoCommand.Play: player.Play(); break;
+                case VideoCommand.Pause: player.Pause(); break;
+                default: player.Stop(); break;
+            }
+            DebugLog.Write($"Video „{name}“: {command}");
+            return;
+        }
+        throw new PowerPointException($"Video „{name}“ ist auf dieser Folie nicht zu finden.");
+    }, 5000, $"Video {command}");
+
     /// <summary>Alle Shows beenden und die Präsentation schließen.</summary>
     public async Task StopAsync()
     {

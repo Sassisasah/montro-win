@@ -1,6 +1,8 @@
 # Änderungsprotokoll
 
 ## 0.4 – 21.10.2026
+- Neu (22.10.2026): Video-Karte im Inspector wie am Mac – laufendes Video mit Pause/Stopp,
+  Videos der Folie mit Start und „Abspielen“.
 - Neu (22.10.2026): Video-Laufzeit in der Referent*innenansicht (Name, Gesamt, Rest, Fortschritt),
   sobald auf der Live-Folie ein Video läuft.
 - Neu (22.10.2026): Baukasten der Referent*innenansicht wie am Mac mit Presets je Präsentation,
