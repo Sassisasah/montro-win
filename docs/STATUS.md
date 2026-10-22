@@ -4,7 +4,8 @@
 
 - **22.10.2026** – Referent*innenansicht auf dem zweiten Verbatim: läuft (Nutzerin: „geht“).
   Die aktuelle Folie war extrem verpixelt: Der Bildspeicher gab das 280-px-Bild der
-  Folienkacheln heraus. Behoben, der Speicher unterscheidet jetzt nach Bildbreite.
+  Folienkacheln heraus. Behoben, der Speicher unterscheidet jetzt nach Bildbreite. Danach von
+  der Nutzerin bestätigt: Folie scharf („geht“).
 - **22.10.2026** – Meilenstein 4, Etappe 3 (Referent*innenansicht), Testbilder ohne PowerPoint
   (`montro.exe --referentenbild`, Technik-Testdeck mit den echten Vorschaubildern): Aufbau wie
   der Mac-Standard „Windows“ – Timer, Uhr oben, aktuelle Folie groß links, „Folie 3 von 14“ mit
