@@ -1,5 +1,10 @@
 # Änderungsprotokoll
 
+## 0.5 – 22.10.2026
+- Neu (Branch `meilenstein-5`): Fernsteuerung per HTTP/JSON wie am Mac (Port 8765, `/api/state`,
+  alle Befehle, `/api/diag`) für Companion / Stream Deck. Einstellungen-Fenster mit an/aus, Port und
+  „nur von diesem Rechner“.
+
 ## 0.4 – 21.10.2026
 - Neu (22.10.2026): Referent*innenansicht ohne Live-Schalten gestalten – Karte und Baukasten zeigen
   die ausgewählte Präsentation mit ihrem Preset.

@@ -703,6 +703,22 @@ public partial class MainWindow : Window
 
     // MARK: - Referent*innenansicht, Timer, Ende
 
+    private SettingsWindow? settings;
+
+    private void OnSettings(object sender, RoutedEventArgs e) => OpenSettings();
+
+    private void OpenSettings()
+    {
+        if (settings is { IsLoaded: true })
+        {
+            settings.Activate();
+            return;
+        }
+        settings = new SettingsWindow(state) { Owner = this };
+        settings.Closed += (_, _) => settings = null;
+        settings.Show();
+    }
+
     private LayoutBuilderWindow? builder;
 
     /// <summary>Baukasten der Referent*innenansicht öffnen (nur einmal).</summary>
@@ -792,6 +808,7 @@ public partial class MainWindow : Window
             case Key.OemPeriod when ctrl: _ = state.Stop(); break;
             case Key.T when ctrl: state.Timer.Toggle(); break;
             case Key.O when ctrl: OpenShowDialog(); break;
+            case Key.OemComma when ctrl: OpenSettings(); break;
             case Key.S when ctrl && shift: SaveShowAs(); break;
             case Key.S when ctrl: SaveShow(); break;
             case Key.G when ctrl: ShowGoto(); break;

@@ -921,6 +921,7 @@ public sealed partial class AppState : Observable
         presenterDevice = s.PresenterDevice == s.AudienceDevice ? null : s.PresenterDevice;
         LoadLayouts(s);
         currentShowPath = s.ShowPath;
+        StartRemote(s);
         Timer.Settings = s.Timer;
         endBehavior = s.EndBehavior;
         transition = s.Transition;
@@ -999,6 +1000,9 @@ public sealed partial class AppState : Observable
             MessageBackground = Message.Background,
             MessageForeground = Message.Foreground,
             ShowPath = CurrentShowPath,
+            RemoteEnabled = RemoteEnabled,
+            RemotePort = RemotePort,
+            RemoteLocalOnly = RemoteLocalOnly,
         });
     }
 
@@ -1006,6 +1010,7 @@ public sealed partial class AppState : Observable
     {
         ticker.Stop();
         SaveNow();
+        remote?.Stop();
         outputs.CloseAll();
         TaskbarHider.RestoreAll();
         await ppt.ShutdownAsync();

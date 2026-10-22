@@ -30,6 +30,9 @@ Der Vertrag dafür steht in [KOMPATIBILITAET.md](KOMPATIBILITAET.md).
 | `src/montro/Display/OutputManager.cs` | Schwarzbild, Übergang und Ausgabefenster der Referent*innenansicht (Bildschirm oder Popup) |
 | `src/montro/Testing/PresenterSnapshot.cs` | `--referentenbild`: Testbilder der Referent*innenansicht ohne PowerPoint |
 | `src/montro/Core/AppState.Layouts.cs` | Standard, Presets, Entwurf und Zuweisung der Referent*innenansicht (Mac: `AppState`, Presets) |
+| `src/montro/Remote/RemoteApi.cs` | Fernsteuerung per HTTP/JSON auf `TcpListener` (Mac: `RemoteAPI.swift`, `docs/REMOTE-API.md` im Mac-Repo), ohne Verbund-Teil |
+| `src/montro/Core/AppState.Remote.cs` | Einstellungen der Fernsteuerung (an/aus, Port, nur lokal) |
+| `src/montro/Views/SettingsWindow.cs` | Einstellungen › Fernsteuerung (Mac: `RemoteAPISection`) |
 | `src/montro/Core/ShowFile.cs` | Show-Datei `.montro` (JSON, Format wie `docs/SHOW-FORMAT.md` im Mac-Repo), Umwandlung der Farben `#RRGGBBAA` ↔ WPF `#AARRGGBB` |
 | `src/montro/Core/AppState.Show.cs` | Show öffnen, sichern, mit Präsentationen sichern, fehlende Dateien suchen (Mac: `ShowFileIO`) |
 | `src/montro/Testing/ShowFileTest.cs` | `--showtest`: Show-Dateien ohne Oberfläche prüfen, auch eine Show im Mac-Stil |
@@ -234,8 +237,10 @@ Fremdbibliothek. Zählweise absichtlich wie am Mac:
 1. PowerPoint-COM-Kern mit Testfenster ✓ (21.10.2026)
 2. *(in 1 enthalten)* Gerüst, Doku, Build über GitHub Actions ✓
 3. PPTX-Parser portieren (Notizen, Klick-Animationen, Videos, ausgeblendete Folien) ✓ (21.10.2026)
-4. Playlist, Inspector, Ausgaben (Schwarzfenster, Popup-Modus), Ende-Sperre ← **als Nächstes**
-5. Remote-API 1:1, Test mit dem Companion-Modul
-6. Referent*innenansicht mit Builder und Presets, Timer, Regie-Nachricht
-7. Übergänge, Verbund (DNS-SD und Sync), gemischter Test mit dem Mac
+4. Playlist, Inspector, Ausgaben (Schwarzfenster, Popup-Modus), Ende-Sperre, dazu (vorgezogen aus 6
+   und 7) Referent*innenansicht mit Baukasten und Presets, Timer, Regie-Nachricht, Übergänge,
+   Video-Karte, „In PowerPoint bearbeiten“, Show-Dateien ✓ (22.10.2026, Branch `meilenstein-4`)
+5. Remote-API 1:1, Test mit dem Companion-Modul ← **in Arbeit** (Branch `meilenstein-5`)
+6. *(in 4 enthalten)*
+7. Verbund (DNS-SD und Sync, „Aktualisieren“), gemischter Test mit dem Mac
 8. Installer mit Firewall-Regel, Info-Fenster, Version aus CHANGELOG

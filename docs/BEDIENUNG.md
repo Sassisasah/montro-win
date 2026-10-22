@@ -86,6 +86,23 @@ wenn die Ende-Sperre greift).
 - Werkzeuge: Strg+Umschalt+P öffnet das Testfenster „PowerPoint testen“, Strg+Umschalt+L den
   Log-Ordner.
 
+## Fernsteuerung (Meilenstein 5)
+
+Zahnrad oben rechts (Strg+,) › **Fernsteuerung (Bitfocus Companion)**: Netzwerk-Schnittstelle an/aus
+(Standard: an), Port (Standard **8765**), „Nur von diesem Rechner erreichbar (127.0.0.1)“. Darunter
+steht, welche Adresse in Companion als Host einzutragen ist. Pfade und Antworten genau wie am Mac
+(`docs/REMOTE-API.md` im Repo `Sassisasah/montro`), z. B.:
+
+```
+curl http://127.0.0.1:8765/api/state
+curl -X POST http://127.0.0.1:8765/api/next
+curl -X POST "http://127.0.0.1:8765/api/message?text=Noch%202%20Minuten"
+```
+
+Keine Anmeldung: Ohne „nur von diesem Rechner“ kann jeder im selben Netz steuern. Beim ersten Start
+fragt die Windows-Firewall – Zugriff im privaten Netz erlauben (der Installer trägt später eine
+Regel ein). Der Verbund-Teil (`/api/cluster…`) folgt mit Meilenstein 7.
+
 ## PowerPoint testen (Meilenstein 1)
 
 Strg+Umschalt+P im Hauptfenster öffnet ein Testfenster für den PowerPoint-Kern:

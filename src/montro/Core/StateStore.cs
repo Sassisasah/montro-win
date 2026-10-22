@@ -26,6 +26,10 @@ public sealed class SavedState
     public string? MessageForeground { get; set; }
     /// <summary>Zuletzt geöffnete bzw. gesicherte Show-Datei (.montro)</summary>
     public string? ShowPath { get; set; }
+    /// <summary>Fernsteuerung (Remote-API): an/aus, Port, nur von diesem Rechner</summary>
+    public bool? RemoteEnabled { get; set; }
+    public int? RemotePort { get; set; }
+    public bool RemoteLocalOnly { get; set; }
 }
 
 /// <summary>Übergang auf dem Publikumsbildschirm, wenn eine andere Präsentation live geht (Mac: ShowTransition).</summary>

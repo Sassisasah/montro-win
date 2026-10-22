@@ -56,6 +56,9 @@
                         Visibility="{Binding IsLocked, Converter={StaticResource Vis}}" Click="OnUnlock">
                     <TextBlock Style="{StaticResource Brand.Icon}" Text="&#xE785;" Foreground="{StaticResource Brand.Warning}" />
                 </Button>
+                <Button Style="{StaticResource Brand.Borderless}" ToolTip="Einstellungen – Fernsteuerung (Strg+,)" Click="OnSettings" Margin="8,0,0,0">
+                    <TextBlock Style="{StaticResource Brand.Icon}" Text="&#xE713;" />
+                </Button>
             </StackPanel>
             </DockPanel>
         </Border>
