@@ -305,7 +305,7 @@ internal sealed class CurrentSlideWidget : PresenterWidget
     }
 
     public override void Update(AppState s) =>
-        frame.Set(Image(s.CurrentSlideImage), "Keine Folie live", s.IsBlackout || s.IsEndBlack);
+        frame.Set(s.CurrentSlideSource, "Keine Folie live", s.IsBlackout || s.IsEndBlack);
 }
 
 internal sealed class NextSlideWidget : PresenterWidget

@@ -127,8 +127,12 @@
 - PowerPoint ohne Lizenz: lässt sich auf dem Test-PC nicht nachstellen.
 - **22.10.2026** – Meilenstein 4, Etappe 3: Referent*innenansicht auf dem zweiten Verbatim mit
   Timer-Blinken und Ende auf Schwarz prüfen; Popup-Modus (links
-  Referent*innenansicht, rechts PowerPoint). Die Folienbilder sind die Vorschaubilder, ohne
-  Animationsstand (Live-Bild folgt). Video-Laufzeit bleibt leer, bis die Video-Erkennung kommt.
+  Referent*innenansicht, rechts PowerPoint). Video-Laufzeit bleibt leer, bis die
+  Video-Erkennung kommt.
+- **22.10.2026** – Live-Bild eingebaut, noch nicht auf dem Verbatim geprüft: Aktuelle Folie in
+  Live-Folie-Karte und Referent*innenansicht zeigt zweimal pro Sekunde den Publikumsbildschirm
+  (Animationsstand, Video). Aufnahme im Hintergrund, am Test-PC 30–60 ms je Bild (gemessen am
+  Laptop-Bildschirm). Im Popup-Modus weiter das Vorschaubild.
 - **21.10.2026** – Meilenstein 4: noch nicht geprüft sind Timer-Einstellungen und Ziehen &
   Ablegen. Offen: Builder und Presets der Referent*innenansicht, Video-Karte, „In PowerPoint
   bearbeiten“, „Aktualisieren“, Show-Dateien `.montro`.

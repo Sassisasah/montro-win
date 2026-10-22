@@ -136,6 +136,10 @@ Fremdbibliothek. Zählweise absichtlich wie am Mac:
   Fläche von 1080 Einheiten Höhe; die Breite folgt dem Seitenverhältnis, so gelten die
   Mac-Schriftgrößen unverändert. Die vielen Änderungsmeldungen pro Takt (Timer, Uhr, Blinken)
   werden zu einem Neuzeichnen zusammengefasst.
+- **Live-Bild:** GDI `StretchBlt` des Publikumsbildschirms auf 1280 px Breite, alle 500 ms und
+  direkt nach jedem Wechsel, im Hintergrund-Thread (30–60 ms je Aufnahme). Nicht bei Schwarz,
+  Start oder Übergang, und nicht im Popup-Modus (dort könnten andere Fenster das
+  PowerPoint-Fenster überdecken) – dann das Vorschaubild.
 
 - **Kein `HttpListener`** für die Remote-API (später), weil er für `http://+:8765/` eine
   URL-Reservierung mit Adminrechten braucht. Geplant ist ein eigener kleiner HTTP-Server auf

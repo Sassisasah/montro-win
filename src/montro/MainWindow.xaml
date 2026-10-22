@@ -228,7 +228,7 @@
                             <Border Background="Black" CornerRadius="6" ClipToBounds="True">
                                 <Viewbox Stretch="Uniform">
                                     <Grid Width="1280" Height="720">
-                                        <Image Source="{Binding CurrentSlideImage, Converter={StaticResource Img}}" Stretch="Uniform" />
+                                        <Image Source="{Binding CurrentSlideSource}" Stretch="Uniform" RenderOptions.BitmapScalingMode="HighQuality" />
                                         <Rectangle Fill="#BF000000" Visibility="{Binding LiveOverlayText, Converter={StaticResource NullVis}}" />
                                         <TextBlock Text="{Binding LiveOverlayText}" Foreground="#80FFFFFF" FontSize="40"
                                                    HorizontalAlignment="Center" VerticalAlignment="Center" />

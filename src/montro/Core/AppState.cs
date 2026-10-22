@@ -329,8 +329,63 @@ public sealed class AppState : Observable
         }
     }
 
-    /// <summary>Folienbild der Live-Folie (Live-Bild aus dem Fenster folgt später).</summary>
+    /// <summary>Vorschaubild der Live-Folie (Datei).</summary>
     public string? CurrentSlideImage => LiveItem?.Thumbnail(CurrentSlide);
+
+    private static readonly Views.PathToImage Images = new();
+    private System.Windows.Media.ImageSource? liveImage;
+    private int captureTick;
+
+    /// <summary>
+    /// Bild der Live-Folie für Vorschau und Referent*innenansicht: Live-Bild des
+    /// Publikumsbildschirms (mit Animationsstand und laufendem Video), sonst das Vorschaubild
+    /// (Mac: currentSlideImage mit LiveCapture).
+    /// </summary>
+    public System.Windows.Media.ImageSource? CurrentSlideSource =>
+        liveImage ?? Images.Convert(CurrentSlideImage, typeof(System.Windows.Media.ImageSource), null,
+            System.Globalization.CultureInfo.InvariantCulture) as System.Windows.Media.ImageSource;
+
+    /// <summary>Live-Bild nur, wenn wirklich die Folie zu sehen ist (nicht schwarz, kein Übergang).</summary>
+    private bool CanCaptureLive =>
+        !headless && IsShowRunning && !IsStarting && !IsBlackout && !IsEndBlack && !outputs.TransitionActive
+        && AudienceScreen != null;
+
+    private bool capturing;
+
+    /// <summary>
+    /// Live-Bild aufnehmen. Das Lesen des Bildschirms dauert am Test-PC 30–60 ms, daher im
+    /// Hintergrund, damit Bedienung und Takt nicht stocken.
+    /// </summary>
+    private async void CaptureLive()
+    {
+        if (capturing) return;
+        if (!CanCaptureLive || AudienceScreen is not { } screen)
+        {
+            if (liveImage == null) return;
+            liveImage = null;
+            Raise(nameof(CurrentSlideSource));
+            return;
+        }
+        capturing = true;
+        bool first = liveImage == null;
+        try
+        {
+            var sw = System.Diagnostics.Stopwatch.StartNew();
+            var img = await Task.Run(() => ScreenShot.CaptureScaled(screen.Bounds, 1280));
+            if (first) DebugLog.Write($"Live-Bild aufgenommen in {sw.ElapsedMilliseconds} ms");
+            // inzwischen schwarz oder gestoppt → verwerfen
+            liveImage = CanCaptureLive ? img : null;
+            Raise(nameof(CurrentSlideSource));
+        }
+        catch (Exception e)
+        {
+            DebugLog.Write($"Live-Bild: {e.Message}");
+        }
+        finally
+        {
+            capturing = false;
+        }
+    }
 
     public string? NextSlideImage =>
         LiveItem is { } item && item.NextVisible(CurrentSlide) is int n ? item.Thumbnail(n) : null;
@@ -348,7 +403,15 @@ public sealed class AppState : Observable
     {
         Raise(nameof(CanControl), nameof(CanGoLive), nameof(CanStop), nameof(CurrentSlideMeta),
             nameof(NavigatorItem), nameof(SlidePositionText), nameof(LiveStatusLine), nameof(CurrentSlideImage),
-            nameof(NextSlideImage), nameof(LiveOverlayText), nameof(BlackoutButtonText), nameof(CurrentNotes));
+            nameof(NextSlideImage), nameof(LiveOverlayText), nameof(BlackoutButtonText), nameof(CurrentNotes),
+            nameof(CurrentSlideSource));
+        // nach einem Wechsel (Folie, Klick, Schwarz) beim nächsten Takt neu aufnehmen
+        captureTick = 0;
+        if (!CanCaptureLive && liveImage != null)
+        {
+            liveImage = null;
+            Raise(nameof(CurrentSlideSource));
+        }
         UpdateOutputs();
     }
 
@@ -792,6 +855,8 @@ public sealed class AppState : Observable
     private void Tick()
     {
         Timer.Tick();
+        // Live-Bild zweimal pro Sekunde (direkt nach einem Wechsel sofort)
+        if (captureTick++ % 2 == 0) CaptureLive();
         Message.Tick();
         // Schwarzbild/Übergang über allem halten – aber nicht, solange die Show sichtbar sein soll
         // oder gerade startet: Sonst wechseln sich Schwarzbild und PowerPoint-Fenster (das ebenfalls
