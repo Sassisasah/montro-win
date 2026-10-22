@@ -2,6 +2,12 @@
 
 ## Getestet
 
+- **22.10.2026** – Show-Dateien (`montro.exe --showtest`, 18 Prüfungen ok): sichern und öffnen
+  (Playlist, Preset-Zuweisung, Ansichten, Ende, Übergang, Timer, Regie-Farben); „mit Präsentationen
+  sichern“, Ordner verschoben, wieder geöffnet (relative Pfade); Show im Mac-Stil (Pfad mit „/“,
+  `#RRGGBBAA`, `countup`, unbekanntes Widget und Feld, Version 2, fehlende Datei). Menü „Show“
+  über UI Automation geöffnet. Austausch mit einer echten Mac-Show steht aus.
+
 - **22.10.2026** – „In PowerPoint bearbeiten“ am Test-PC (UI Automation): Stift beim Testdeck →
   PowerPoint öffnet die Datei beschreibbar mit Fenster auf dem Laptop-Bildschirm. Speichern in
   PowerPoint → nach ~3 s „Datei geändert … → neu analysieren“, 1,5 s später 14 neue
@@ -153,8 +159,7 @@
   Die erste Video-Abfrage kam etwa 4 s nach dem Sprung (Video bei 3 s) – beobachten.
 - **22.10.2026** – Live-Bild (DWM-Miniatur) im Popup-Modus prüfen; auf dem Verbatim bestätigt.
 - **21.10.2026** – Meilenstein 4: noch nicht geprüft sind Timer-Einstellungen und Ziehen &
-  Ablegen. Offen: Show-Dateien
-  `.montro`.
+  Ablegen. „Aktualisieren“ (neue Version aus dem Verbund) folgt mit Meilenstein 7.
 - **22.10.2026** – Sperre gegen Bildschirm-Abschaltung während der Show eingebaut (Log: „Bildschirm-
   Abschaltung gesperrt“), noch nicht über die eingestellte Abschaltzeit hinaus geprüft.
 - **21.10.2026** – Parser: noch nicht geprüft sind verknüpfte (nicht eingebettete) Videos,

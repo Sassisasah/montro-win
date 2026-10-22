@@ -23,6 +23,16 @@
 
         <!-- Werkzeugleiste (Mac: TransportToolbar) -->
         <Border Grid.Row="0" Background="{StaticResource Brand.Panel}" BorderBrush="{StaticResource Brand.Line}" BorderThickness="0,0,0,1">
+            <DockPanel>
+            <!-- Show-Dateien (Mac: Menü „Ablage“) -->
+            <Button DockPanel.Dock="Left" Style="{StaticResource Brand.Borderless}" Margin="8,3" Padding="6,2" Click="OnShowMenu"
+                    ToolTip="Show öffnen und sichern (Strg+O, Strg+S)">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Style="{StaticResource Brand.Icon}" Text="&#xE8B7;" Margin="0,0,6,0" />
+                    <TextBlock x:Name="ShowCaption" Text="Show" VerticalAlignment="Center" />
+                    <TextBlock Style="{StaticResource Brand.Icon}" Text="&#xE70D;" FontSize="8" Margin="6,0,0,0" />
+                </StackPanel>
+            </Button>
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="8,3">
                 <Button Style="{StaticResource Brand.Borderless}" ToolTip="Ausgewählte Präsentation live schalten (Strg+Enter)"
                         IsEnabled="{Binding CanGoLive}" Click="OnGoLive">
@@ -47,6 +57,7 @@
                     <TextBlock Style="{StaticResource Brand.Icon}" Text="&#xE785;" Foreground="{StaticResource Brand.Warning}" />
                 </Button>
             </StackPanel>
+            </DockPanel>
         </Border>
 
         <Grid Grid.Row="1">

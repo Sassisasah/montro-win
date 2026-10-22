@@ -68,8 +68,15 @@ wenn die Ende-Sperre greift).
 - **Am Ende der Präsentation:** „Auf letzter Folie stehen bleiben“ oder „Überall auf Schwarz
   gehen“. Danach ist die Steuerung gesperrt, auch gegen Eingaben direkt in PowerPoint, bis
   „Entsperren“.
+- **Show (oben links):** Show öffnen … (Strg+O), Show sichern (Strg+S), Show sichern unter …
+  (Strg+Umschalt+S), Show mit Präsentationen sichern … (Ordner mit `<Name>.montro` und Kopien in
+  `Präsentationen\` – für USB-Stick oder einen anderen Rechner, Mac oder Windows), Fehlende
+  Dateien suchen …. Eine Show enthält Playlist, Referent*innenansicht (Standard und Presets) und
+  Show-Einstellungen, nicht die Bildschirm-Zuordnung. Öffnen ersetzt Playlist und Einstellungen,
+  Presets werden ergänzt. Nicht während einer Präsentation. Doppelklick auf eine `.montro`-Datei
+  bzw. `montro.exe show.montro` öffnet sie. Format: `docs/SHOW-FORMAT.md` im Repo `Sassisasah/montro`.
 - **Tasten:** → Bild↓ Leertaste Return N = weiter · ← Bild↑ P = zurück · B . = Blackscreen ·
-  Strg+Return live · Strg+. Stopp · Strg+T Timer · Strg+G Gehe zu.
+  Strg+Return live · Strg+. Stopp · Strg+T Timer · Strg+G Gehe zu · Strg+O/S Show.
 - Werkzeuge: Strg+Umschalt+P öffnet das Testfenster „PowerPoint testen“, Strg+Umschalt+L den
   Log-Ordner.
 

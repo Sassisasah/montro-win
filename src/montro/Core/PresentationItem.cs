@@ -15,7 +15,10 @@ public sealed class PresentationItem : Observable
     private bool isLive;
 
     public Guid Id { get; init; } = Guid.NewGuid();
-    public string Path { get; init; } = "";
+    private string path = "";
+
+    /// <summary>Pfad der Datei; ändert sich nur über „Fehlende Dateien suchen …“.</summary>
+    public string Path { get => path; set => Set(ref path, value); }
 
     public string Title { get => title; set => Set(ref title, value); }
 

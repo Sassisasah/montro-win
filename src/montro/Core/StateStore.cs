@@ -24,6 +24,8 @@ public sealed class SavedState
     public List<string>? MessagePresets { get; set; }
     public string? MessageBackground { get; set; }
     public string? MessageForeground { get; set; }
+    /// <summary>Zuletzt geöffnete bzw. gesicherte Show-Datei (.montro)</summary>
+    public string? ShowPath { get; set; }
 }
 
 /// <summary>Übergang auf dem Publikumsbildschirm, wenn eine andere Präsentation live geht (Mac: ShowTransition).</summary>

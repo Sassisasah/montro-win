@@ -25,6 +25,13 @@ public partial class App : Application
             Dispatcher.InvokeAsync(async () => Shutdown(await Testing.SelfTest.RunAsync(e.Args)));
             return;
         }
+        if (e.Args.Contains("--showtest"))
+        {
+            ShutdownMode = ShutdownMode.OnExplicitShutdown;
+            base.OnStartup(e);
+            Dispatcher.InvokeAsync(async () => Shutdown(await Testing.ShowFileTest.RunAsync(e.Args)));
+            return;
+        }
         if (e.Args.Contains("--miniaturtest"))
         {
             ShutdownMode = ShutdownMode.OnExplicitShutdown;
@@ -46,7 +53,10 @@ public partial class App : Application
         main.Show();
         // „Öffnen mit montro“ / Dateien als Argumente: in die Playlist
         var files = e.Args.Where(a => !a.StartsWith("--") && File.Exists(a)).ToArray();
-        if (files.Length > 0) main.AddFiles(files);
+        if (files.FirstOrDefault(f => f.EndsWith(Core.ShowFile.Extension, StringComparison.OrdinalIgnoreCase)) is { } show)
+            main.OpenShow(show);
+        var presentations = files.Where(f => !f.EndsWith(Core.ShowFile.Extension, StringComparison.OrdinalIgnoreCase)).ToArray();
+        if (presentations.Length > 0) main.AddFiles(presentations);
     }
 
     private static void OnUnhandled(object sender, DispatcherUnhandledExceptionEventArgs e)

@@ -52,6 +52,14 @@ public partial class MainWindow : Window
         UpdateNavigatorHint();
         UpdateBlackoutButton();
         PresenterPreviewHost.Child = new PresenterOutputView(state);
+        UpdateTitle();
+        state.ShowLoaded += () =>
+        {
+            (state.EndBehavior == EndBehavior.HoldLastSlide ? EndHold : EndBlack).IsChecked = true;
+            LoadTransition();
+            LoadTimerSettings();
+            UpdateEnd();
+        };
         liveThumb = new Display.LiveThumbnail(LivePreview);
 
         PreviewKeyDown += OnKey;
@@ -67,6 +75,9 @@ public partial class MainWindow : Window
         Playlist.PreviewMouseMove += OnPlaylistDragMove;
         DebugLog.Write($"Hauptfenster: {state.Items.Count} Einträge in der Playlist, {state.ExternalScreens.Count} externe(r) Bildschirm(e)");
     }
+
+    /// <summary>Show-Datei öffnen (Kommandozeile, Doppelklick auf .montro).</summary>
+    public void OpenShow(string path) => state.OpenShow(path);
 
     /// <summary>Dateien in die Playlist (Kommandozeile, „Öffnen mit“).</summary>
     public void AddFiles(IEnumerable<string> paths)
@@ -98,6 +109,9 @@ public partial class MainWindow : Window
             case nameof(AppState.Video):
             case nameof(AppState.CurrentSlideMeta):
                 UpdateVideoCard();
+                break;
+            case nameof(AppState.CurrentShowName):
+                UpdateTitle();
                 break;
             case nameof(AppState.LiveSource):
                 liveThumb.Source = state.LiveSource;
@@ -378,6 +392,92 @@ public partial class MainWindow : Window
             Multiselect = true,
         };
         if (dlg.ShowDialog(this) == true) state.Add(dlg.FileNames);
+    }
+
+    // MARK: - Show-Dateien (Mac: Ablage › Show öffnen / sichern)
+
+    private const string ShowFilter = "montro-Show (*.montro)|*.montro";
+
+    private void OnShowMenu(object sender, RoutedEventArgs e)
+    {
+        var menu = new ContextMenu { PlacementTarget = (UIElement)sender, Placement = System.Windows.Controls.Primitives.PlacementMode.Bottom };
+        bool free = state.ShowBlockReason == null;
+        MenuItem Entry(string text, string? keys, Action action, bool enabled = true)
+        {
+            var mi = new MenuItem { Header = text, InputGestureText = keys ?? "", IsEnabled = enabled };
+            mi.Click += (_, _) => action();
+            return mi;
+        }
+        menu.Items.Add(Entry("Show öffnen …", "Strg+O", OpenShowDialog, free));
+        menu.Items.Add(new Separator());
+        menu.Items.Add(Entry(state.CurrentShowName is { } n ? $"Show „{n}“ sichern" : "Show sichern", "Strg+S", SaveShow, free));
+        menu.Items.Add(Entry("Show sichern unter …", "Strg+Umschalt+S", SaveShowAs, free));
+        menu.Items.Add(Entry("Show mit Präsentationen sichern …", null, SaveShowWithPresentations, free));
+        menu.Items.Add(new Separator());
+        menu.Items.Add(Entry("Fehlende Dateien suchen …", null, LocateMissing, state.Items.Any(i => !File.Exists(i.Path))));
+        menu.IsOpen = true;
+    }
+
+    private bool ShowAllowed()
+    {
+        if (state.ShowBlockReason is not { } reason) return true;
+        state.StatusMessage = reason;
+        return false;
+    }
+
+    private void OpenShowDialog()
+    {
+        if (!ShowAllowed()) return;
+        var dlg = new OpenFileDialog { Title = "Show öffnen", Filter = ShowFilter + "|JSON (*.json)|*.json" };
+        if (dlg.ShowDialog(this) == true) state.OpenShow(dlg.FileName);
+    }
+
+    private void SaveShow()
+    {
+        if (!ShowAllowed()) return;
+        if (state.CurrentShowPath is { } path && Directory.Exists(Path.GetDirectoryName(path))) state.SaveShow(path);
+        else SaveShowAs();
+    }
+
+    private void SaveShowAs()
+    {
+        if (!ShowAllowed()) return;
+        var dlg = new SaveFileDialog
+        {
+            Title = "Show sichern – Playlist, Referent*innenansichten (Standard + Presets) und Show-Einstellungen",
+            Filter = ShowFilter,
+            FileName = (state.CurrentShowName ?? "Show") + ShowFile.Extension,
+        };
+        if (dlg.ShowDialog(this) == true) state.SaveShow(dlg.FileName);
+    }
+
+    private async void SaveShowWithPresentations()
+    {
+        if (!ShowAllowed()) return;
+        // Gewählt wird „<Ort>\<Name>.montro“, angelegt wird „<Ort>\<Name>\<Name>.montro“ + „Präsentationen\“
+        var dlg = new SaveFileDialog
+        {
+            Title = "Show mit Präsentationen sichern – legt einen Ordner mit der Show-Datei und Kopien aller Präsentationen an",
+            Filter = ShowFilter,
+            OverwritePrompt = false,
+            FileName = state.CurrentShowName ?? "Show",
+        };
+        if (dlg.ShowDialog(this) != true) return;
+        string folder = Path.Combine(Path.GetDirectoryName(dlg.FileName)!, Path.GetFileNameWithoutExtension(dlg.FileName));
+        if (await state.SaveShowWithPresentations(folder) is { } showPath)
+            Process.Start(new ProcessStartInfo("explorer.exe", $"/select,\"{showPath}\"") { UseShellExecute = true });
+    }
+
+    private async void LocateMissing()
+    {
+        var dlg = new OpenFolderDialog { Title = "Fehlende Dateien suchen – montro sucht im Ordner (mit Unterordnern) nach den Präsentationen" };
+        if (dlg.ShowDialog(this) == true) await state.LocateMissing(dlg.FolderName);
+    }
+
+    private void UpdateTitle()
+    {
+        Title = state.CurrentShowName is { } n ? $"montro – {n}" : "montro";
+        ShowCaption.Text = state.CurrentShowName ?? "Show";
     }
 
     // MARK: - Playlist
@@ -661,6 +761,9 @@ public partial class MainWindow : Window
             case Key.Enter when ctrl: state.GoLiveSelected(); break;
             case Key.OemPeriod when ctrl: _ = state.Stop(); break;
             case Key.T when ctrl: state.Timer.Toggle(); break;
+            case Key.O when ctrl: OpenShowDialog(); break;
+            case Key.S when ctrl && shift: SaveShowAs(); break;
+            case Key.S when ctrl: SaveShow(); break;
             case Key.G when ctrl: ShowGoto(); break;
             case Key.OemPlus or Key.Add when ctrl: state.NotesFontScale += 0.1; break;
             case Key.OemMinus or Key.Subtract when ctrl: state.NotesFontScale -= 0.1; break;

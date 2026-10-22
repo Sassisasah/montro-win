@@ -107,6 +107,9 @@ public sealed partial class AppState : Observable
         ticker.Start();
     }
 
+    /// <summary>Leerer Zustand ohne Ausgaben und ohne Speichern (Tests der Show-Dateien).</summary>
+    internal static AppState ForTest() => new(headless: true);
+
     /// <summary>
     /// Zustand „live auf Folie <paramref name="slide"/>“ ohne PowerPoint, für Testbilder der
     /// Referent*innenansicht (<c>montro.exe --referentenbild</c>).
@@ -473,7 +476,7 @@ public sealed partial class AppState : Observable
     /// <summary>Alle ausstehenden Einträge nacheinander analysieren und Vorschaubilder erzeugen.</summary>
     public async Task PrepareAll()
     {
-        if (preparing) return;
+        if (preparing || headless) return;
         preparing = true;
         try
         {
@@ -880,6 +883,7 @@ public sealed partial class AppState : Observable
         audienceDevice = s.AudienceDevice;
         presenterDevice = s.PresenterDevice == s.AudienceDevice ? null : s.PresenterDevice;
         LoadLayouts(s);
+        currentShowPath = s.ShowPath;
         Timer.Settings = s.Timer;
         endBehavior = s.EndBehavior;
         transition = s.Transition;
@@ -957,6 +961,7 @@ public sealed partial class AppState : Observable
             MessagePresets = Message.Presets.ToList(),
             MessageBackground = Message.Background,
             MessageForeground = Message.Foreground,
+            ShowPath = CurrentShowPath,
         });
     }
 
