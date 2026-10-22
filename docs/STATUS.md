@@ -11,7 +11,8 @@
   (Playlist, Preset-Zuweisung, Ansichten, Ende, Übergang, Timer, Regie-Farben); „mit Präsentationen
   sichern“, Ordner verschoben, wieder geöffnet (relative Pfade); Show im Mac-Stil (Pfad mit „/“,
   `#RRGGBBAA`, `countup`, unbekanntes Widget und Feld, Version 2, fehlende Datei). Menü „Show“
-  über UI Automation geöffnet. Austausch mit einer echten Mac-Show steht aus.
+  über UI Automation geöffnet. Eine am Mac gesicherte Show öffnet die Nutzerin unter Windows
+  ohne Probleme („mac showfile öffnen geht“).
 
 - **22.10.2026** – „In PowerPoint bearbeiten“ am Test-PC (UI Automation): Stift beim Testdeck →
   PowerPoint öffnet die Datei beschreibbar mit Fenster auf dem Laptop-Bildschirm. Speichern in
