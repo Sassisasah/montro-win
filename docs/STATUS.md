@@ -23,8 +23,8 @@
   eingeblendet gezeigt. Von der Nutzerin bestätigt: „perfekt“.
 - **22.10.2026** – Ende der Präsentation funktioniert (Nutzerin: „geht“). Vorher lief die Show
   über das Ende hinaus und PowerPoint fragte „Speichern?“ (blockierte dann alles) – behoben.
-- **22.10.2026** – Offen: Video in der Präsentation ruckelt laut Nutzerin. Vergleich mit
-  PowerPoint allein steht aus.
+- **22.10.2026** – Video (Technik-Testdeck, Folie 7) läuft flüssig. Ein einmaliges Ruckeln lag
+  laut Nutzerin vermutlich an etwas anderem im Hintergrund.
 
 - **21.10.2026** – Meilenstein 4, Etappe 1 (Branch `meilenstein-4`), über UI Automation
   bedient: 4 Präsentationen per Kommandozeile hinzugefügt, alle in 23 s analysiert und mit
