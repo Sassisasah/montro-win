@@ -151,7 +151,28 @@ public sealed class AppState : Observable
 
     public int CurrentSlide { get => currentSlide; private set { if (Set(ref currentSlide, value)) RaiseDerived(); } }
     public int ClickInSlide { get => clickInSlide; private set { if (Set(ref clickInSlide, value)) RaiseDerived(); } }
-    public bool IsShowRunning { get => isShowRunning; private set { if (Set(ref isShowRunning, value)) RaiseDerived(); } }
+    public bool IsShowRunning
+    {
+        get => isShowRunning;
+        private set
+        {
+            if (!Set(ref isShowRunning, value)) return;
+            KeepDisplaysOn(value);
+            RaiseDerived();
+        }
+    }
+
+    /// <summary>
+    /// Während der Show weder Bildschirme abschalten noch Ruhezustand (Mac: Energiespar-Sperre).
+    /// Am 20.10.2026 meldeten sich in einer Pause die Verbatims ab („No signal“).
+    /// </summary>
+    private void KeepDisplaysOn(bool on)
+    {
+        if (headless) return;
+        uint flags = on ? Native.ES_CONTINUOUS | Native.ES_DISPLAY_REQUIRED | Native.ES_SYSTEM_REQUIRED : Native.ES_CONTINUOUS;
+        bool ok = Native.SetThreadExecutionState(flags) != 0;
+        DebugLog.Write($"Bildschirm-Abschaltung {(on ? "gesperrt" : "wieder erlaubt")}{(ok ? "" : " – fehlgeschlagen")}");
+    }
     public bool IsStarting { get => isStarting; private set { if (Set(ref isStarting, value)) RaiseDerived(); } }
     public bool IsBlackout { get => isBlackout; private set { if (Set(ref isBlackout, value)) RaiseDerived(); } }
     public bool IsLocked { get => isLocked; private set { if (Set(ref isLocked, value)) RaiseDerived(); } }

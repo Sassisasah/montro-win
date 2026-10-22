@@ -5,7 +5,8 @@
 - **22.10.2026** – Referent*innenansicht auf dem zweiten Verbatim: läuft (Nutzerin: „geht“).
   Die aktuelle Folie war extrem verpixelt: Der Bildspeicher gab das 280-px-Bild der
   Folienkacheln heraus. Behoben, der Speicher unterscheidet jetzt nach Bildbreite. Danach von
-  der Nutzerin bestätigt: Folie scharf („geht“).
+  der Nutzerin bestätigt: Folie scharf („geht“). Regie-Nachricht erscheint dort ebenfalls
+  („regie geht auch“).
 - **22.10.2026** – Meilenstein 4, Etappe 3 (Referent*innenansicht), Testbilder ohne PowerPoint
   (`montro.exe --referentenbild`, Technik-Testdeck mit den echten Vorschaubildern): Aufbau wie
   der Mac-Standard „Windows“ – Timer, Uhr oben, aktuelle Folie groß links, „Folie 3 von 14“ mit
@@ -125,18 +126,19 @@
 
 - PowerPoint ohne Lizenz: lässt sich auf dem Test-PC nicht nachstellen.
 - **22.10.2026** – Meilenstein 4, Etappe 3: Referent*innenansicht auf dem zweiten Verbatim mit
-  Regie-Nachricht, Timer-Blinken und Ende auf Schwarz prüfen; Popup-Modus (links
+  Timer-Blinken und Ende auf Schwarz prüfen; Popup-Modus (links
   Referent*innenansicht, rechts PowerPoint). Die Folienbilder sind die Vorschaubilder, ohne
   Animationsstand (Live-Bild folgt). Video-Laufzeit bleibt leer, bis die Video-Erkennung kommt.
 - **21.10.2026** – Meilenstein 4: noch nicht geprüft sind Timer-Einstellungen und Ziehen &
   Ablegen. Offen: Builder und Presets der Referent*innenansicht, Video-Karte, „In PowerPoint
-  bearbeiten“, „Aktualisieren“, Show-Dateien `.montro`, Bildschirm-Abschaltung während der Show
-  verhindern.
+  bearbeiten“, „Aktualisieren“, Show-Dateien `.montro`.
+- **22.10.2026** – Sperre gegen Bildschirm-Abschaltung während der Show eingebaut (Log: „Bildschirm-
+  Abschaltung gesperrt“), noch nicht über die eingestellte Abschaltzeit hinaus geprüft.
 - **21.10.2026** – Parser: noch nicht geprüft sind verknüpfte (nicht eingebettete) Videos,
   Videos mit Trigger-Start und andere Videoformate als MP4/MOV (Länge dann 0 = unbekannt).
   Abgleich mit dem Mac-Ergebnis für dieselben Dateien steht aus.
 - Der Selbsttest kann nicht sehen, was ein Monitor wirklich anzeigt. Sichtprüfung bleibt nötig.
 - **20.10.2026** – Während einer Pause schaltete Windows die Bildschirme ab, die Verbatims
-  meldeten sich ab („No signal“). Für Meilenstein 4: Abschaltung während einer Show verhindern
-  (`SetThreadExecutionState(ES_DISPLAY_REQUIRED)`).
+  meldeten sich ab („No signal“). Seit 22.10.2026 verhindert montro das, solange eine
+  Präsentation live ist.
 - Eintrag in der Projekttabelle von `Sassisasah/Developer-Setup` (`README.md`).

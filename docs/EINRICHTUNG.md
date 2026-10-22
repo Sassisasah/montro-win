@@ -31,8 +31,9 @@ Getestet wird mit dem Laptop und zwei externen Bildschirmen (Publikum, Referent*
   (DPI-Modus PerMonitorV2).
 - **Bildschirm-Abschaltung:** Schaltet Windows die Bildschirme wegen Inaktivität ab, melden sich
   USB-C-Monitore (z. B. Verbatim MT15) ganz ab und zeigen „No signal“. Auf Show-Rechnern unter
-  Einstellungen › System › Energie „Bildschirm ausschalten“ auf „Nie“ stellen. montro soll das
-  ab Meilenstein 4 während einer Show selbst verhindern (`SetThreadExecutionState`).
+  Einstellungen › System › Energie „Bildschirm ausschalten“ auf „Nie“ stellen. Während eine
+  Präsentation live ist, verhindert montro das selbst (`SetThreadExecutionState`), in den Pausen
+  dazwischen aber nicht.
 
 ## Show-Rechner
 
