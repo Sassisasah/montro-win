@@ -6,8 +6,8 @@
   `/api/state` vollständig wie am Mac; `select/2`, `message?text=…` (sichtbar), `timer/duration/20`
   („20:00“), `golive/1` (live, „1/14“, nächste 2), `goto/3` + `next` (Folie 3, Animation 1/5),
   `blackout/on` (schwarz), `blackout/off`, `stop` („Gestoppt – Ausgänge schwarz“), `diag`
-  (3 Bildschirme, Log); unbekannter Pfad → 404, `goto` ohne Show → 400. Noch offen: Zugriff von
-  einem anderen Rechner (Firewall), Test mit Companion.
+  (3 Bildschirme, Log); unbekannter Pfad → 404, `goto` ohne Show → 400. Danach mit dem
+  Companion-Modul 2.0.0 (Release auf GitHub) von der Nutzerin bestätigt: „companion geht“.
 - **22.10.2026** – Presets in Show-Dateien Mac → Windows: Prüfung durch die Nutzerin zu Hause steht aus.
 
 - **22.10.2026** – Referent*innenansicht ohne Live-Schalten gestalten (Hinweis der Nutzerin: „hier
