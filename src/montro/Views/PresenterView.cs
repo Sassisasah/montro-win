@@ -547,7 +547,7 @@ internal sealed class VideoTimeWidget : PresenterWidget
         if (placeholder != null) placeholder.Visibility = Visibility.Collapsed;
         box.Visibility = Visibility.Visible;
         glyph.Text = v.Playing ? "" : "";   // Play / Pause
-        name.Text = v.Name;
+        name.Text = s.IsLooping(v.Name) ? $"{v.Name}  ↻" : v.Name;   // ↻ = Schleife
         total.Text = v.Duration > 0 ? $"Gesamt {TimeFormat.Clock(v.Duration)}" : "";
         rest.Text = v.Duration > 0 ? $"Rest {TimeFormat.Clock(v.Remaining)}" : TimeFormat.Clock(v.Position, roundUp: false);
         rest.Foreground = v.Duration > 0 && v.Remaining <= 10 ? Live : null;

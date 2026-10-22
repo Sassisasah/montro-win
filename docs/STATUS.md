@@ -2,6 +2,11 @@
 
 ## Getestet
 
+- **22.10.2026** – Video-Restzeit von der Nutzerin bestätigt („funktioniert“). Auf ihren Wunsch
+  Schleife eingebaut und am Test-PC geprüft (Testdeck, Folie 7, Schleife an): dreimal hintereinander
+  „Ende erreicht, Schleife → von vorn“, je einmal neu gestartet, Lücke am Ende rund 0,2–0,5 s
+  (Ende von PowerPoint abwarten, dann Stopp + Abspielen).
+
 - **22.10.2026** – Show-Dateien (`montro.exe --showtest`, 18 Prüfungen ok): sichern und öffnen
   (Playlist, Preset-Zuweisung, Ansichten, Ende, Übergang, Timer, Regie-Farben); „mit Präsentationen
   sichern“, Ordner verschoben, wieder geöffnet (relative Pfade); Show im Mac-Stil (Pfad mit „/“,

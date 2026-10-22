@@ -327,7 +327,7 @@ public sealed class PowerPointHost
         DebugLog.Write($"Bearbeiten: „{Path.GetFileName(full)}“ in PowerPoint geöffnet");
     }, 30000, "Zum Bearbeiten öffnen");
 
-    public enum VideoCommand { Play, Pause, Stop }
+    public enum VideoCommand { Play, Pause, Stop, Restart }
 
     /// <summary>Video der aktuellen Folie (Name der Form) abspielen, anhalten oder stoppen (Mac: video.togglePause/stop).</summary>
     public Task VideoAsync(string name, VideoCommand command) => sta.Run(() =>
@@ -344,6 +344,7 @@ public sealed class PowerPointHost
             {
                 case VideoCommand.Play: player.Play(); break;
                 case VideoCommand.Pause: player.Pause(); break;
+                case VideoCommand.Restart: player.Stop(); player.Play(); break;
                 default: player.Stop(); break;
             }
             DebugLog.Write($"Video „{name}“: {command}");

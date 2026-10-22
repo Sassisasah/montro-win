@@ -1,6 +1,7 @@
 # Änderungsprotokoll
 
 ## 0.4 – 21.10.2026
+- Neu (22.10.2026): Schleife für Videos in der Video-Karte (Wunsch der Nutzerin, gibt es am Mac nicht).
 - Neu (22.10.2026): Show-Dateien `.montro` wie am Mac (öffnen, sichern, mit Präsentationen
   sichern, fehlende Dateien suchen), mit montro für macOS austauschbar.
 - Neu (22.10.2026): „In PowerPoint bearbeiten“ (Stift, Kontextmenü) mit Dateiwächter – nach dem

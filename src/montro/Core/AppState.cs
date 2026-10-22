@@ -755,6 +755,38 @@ public sealed partial class AppState : Observable
         if (Video is { } v && IsShowRunning) Send(() => ppt.VideoAsync(v.Name, PowerPointHost.VideoCommand.Stop));
     }
 
+    /// <summary>Videos in Schleife (Präsentation + Name der Form), gilt bis montro beendet wird.</summary>
+    private readonly HashSet<string> loopVideos = new();
+
+    private string LoopKey(string name) => $"{LiveItem?.Id}|{name}";
+
+    public bool IsLooping(string name) => loopVideos.Contains(LoopKey(name));
+
+    /// <summary>Schleife ein/aus. Läuft das Video schon zu Ende, startet es gleich neu.</summary>
+    public void ToggleLoop(string name)
+    {
+        if (!loopVideos.Remove(LoopKey(name))) loopVideos.Add(LoopKey(name));
+        DebugLog.Write($"Video „{name}“: Schleife {(IsLooping(name) ? "an" : "aus")}");
+        Raise(nameof(Video));
+    }
+
+    /// <summary>
+    /// Schleife: Ist ein Video in Schleife gerade zu Ende gelaufen (lief eben noch, jetzt am Ende
+    /// bzw. zurückgesetzt), von vorn starten. PowerPoint selbst wird dafür nicht geändert.
+    /// </summary>
+    private DateTime lastLoopRestart;
+
+    private void LoopIfEnded(VideoState? before, VideoState? now)
+    {
+        if (before is not { Playing: true } b || !IsLooping(b.Name)) return;
+        bool ended = now == null ? b.Remaining < 1.0 : now.Name == b.Name && now.Remaining < 0.6 && (!now.Playing || now.Remaining < 0.05);
+        // nur einmal je Ende (die nächste Abfrage meldet das Ende noch einmal)
+        if (!ended || (DateTime.Now - lastLoopRestart).TotalSeconds < 1.5) return;
+        lastLoopRestart = DateTime.Now;
+        DebugLog.Write($"Video „{b.Name}“: Ende erreicht, Schleife → von vorn");
+        Send(() => ppt.VideoAsync(b.Name, PowerPointHost.VideoCommand.Restart));
+    }
+
     public void SetBlackout(bool on)
     {
         if (!IsShowRunning) return;
@@ -833,7 +865,9 @@ public sealed partial class AppState : Observable
         }
         if (s.SlideIndex > 0) CurrentSlide = s.SlideIndex;
         ClickInSlide = s.Click;
+        var videoBefore = Video;
         Video = s.Video;
+        LoopIfEnded(videoBefore, s.Video);
         if (!IsEndBlack) IsBlackout = s.IsBlack;
     }
 

@@ -168,10 +168,15 @@ public partial class MainWindow : Window
             videoPauseGlyph = Glyph("");
             var pause = new Button { Style = (Style)FindResource("Brand.Compact"), ToolTip = "Pause / Weiter", Content = videoPauseGlyph };
             pause.Click += (_, _) => state.ToggleVideoPause();
+            videoLoop = new Button { Style = (Style)FindResource("Brand.Compact"), ToolTip = "Schleife – Video am Ende von vorn starten", Margin = new Thickness(0, 0, 6, 0), Content = Glyph("") };
+            videoLoop.Click += (_, _) => { if (state.Video is { } cur) state.ToggleLoop(cur.Name); };
             DockPanel.SetDock(stop, Dock.Right);
             DockPanel.SetDock(pause, Dock.Right);
+            DockPanel.SetDock(videoLoop, Dock.Right);
             row.Children.Add(stop);
             row.Children.Add(pause);
+            row.Children.Add(videoLoop);
+            loopButtons.Clear();
             var texts = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
             videoName = new TextBlock { TextTrimming = TextTrimming.CharacterEllipsis };
             videoTimes = new TextBlock { Style = (Style)FindResource("Brand.Caption") };
@@ -190,6 +195,11 @@ public partial class MainWindow : Window
                 play.Click += (_, _) => state.PlayVideo(name);
                 DockPanel.SetDock(play, Dock.Right);
                 line.Children.Add(play);
+                var loop = new Button { Style = (Style)FindResource("Brand.Small"), ToolTip = "Schleife – Video am Ende von vorn starten", Margin = new Thickness(8, 0, 0, 0), Content = Glyph("") };
+                loop.Click += (_, _) => state.ToggleLoop(name);
+                loopButtons[name] = loop;
+                DockPanel.SetDock(loop, Dock.Right);
+                line.Children.Add(loop);
                 var info = new TextBlock { Text = StartText(v), Style = (Style)FindResource("Brand.Caption"), VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(8, 0, 0, 0) };
                 DockPanel.SetDock(info, Dock.Right);
                 line.Children.Add(info);
@@ -209,8 +219,28 @@ public partial class MainWindow : Window
             videoTimes!.Text = $"Gesamt {TimeFormat.Clock(p.Duration)} · Rest {TimeFormat.Clock(p.Remaining)}";
             videoPauseGlyph!.Text = p.Playing ? "" : "";
             videoProgress!.Value = p.Progress;
+            MarkLoop(videoLoop!, state.IsLooping(p.Name));
         }
         else videoPlaying.Visibility = Visibility.Collapsed;
+        foreach (var (name, button) in loopButtons) MarkLoop(button, state.IsLooping(name));
+    }
+
+    private readonly Dictionary<string, Button> loopButtons = new();
+    private Button? videoLoop;
+
+    /// <summary>Schleife an = Knopf in Akzentfarbe (wie ein gedrückter Umschalter am Mac).</summary>
+    private void MarkLoop(Button b, bool on)
+    {
+        if (on)
+        {
+            b.Background = (Brush)FindResource("Brand.Accent");
+            b.Foreground = (Brush)FindResource("Brand.Background");
+        }
+        else
+        {
+            b.ClearValue(BackgroundProperty);
+            b.ClearValue(ForegroundProperty);
+        }
     }
 
     private TextBlock Glyph(string glyph) => new() { Text = glyph, Style = (Style)FindResource("Brand.Icon"), FontSize = 11 };

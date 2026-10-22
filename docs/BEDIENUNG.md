@@ -60,7 +60,10 @@ wenn die Ende-Sperre greift).
 - **Video:** erscheint, wenn die Live-Folie Videos hat. Oben das laufende Video mit Gesamt- und
   Restzeit, Pause/Weiter und Stopp, darunter jedes Video der Folie mit Länge, Start (automatisch /
   Klick n / Trigger) und „Abspielen“. Anders als am Mac liest montro unter Windows die echte
-  Position aus PowerPoint.
+  Position aus PowerPoint. **Schleife** (Pfeil-Kreis, lila = an): startet das Video am Ende von
+  vorn, bis sie ausgeschaltet wird; in der Referent*innenansicht steht dann „↻“ hinter dem Namen.
+  Gilt bis montro beendet wird. Für eine ganz lückenlose Schleife in PowerPoint selbst
+  „Wiedergabe bis zum Beenden wiederholen“ einstellen.
 - **Übergang zwischen Präsentationen:** Hart / Über Schwarz / Überblenden (Standbild der
   letzten Folie), Dauer 0,3–3 s. Gilt nur mit externem Publikumsbildschirm.
 - **Schwarze Ausgänge:** Ist ein externer Publikumsbildschirm gewählt, zeigt er Schwarz, solange
