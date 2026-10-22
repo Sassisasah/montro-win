@@ -25,6 +25,10 @@ Der Vertrag dafür steht in [KOMPATIBILITAET.md](KOMPATIBILITAET.md).
 | `src/montro/Core/Observable.cs` | `INotifyPropertyChanged`-Basis für die Bindungen |
 | `src/montro/MainWindow.xaml(.cs)` | Hauptfenster wie `MainView`/`PlaylistView`/`InspectorView` am Mac |
 | `src/montro/Views/SlideTile.cs` | Kachel der Folienübersicht (Mac: `SlideTile`) |
+| `src/montro/Core/PresenterLayout.cs` | Aufbau der Referent*innenansicht: Bausteine mit normierter Lage, Standard „Windows“ (Mac: `PresenterLayout.swift`) |
+| `src/montro/Views/PresenterView.cs` | Referent*innenansicht mit allen Bausteinen, Fläche 1080 Einheiten hoch (Mac: `PresenterView.swift`) |
+| `src/montro/Display/OutputManager.cs` | Schwarzbild, Übergang und Ausgabefenster der Referent*innenansicht (Bildschirm oder Popup) |
+| `src/montro/Testing/PresenterSnapshot.cs` | `--referentenbild`: Testbilder der Referent*innenansicht ohne PowerPoint |
 | `src/montro/Views/Converters.cs` | Bindungshilfen (Sichtbarkeit, Bilder ohne Dateisperre) |
 | `src/montro/Core/PresentationMeta.cs` | Ergebnis des Parsers: Folien mit Ausblendung, Notizen, Klicks, Videos (wie `SlideMeta` am Mac) |
 | `src/montro/Pptx/PptxParser.cs` | PPTX-Parser, portiert aus `PPTXParser.swift`: liest das ZIP direkt, ohne PowerPoint |
@@ -123,6 +127,15 @@ Fremdbibliothek. Zählweise absichtlich wie am Mac:
   ebenfalls exportiert.
 
 ## Entscheidungen & Stolpersteine
+
+- **Referent*innenansicht auf eigenem Bildschirm:** randloses Fenster in voller Größe, aber
+  „layered“ (`AllowsTransparency`) wie die Abdeckungen. Ein normales randloses Vollbildfenster
+  ginge auf den Verbatims (USB-C, AMD Vega 8) in den Vollbild-Direktmodus und zeigte Schwarz oder
+  Störungen. Kein Fokus, keine Mausklicks, damit Clicker-Tasten bei montro bleiben. Nicht live
+  zeigt es Schwarz (am Mac liegt dort das Schwarzbild darüber). Gezeichnet wird auf einer
+  Fläche von 1080 Einheiten Höhe; die Breite folgt dem Seitenverhältnis, so gelten die
+  Mac-Schriftgrößen unverändert. Die vielen Änderungsmeldungen pro Takt (Timer, Uhr, Blinken)
+  werden zu einem Neuzeichnen zusammengefasst.
 
 - **Kein `HttpListener`** für die Remote-API (später), weil er für `http://+:8765/` eine
   URL-Reservierung mit Adminrechten braucht. Geplant ist ein eigener kleiner HTTP-Server auf

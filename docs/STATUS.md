@@ -2,6 +2,13 @@
 
 ## Getestet
 
+- **22.10.2026** – Meilenstein 4, Etappe 3 (Referent*innenansicht), Testbilder ohne PowerPoint
+  (`montro.exe --referentenbild`, Technik-Testdeck mit den echten Vorschaubildern): Aufbau wie
+  der Mac-Standard „Windows“ – Timer, Uhr oben, aktuelle Folie groß links, „Folie 3 von 14“ mit
+  Animationspunkten, Regie-Nachricht darunter, rechts „Nächste Folie“ und „Notizen“. Letzte
+  Folie: „Ende der Präsentation“. Popup-Größe 1120×660 passt sich an. Nicht live: Ruhe-Ansicht
+  mit Uhr. Auf dem Verbatim noch nicht geprüft.
+
 - **21.10.2026** – Meilenstein 4, Etappe 2, über UI Automation mit Bildschirmfotos von Verbatim 2:
   Ausgabe auf „Verbatim MT15 (2)“ gestellt → Verbatim schwarz; Technik-Testdeck live → Folie
   auf Verbatim 2 (1920×1079, Lage ok); Blackscreen → schwarz, wieder aus → Folie; zweite
@@ -113,11 +120,14 @@
 ## Offen
 
 - PowerPoint ohne Lizenz: lässt sich auf dem Test-PC nicht nachstellen.
-- **21.10.2026** – Meilenstein 4: noch nicht geprüft sind Ende-Sperre (beide Varianten),
-  „Überblenden“, Regie-Nachricht in der Anzeige, Timer-Einstellungen, Ziehen & Ablegen. Offen:
-  echte Referent*innenansicht (Builder, Presets, eigener Bildschirm), Popup-Modus wie am Mac
-  (links Referent*innenansicht), Video-Karte, „In PowerPoint bearbeiten“, „Aktualisieren“,
-  Show-Dateien `.montro`, Bildschirm-Abschaltung während der Show verhindern.
+- **22.10.2026** – Meilenstein 4, Etappe 3: Referent*innenansicht auf dem zweiten Verbatim mit
+  Regie-Nachricht, Timer-Blinken und Ende auf Schwarz prüfen; Popup-Modus (links
+  Referent*innenansicht, rechts PowerPoint). Die Folienbilder sind die Vorschaubilder, ohne
+  Animationsstand (Live-Bild folgt). Video-Laufzeit bleibt leer, bis die Video-Erkennung kommt.
+- **21.10.2026** – Meilenstein 4: noch nicht geprüft sind Timer-Einstellungen und Ziehen &
+  Ablegen. Offen: Builder und Presets der Referent*innenansicht, Video-Karte, „In PowerPoint
+  bearbeiten“, „Aktualisieren“, Show-Dateien `.montro`, Bildschirm-Abschaltung während der Show
+  verhindern.
 - **21.10.2026** – Parser: noch nicht geprüft sind verknüpfte (nicht eingebettete) Videos,
   Videos mit Trigger-Start und andere Videoformate als MP4/MOV (Länge dann 0 = unbekannt).
   Abgleich mit dem Mac-Ergebnis für dieselben Dateien steht aus.

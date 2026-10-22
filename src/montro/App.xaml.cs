@@ -25,6 +25,14 @@ public partial class App : Application
             Dispatcher.InvokeAsync(async () => Shutdown(await Testing.SelfTest.RunAsync(e.Args)));
             return;
         }
+        if (e.Args.Contains("--referentenbild"))
+        {
+            // Testbilder der Referent*innenansicht schreiben und beenden (ohne PowerPoint, ohne Fenster)
+            ShutdownMode = ShutdownMode.OnExplicitShutdown;
+            base.OnStartup(e);
+            Dispatcher.InvokeAsync(() => Shutdown(Testing.PresenterSnapshot.Run(e.Args)));
+            return;
+        }
         base.OnStartup(e);
         // Hauptfenster hier statt per StartupUri, damit der Selbsttest ohne Fenster starten kann
         var main = new MainWindow();

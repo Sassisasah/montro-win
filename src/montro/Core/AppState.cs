@@ -32,6 +32,8 @@ public sealed class AppState : Observable
     private bool isEndBlack;
     private string statusMessage = "Bereit";
     private string? audienceDevice;
+    private string? presenterDevice;
+    private PresenterLayout layout = PresenterLayout.WindowsDefault();
     private EndBehavior endBehavior = EndBehavior.HoldLastSlide;
     private double notesFontScale = 1.0;
     private int? lockSlide;
@@ -90,14 +92,39 @@ public sealed class AppState : Observable
     /// </summary>
     public event Action? FocusRequested;
 
-    public AppState()
+    /// <summary>Nur für Testbilder: kein Laden/Speichern, keine Ausgabefenster, kein Takt.</summary>
+    private readonly bool headless;
+
+    public AppState() : this(headless: false) { }
+
+    private AppState(bool headless)
     {
+        this.headless = headless;
         ppt.StateChanged += OnShowState;
         ppt.ShowEnded += OnShowEnded;
         ticker = new DispatcherTimer(TimeSpan.FromMilliseconds(250), DispatcherPriority.Normal, (_, _) => Tick(), ui);
+        if (headless) return;
         Load();
         ticker.Start();
     }
+
+    /// <summary>
+    /// Zustand „live auf Folie <paramref name="slide"/>“ ohne PowerPoint, für Testbilder der
+    /// Referent*innenansicht (<c>montro.exe --referentenbild</c>).
+    /// </summary>
+    internal static AppState ForPreview(PresentationItem item, int slide, int click)
+    {
+        var s = new AppState(headless: true);
+        s.Items.Add(item);
+        s.LiveItem = item;
+        s.CurrentSlide = slide;
+        s.ClickInSlide = click;
+        s.IsShowRunning = true;
+        s.Clock = DateTime.Now;
+        return s;
+    }
+
+    internal void SimulateStopped() => IsShowRunning = false;
 
     // MARK: - Eigenschaften
 
@@ -167,6 +194,12 @@ public sealed class AppState : Observable
         {
             if (Set(ref audienceDevice, value))
             {
+                // ein Bildschirm hat genau eine Rolle (Mac: OutputManager.assign)
+                if (value != null && presenterDevice == value)
+                {
+                    presenterDevice = null;
+                    Raise(nameof(PresenterDevice), nameof(PresenterCaption), nameof(PresenterIsPopup));
+                }
                 Raise(nameof(AudienceCaption), nameof(AudienceIsPopup));
                 QueueSave();
                 blackKey = "?";
@@ -186,9 +219,57 @@ public sealed class AppState : Observable
 
     public string ExternalScreensText => $"{ExternalScreens.Count} externe(r) Bildschirm(e)";
 
+    /// <summary>Gerätename des Bildschirms für die Referent*innenansicht, null = Popup-Fenster.</summary>
+    public string? PresenterDevice
+    {
+        get => presenterDevice;
+        set
+        {
+            if (!Set(ref presenterDevice, value)) return;
+            Raise(nameof(PresenterCaption), nameof(PresenterIsPopup));
+            QueueSave();
+            if (value != null && audienceDevice == value)
+            {
+                // Publikum muss weichen (läuft die Show, startet sie im Popup-Fenster neu)
+                AudienceDevice = null;
+                return;
+            }
+            blackKey = "?";
+            UpdateOutputs();
+            if (value == null && IsShowRunning) ShowPresenterWindow();
+        }
+    }
+
+    public MonitorInfo? PresenterScreen =>
+        PresenterDevice == null ? null
+        : Monitors.All().FirstOrDefault(m => m.DeviceName == PresenterDevice && !m.IsPrimary && m.DeviceName != AudienceDevice);
+
+    public bool PresenterIsPopup => PresenterScreen == null;
+
+    public string PresenterCaption => PresenterScreen is { } m ? $"Ausgabe: {m.FriendlyName} ({m.Number})" : "Ausgabe: Popup-Fenster";
+
+    /// <summary>Aufbau der Referent*innenansicht (Mac: layout).</summary>
+    public PresenterLayout Layout
+    {
+        get => layout;
+        set
+        {
+            if (Set(ref layout, value)) QueueSave();
+        }
+    }
+
+    /// <summary>Popup-Fenster der Referent*innenansicht öffnen bzw. nach vorne holen.</summary>
+    public void ShowPresenterWindow() =>
+        outputs.EnsurePresenter(PresenterScreen, showPopup: true, PresenterContent);
+
+    /// <summary>Inhalt des Ausgabefensters; auf eigenem Bildschirm nicht live schwarz (wie am Mac).</summary>
+    private System.Windows.FrameworkElement PresenterContent() =>
+        new Views.PresenterOutputView(this) { BlackWhenIdle = PresenterScreen != null };
+
     public void RefreshScreens()
     {
-        Raise(nameof(ExternalScreens), nameof(ExternalScreensText), nameof(AudienceCaption), nameof(AudienceIsPopup));
+        Raise(nameof(ExternalScreens), nameof(ExternalScreensText), nameof(AudienceCaption), nameof(AudienceIsPopup),
+            nameof(PresenterCaption), nameof(PresenterIsPopup));
         blackKey = "?";
         UpdateOutputs();
     }
@@ -258,8 +339,11 @@ public sealed class AppState : Observable
     /// </summary>
     public void UpdateOutputs()
     {
+        if (headless) return;
         var black = new HashSet<string>();
-        TaskbarHider.Apply(AudienceScreen is { } shown ? new[] { shown } : Array.Empty<MonitorInfo>());
+        TaskbarHider.Apply(AssignedScreens);
+        // Referent*innenansicht auf eigenem Bildschirm: immer da (nicht live schwarz), sonst Popup
+        outputs.EnsurePresenter(PresenterScreen, showPopup: false, PresenterContent);
         // Während eines Übergangs nichts ändern: dessen Fenster deckt ab, und ein ausblendendes
         // Schwarzbild darunter würde kurz den Desktop durchscheinen lassen. Danach erneut aufrufen.
         if (outputs.TransitionActive) return;
@@ -276,6 +360,10 @@ public sealed class AppState : Observable
         }
         if (BlackOnTop) outputs.RaiseAll();
     }
+
+    /// <summary>Bildschirme mit einer Ausgabe (Publikum, Referent*innenansicht) – dort keine Taskleiste.</summary>
+    private MonitorInfo[] AssignedScreens =>
+        new[] { AudienceScreen, PresenterScreen }.OfType<MonitorInfo>().ToArray();
 
     /// <summary>Soll das Schwarzbild gerade über der Show liegen?</summary>
     private bool BlackOnTop => !IsStarting && (!IsShowRunning || IsBlackout || IsEndBlack);
@@ -434,10 +522,16 @@ public sealed class AppState : Observable
             var screen = AudienceScreen;
             await ppt.StartShowAsync(new ShowOptions(Kiosk: false, Target: screen, PreselectMonitorInRegistry: false,
                 StartIndex: start));
+            // Referent*innenansicht: eigener Bildschirm ist schon da, sonst Popup öffnen
+            if (PresenterIsPopup) ShowPresenterWindow();
             if (screen != null)
                 await ppt.PlaceAsync(screen);
             else
+            {
+                // Popup-Modus wie am Mac: Referent*innenansicht links, Präsentation rechts daneben
+                if (PresenterIsPopup) outputs.PlacePresenterPopup(PresenterPopupRect());
                 await ppt.PlaceAsync(PopupRect(open.SlideWidthPt, open.SlideHeightPt), topmostWanted: false);
+            }
             LiveItem = item;
             Selected = item;
             CurrentSlide = start;
@@ -475,19 +569,36 @@ public sealed class AppState : Observable
         }
     }
 
-    /// <summary>Popup-Modus ohne externen Bildschirm: PowerPoint rechts auf dem Hauptbildschirm, Seitenverhältnis der Folien.</summary>
+    private const double PresenterShare = 0.42;
+    private const int PopupGap = 12;
+
+    private static PixelRect MainWorkArea =>
+        (Monitors.All().FirstOrDefault(m => m.IsPrimary) ?? Monitors.All()[0]).WorkArea;
+
+    /// <summary>Popup-Modus: Referent*innenansicht im linken Teil des Hauptbildschirms (Mac: arrangePopupWindows).</summary>
+    private static PixelRect PresenterPopupRect()
+    {
+        var wa = MainWorkArea;
+        int pw = (int)Math.Round(wa.Width * PresenterShare);
+        return new PixelRect(wa.X + PopupGap, wa.Y + PopupGap, pw - PopupGap, wa.Height - 2 * PopupGap);
+    }
+
+    /// <summary>
+    /// Popup-Modus ohne externen Bildschirm: PowerPoint rechts neben der Referent*innenansicht,
+    /// im Seitenverhältnis der Folien, senkrecht zentriert.
+    /// </summary>
     private static PixelRect PopupRect(double slideW, double slideH)
     {
-        var main = Monitors.All().FirstOrDefault(m => m.IsPrimary) ?? Monitors.All()[0];
-        var wa = main.WorkArea;
-        int w = wa.Width / 2;
+        var wa = MainWorkArea;
+        int left = wa.X + (int)Math.Round(wa.Width * PresenterShare) + PopupGap;
+        int w = wa.Right - left - PopupGap;
         int h = (int)Math.Round(w * slideH / Math.Max(slideW, 1));
-        if (h > wa.Height)
+        if (h > wa.Height - 2 * PopupGap)
         {
-            h = wa.Height;
+            h = wa.Height - 2 * PopupGap;
             w = (int)Math.Round(h * slideW / Math.Max(slideH, 1));
         }
-        return new PixelRect(wa.Right - w, wa.Y + (wa.Height - h) / 2, w, h);
+        return new PixelRect(left, wa.Y + (wa.Height - h) / 2, w, h);
     }
 
     public async Task Stop()
@@ -668,7 +779,7 @@ public sealed class AppState : Observable
             outputs.RaiseAll(black: BlackOnTop);
         // Taskleiste auf dem Publikumsbildschirm ausgeblendet halten (Explorer zeigt sie z. B. bei
         // automatisch ausblendender Taskleiste von selbst wieder)
-        TaskbarHider.Apply(AudienceScreen is { } a ? new[] { a } : Array.Empty<MonitorInfo>());
+        TaskbarHider.Apply(AssignedScreens);
         Clock = DateTime.Now;
         Raise(nameof(ClockText));
         BlinkPhase = DateTime.Now.Millisecond < 500;
@@ -691,6 +802,12 @@ public sealed class AppState : Observable
         Renumber();
         Selected = Items.FirstOrDefault(i => i.Id == s.Selection) ?? Items.FirstOrDefault();
         audienceDevice = s.AudienceDevice;
+        presenterDevice = s.PresenterDevice == s.AudienceDevice ? null : s.PresenterDevice;
+        if (s.Layout is { Widgets.Count: > 0 } savedLayout)
+        {
+            savedLayout.EnsureAllKinds();
+            layout = savedLayout;
+        }
         Timer.Settings = s.Timer;
         endBehavior = s.EndBehavior;
         notesFontScale = s.NotesFontScale;
@@ -734,7 +851,7 @@ public sealed class AppState : Observable
 
     public void QueueSave()
     {
-        if (saveQueued) return;
+        if (saveQueued || headless) return;
         saveQueued = true;
         ui.InvokeAsync(() =>
         {
@@ -758,6 +875,8 @@ public sealed class AppState : Observable
             }).ToList(),
             Selection = Selected?.Id,
             AudienceDevice = AudienceDevice,
+            PresenterDevice = PresenterDevice,
+            Layout = Layout,
             Timer = Timer.Settings,
             EndBehavior = EndBehavior,
             NotesFontScale = NotesFontScale,

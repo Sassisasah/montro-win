@@ -24,10 +24,17 @@ wenn die Ende-Sperre greift).
   Notizen. „#“ bzw. Strg+G: Gehe zu Folie.
 - **Live-Folie:** Vorschau der aktuellen Folie, Zeile „Titel · Folie x von n · Animation a/b“,
   Zurück/Weiter, Blackscreen. Das Bildschirm-Symbol oben rechts wählt die Ausgabe: einen
-  externen Bildschirm oder **Popup-Fenster** (PowerPoint rechts auf dem Laptop).
-- **Referent*innenansicht:** ohne Show die Uhr, während der Show vorerst aktuelle und nächste
-  Folie, Uhr, „Folie x von n“ und Notizen. Notizen-Schriftgröße 40–400 % (Strg+Plus/Minus/0).
-  Builder, Presets und eigene Ausgabe folgen.
+  externen Bildschirm oder **Popup-Fenster** (PowerPoint rechts auf dem Laptop, neben der
+  Referent*innenansicht).
+- **Referent*innenansicht:** Aufbau wie am Mac (Standard „Windows“): oben Timer und Uhr, links
+  groß die aktuelle Folie, darunter „Folie x von n“ mit Punkten für die Animationen und die
+  Regie-Nachricht, rechts nächste Folie und Notizen. Die Karte zeigt dieselbe Ansicht verkleinert.
+  Das Bildschirm-Symbol oben rechts wählt die Ausgabe: einen externen Bildschirm (dort randlos,
+  nicht live schwarz, Taskleiste ausgeblendet) oder **Popup-Fenster** – das öffnet sich beim Live
+  schalten bzw. über „Fenster zeigen“. Ein Bildschirm ist entweder Publikum oder
+  Referent*innenansicht; wer ihn neu bekommt, verdrängt die andere Rolle ins Popup. Ohne
+  externen Publikumsbildschirm liegt die Referent*innenansicht links, PowerPoint rechts daneben.
+  Notizen-Schriftgröße 40–400 % (Strg+Plus/Minus/0). Builder und Presets folgen.
 - **Timer:** Start/Pause (Strg+T), Zurücksetzen, ±1 min, Blinken, Schnellwahl 5–60 min.
   „Einstellungen“: Redezeit, 1. und 2. Warnung (als Restzeit) mit Farben, Überzogen-Farbe,
   Herunter- oder Hochzählen, ins Minus laufen, Blinken beim Überziehen bzw. in der 2. Warnzeit,

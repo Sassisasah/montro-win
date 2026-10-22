@@ -50,7 +50,7 @@ public partial class MainWindow : Window
         UpdateEmpty();
         UpdateNavigatorHint();
         UpdateBlackoutButton();
-        UpdateNotesFont();
+        PresenterPreviewHost.Child = new PresenterOutputView(state);
 
         PreviewKeyDown += OnKey;
         DragEnter += OnDragOver;
@@ -92,9 +92,6 @@ public partial class MainWindow : Window
             case nameof(AppState.CurrentSlide):
                 ScrollNavigatorToCurrent();
                 break;
-            case nameof(AppState.NotesFontScale):
-                UpdateNotesFont();
-                break;
             case nameof(AppState.BlinkPhase):
                 UpdateBlink();
                 break;
@@ -118,14 +115,8 @@ public partial class MainWindow : Window
         NavigatorHint.Foreground = (Brush)FindResource(isLive && state.IsLocked ? "Brand.Warning" : "Brand.SecondaryText");
     }
 
-    private void UpdateNotesFont() => PresenterNotes.FontSize = 34 * state.NotesFontScale;
-
-    private void UpdateBlink()
-    {
+    private void UpdateBlink() =>
         TimerText.Opacity = state.Timer.ShouldBlink && !state.BlinkPhase ? 0.2 : 1;
-        bool msgBlink = state.Message.Blink || state.Message.IsFlashing;
-        PresenterMessage.Opacity = msgBlink && !state.BlinkPhase ? 0.25 : 1;
-    }
 
     // MARK: - Timer-Einstellungen (Mac: DisclosureGroup „Einstellungen“)
 
@@ -472,7 +463,8 @@ public partial class MainWindow : Window
         {
             var mi = new MenuItem
             {
-                Header = $"{m.FriendlyName} ({m.Number}) – {m.Bounds.Width}×{m.Bounds.Height}, {m.Scale:P0}",
+                Header = $"{m.FriendlyName} ({m.Number}) – {m.Bounds.Width}×{m.Bounds.Height}, {m.Scale:P0}"
+                         + (state.PresenterDevice == m.DeviceName ? " · Referent*innenansicht" : ""),
                 IsCheckable = true,
                 IsChecked = state.AudienceDevice == m.DeviceName,
             };
@@ -484,6 +476,40 @@ public partial class MainWindow : Window
     }
 
     // MARK: - Referent*innenansicht, Timer, Ende
+
+    /// <summary>Ausgabe der Referent*innenansicht wählen (Mac: Bildschirm-Menü in der Karte).</summary>
+    private void OnPresenterPicker(object sender, RoutedEventArgs e)
+    {
+        var menu = new ContextMenu { PlacementTarget = (UIElement)sender, Placement = System.Windows.Controls.Primitives.PlacementMode.Bottom };
+        var popup = new MenuItem { Header = "Popup-Fenster", IsCheckable = true, IsChecked = state.PresenterIsPopup };
+        popup.Click += (_, _) => state.PresenterDevice = null;
+        menu.Items.Add(popup);
+        menu.Items.Add(new Separator());
+        var screens = state.ExternalScreens;
+        if (screens.Count == 0)
+            menu.Items.Add(new MenuItem { Header = "Keine externen Bildschirme angeschlossen", IsEnabled = false });
+        foreach (var m in screens)
+        {
+            bool isAudience = state.AudienceDevice == m.DeviceName;
+            var mi = new MenuItem
+            {
+                Header = $"{m.FriendlyName} ({m.Number}) – {m.Bounds.Width}×{m.Bounds.Height}, {m.Scale:P0}" + (isAudience ? " · Publikum" : ""),
+                IsCheckable = true,
+                IsChecked = state.PresenterDevice == m.DeviceName && !state.PresenterIsPopup,
+            };
+            string device = m.DeviceName;
+            mi.Click += (_, _) => state.PresenterDevice = device;
+            menu.Items.Add(mi);
+        }
+        if (state.PresenterIsPopup)
+        {
+            menu.Items.Add(new Separator());
+            var show = new MenuItem { Header = "Fenster zeigen" };
+            show.Click += (_, _) => state.ShowPresenterWindow();
+            menu.Items.Add(show);
+        }
+        menu.IsOpen = true;
+    }
 
     private void OnNotesBigger(object sender, RoutedEventArgs e) => state.NotesFontScale += 0.1;
     private void OnNotesSmaller(object sender, RoutedEventArgs e) => state.NotesFontScale -= 0.1;

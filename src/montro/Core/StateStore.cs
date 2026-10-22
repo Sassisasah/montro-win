@@ -10,7 +10,9 @@ public sealed class SavedState
     public Guid? Selection { get; set; }
     /// <summary>Gerätename des Publikumsbildschirms (\\.\DISPLAY2), null = Popup-Fenster</summary>
     public string? AudienceDevice { get; set; }
+    /// <summary>Bildschirm der Referent*innenansicht, null = Popup-Fenster</summary>
     public string? PresenterDevice { get; set; }
+    public PresenterLayout? Layout { get; set; }
     public TimerSettings Timer { get; set; } = new();
     public EndBehavior EndBehavior { get; set; } = EndBehavior.HoldLastSlide;
     public double NotesFontScale { get; set; } = 1.0;

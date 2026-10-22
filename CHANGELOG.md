@@ -1,6 +1,9 @@
 # Änderungsprotokoll
 
 ## 0.4 – 21.10.2026
+- Neu (Etappe 3, 22.10.2026): Referent*innenansicht wie am Mac (Timer, Uhr, aktuelle und nächste
+  Folie, Foliennummer mit Animationspunkten, Notizen, Regie-Nachricht) auf eigenem Bildschirm
+  oder im Popup-Fenster; Popup-Modus mit Referent*innenansicht links und PowerPoint rechts.
 - Neu (Branch `meilenstein-4`, Etappe 2): Timer-Einstellungen, Regie-Nachricht mit Vorlagen,
   Farben und Blinken (in der Referent*innenansicht), Übergang zwischen Präsentationen (Hart /
   Über Schwarz / Überblenden), Publikumsbildschirm schwarz, wenn nichts live ist, beim Start,

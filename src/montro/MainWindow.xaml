@@ -274,59 +274,25 @@
                         <StackPanel>
                             <DockPanel Margin="0,0,0,10">
                                 <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
-                                    <TextBlock Style="{StaticResource Brand.Icon}" Text="&#xE737;" Foreground="{StaticResource Brand.Accent}" Margin="0,0,10,0"
-                                               ToolTip="Ausgabe für die Referent*innenansicht: folgt in Etappe 3" />
-                                    <TextBlock Style="{StaticResource Brand.Icon}" Text="&#xE713;" Foreground="{StaticResource Brand.Accent}"
-                                               ToolTip="Referent*innenansicht konfigurieren: folgt in Etappe 3" />
+                                    <Button Style="{StaticResource Brand.Borderless}" Padding="6,2" Margin="0,0,4,0"
+                                            ToolTip="Ausgabe für die Referent*innenansicht" Click="OnPresenterPicker">
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Style="{StaticResource Brand.Icon}" Text="&#xE7F4;" Foreground="{StaticResource Brand.Accent}" />
+                                            <TextBlock Style="{StaticResource Brand.Icon}" Text="&#xE70D;" FontSize="8" Margin="4,0,0,0" Foreground="{StaticResource Brand.Accent}" />
+                                        </StackPanel>
+                                    </Button>
+                                    <TextBlock Style="{StaticResource Brand.Icon}" Text="&#xE713;" Foreground="{StaticResource Brand.SecondaryText}" VerticalAlignment="Center"
+                                               ToolTip="Referent*innenansicht konfigurieren: folgt mit dem Layout-Builder" />
                                 </StackPanel>
                                 <StackPanel Orientation="Horizontal">
                                     <TextBlock Style="{StaticResource Brand.Icon}" Text="&#xE77B;" Foreground="{StaticResource Brand.Accent}" Margin="0,0,6,0" />
                                     <TextBlock Text="Referent*innenansicht" FontWeight="SemiBold" FontSize="14" />
                                 </StackPanel>
                             </DockPanel>
-                            <Border Background="{StaticResource Brand.Background}" CornerRadius="6" ClipToBounds="True">
+                            <!-- Vorschau = derselbe Inhalt wie im Ausgabefenster (Mac: PresenterView) -->
+                            <Border CornerRadius="6" ClipToBounds="True" Background="Black">
                                 <Viewbox Stretch="Uniform">
-                                    <Grid Width="1280" Height="720">
-                                        <!-- nicht live (Mac: IdleView) -->
-                                        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center"
-                                                    Visibility="{Binding IsShowRunning, Converter={StaticResource Vis}, ConverterParameter=not}">
-                                            <TextBlock Style="{StaticResource Brand.Icon}" Text="&#xE7F4;" FontSize="110" Foreground="#99BBBBBB" HorizontalAlignment="Center" />
-                                            <TextBlock Text="Keine Präsentation live" FontSize="46" Foreground="{StaticResource Brand.SecondaryText}"
-                                                       HorizontalAlignment="Center" Margin="0,30,0,24" />
-                                            <TextBlock Text="{Binding ClockText}" FontSize="96" FontWeight="SemiBold" Foreground="{StaticResource Brand.SecondaryText}"
-                                                       HorizontalAlignment="Center" />
-                                        </StackPanel>
-                                        <!-- live: vorläufige Ansicht (aktuelle + nächste Folie, Notizen, Uhr) -->
-                                        <Grid Margin="24" Visibility="{Binding IsShowRunning, Converter={StaticResource Vis}}">
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="3*" />
-                                                <ColumnDefinition Width="2*" />
-                                            </Grid.ColumnDefinitions>
-                                            <Grid.RowDefinitions>
-                                                <RowDefinition Height="Auto" />
-                                                <RowDefinition Height="*" />
-                                            </Grid.RowDefinitions>
-                                            <Border Background="Black" Margin="0,0,20,20">
-                                                <Image Source="{Binding CurrentSlideImage, Converter={StaticResource Img}}" Stretch="Uniform" Height="400" />
-                                            </Border>
-                                            <StackPanel Grid.Column="1">
-                                                <TextBlock Text="{Binding ClockText}" FontSize="64" FontWeight="SemiBold" />
-                                                <TextBlock Text="{Binding SlidePositionText}" FontSize="36" Foreground="{StaticResource Brand.SecondaryText}" Margin="0,8,0,16" />
-                                                <Border Background="Black">
-                                                    <Image Source="{Binding NextSlideImage, Converter={StaticResource Img}}" Stretch="Uniform" Height="240" />
-                                                </Border>
-                                            </StackPanel>
-                                            <TextBlock x:Name="PresenterNotes" Grid.Row="1" Grid.ColumnSpan="2" Text="{Binding CurrentNotes}" TextWrapping="Wrap"
-                                                       FontSize="34" Foreground="{StaticResource Brand.Text}" />
-                                        </Grid>
-                                        <!-- Regie-Nachricht in der Referent*innenansicht -->
-                                        <Border x:Name="PresenterMessage" VerticalAlignment="Bottom" Margin="24" Padding="24,14" CornerRadius="12"
-                                                Background="{Binding Message.BackgroundBrush}"
-                                                Visibility="{Binding Message.IsVisible, Converter={StaticResource Vis}}">
-                                            <TextBlock Text="{Binding Message.Text}" FontSize="48" FontWeight="Bold" TextWrapping="Wrap"
-                                                       Foreground="{Binding Message.ForegroundBrush}" />
-                                        </Border>
-                                    </Grid>
+                                    <Border x:Name="PresenterPreviewHost" Width="1280" Height="720" />
                                 </Viewbox>
                             </Border>
                             <DockPanel Margin="0,10,0,0">
@@ -345,7 +311,7 @@
                             </DockPanel>
                             <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
                                 <TextBlock Style="{StaticResource Brand.Icon}" Text="&#xE737;" FontSize="11" Foreground="{StaticResource Brand.SecondaryText}" Margin="0,0,6,0" />
-                                <TextBlock Text="Ausgabe: Popup-Fenster" Style="{StaticResource Brand.Caption}" />
+                                <TextBlock Text="{Binding PresenterCaption}" Style="{StaticResource Brand.Caption}" />
                             </StackPanel>
                         </StackPanel>
                     </Border>

@@ -99,6 +99,84 @@ public sealed class OutputManager
         blackWindows.Clear();
         transitionWindow?.Close();
         transitionWindow = null;
+        ClosePresenter();
+    }
+
+    // MARK: - Ausgabe Referent*innenansicht (Mac: ensurePresenterWindow)
+
+    private Window? presenterWindow;
+    private string? presenterDevice;   // null = Popup-Fenster
+
+    public bool PresenterPopupOpen => presenterWindow != null && presenterDevice == null;
+
+    /// <summary>
+    /// Ausgabefenster herstellen: randlos in voller Größe auf dem zugewiesenen Bildschirm, sonst
+    /// ein normales Fenster „Referent*innenansicht“. <paramref name="showPopup"/> öffnet das Popup
+    /// auch, wenn es gerade nicht offen ist (beim Live-Schalten, „Fenster zeigen“).
+    /// </summary>
+    public void EnsurePresenter(MonitorInfo? screen, bool showPopup, Func<FrameworkElement> content)
+    {
+        if (screen != null)
+        {
+            if (presenterWindow == null || presenterDevice != screen.DeviceName)
+            {
+                ClosePresenter();
+                // „layered“ wie die Abdeckungen: läuft nie im Vollbild-Direktmodus, daher volle Größe
+                // ohne das Verbatim-Problem (schwarz/Störungen bei randlosem Vollbild)
+                var w = CreateCover(screen, null);
+                w.Title = "montro Referent*innenansicht";
+                w.Content = content();
+                presenterWindow = w;
+                presenterDevice = screen.DeviceName;
+                w.Show();
+                DebugLog.Write($"Referent*innenansicht auf {screen.FriendlyName} ({screen.Number})");
+            }
+            Place(presenterWindow, screen, raise: true);
+            return;
+        }
+        if (presenterDevice != null) ClosePresenter();
+        if (!showPopup) return;
+        if (presenterWindow == null)
+        {
+            var w = new Window
+            {
+                Title = "Referent*innenansicht",
+                Width = 1120,
+                Height = 660,
+                WindowStartupLocation = WindowStartupLocation.CenterScreen,
+                Background = Brushes.Black,
+                ShowActivated = false,
+                Content = content(),
+            };
+            if (Application.Current?.MainWindow?.Icon is { } icon) w.Icon = icon;
+            w.Closed += (_, _) =>
+            {
+                if (presenterWindow == w) presenterWindow = null;
+            };
+            presenterWindow = w;
+            presenterDevice = null;
+            w.Show();
+        }
+        if (presenterWindow.WindowState == WindowState.Minimized) presenterWindow.WindowState = WindowState.Normal;
+        Raise(presenterWindow);
+    }
+
+    /// <summary>Popup der Referent*innenansicht an eine feste Stelle legen (physische Pixel).</summary>
+    public void PlacePresenterPopup(PixelRect r)
+    {
+        if (presenterDevice != null || presenterWindow is not { } w) return;
+        var hwnd = new WindowInteropHelper(w).Handle;
+        if (hwnd == IntPtr.Zero) return;
+        if (w.WindowState != WindowState.Normal) w.WindowState = WindowState.Normal;
+        Monitors.MoveWindow(hwnd, r);
+    }
+
+    public void ClosePresenter()
+    {
+        var w = presenterWindow;
+        presenterWindow = null;
+        presenterDevice = null;
+        w?.Close();
     }
 
     private static Window CreateCover(MonitorInfo m, ImageSource? image)
