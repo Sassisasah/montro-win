@@ -112,11 +112,11 @@ Mac-App (Screenshots vom 20.10.2026).
   4. Das Show-Fenster **topmost** legen und wieder nach oben holen: nach jedem Befehl, direkt
      nach dem Platzieren 1,5 s lang alle 100 ms und danach bei jeder Statusabfrage (200 ms).
      Liegt die Übergangsabdeckung darüber, ist das Nach-oben-Holen pausiert; dann entfallen die
-     1,5 s (seit 0.7), die Statusabfrage übernimmt nach dem Aufblenden.
+     1,5 s, die Statusabfrage übernimmt nach dem Aufblenden.
      Sonst schiebt sich auf Nebenbildschirmen die Taskleiste über die Show, denn Windows blendet
      sie nur für das *aktive* Vollbildfenster aus, und PowerPoint läuft im Hintergrund.
 
-## Schnell umschalten (seit 0.7)
+## Schnell umschalten
 
 Ablauf beim Live-Schalten: Vorbereiten (neue Version einspielen, geänderte Datei analysieren) →
 Abdecken (Übergang) → Öffnen (alte Show beenden, alte Präsentation schließen, neue öffnen) →

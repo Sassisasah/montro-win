@@ -69,7 +69,7 @@ wenn die Ende-Sperre greift).
   „Wiedergabe bis zum Beenden wiederholen“ einstellen.
 - **Übergang zwischen Präsentationen:** Hart / Über Schwarz / Überblenden (Standbild der
   letzten Folie), Dauer 0,3–3 s. Gilt nur mit externem Publikumsbildschirm.
-- **Vorab öffnen (seit 0.7):** Ist nichts live, öffnet montro die ausgewählte Präsentation
+- **Vorab öffnen:** Ist nichts live, öffnet montro die ausgewählte Präsentation
   schon im Hintergrund, „Live“ geht dann schneller. Mit „Nächste Präsentation während der Show
   vorab öffnen“ (Übergang-Karte) auch während einer Show: die ausgewählte oder sonst die nächste
   in der Playlist. Noch in Erprobung und deshalb aus: Während montro eine große Datei öffnet,

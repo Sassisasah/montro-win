@@ -1,7 +1,7 @@
 # Änderungsprotokoll
 
-## 0.7 – 24.10.2026
-- Neu (Branch `schneller-umschalten`, am Gerät noch ungetestet): schneller live schalten.
+## Unveröffentlicht – Branch `schneller-umschalten` (24.10.2026, Versionsnummer beim Zusammenführen)
+- Neu (am Gerät noch ungetestet): schneller live schalten.
   - Das Log misst jedes Umschalten: `Umschalten „…“: … ms (Vorbereiten, Abdecken, Öffnen,
     Show starten, Platzieren, Aufblenden)`; Öffnen und Vorab-Öffnen stehen mit Dauer im Log.
   - Unter der Übergangsabdeckung wartet das Platzieren nicht mehr 1,5 s auf die Taskleiste

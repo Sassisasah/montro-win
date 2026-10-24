@@ -188,8 +188,8 @@
 
 ## Offen
 
-- **24.10.2026** – 0.7 „Schneller umschalten“ (Branch `schneller-umschalten`) ist am Gerät
-  ungetestet. Prüfen: Umschalt-Zeiten im Log vorher (0.6) und nachher vergleichen, je mit
+- **24.10.2026** – „Schneller umschalten“ (Branch `schneller-umschalten`) ist am Gerät
+  ungetestet. Prüfen: Umschalt-Zeiten im Log vorher (0.6) und nachher (Branch) vergleichen, je mit
   kleiner und großer Präsentation (800 MB), Übergang „Über Schwarz“ und „Hart“. Taskleiste auf
   den Verbatims nach dem Aufblenden weiter verdeckt? Vorab-Öffnen während der Show: Wie lange
   hängt ein Klick, während eine große Datei geöffnet wird? Danach entscheiden, ob die
