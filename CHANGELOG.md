@@ -1,5 +1,17 @@
 # Änderungsprotokoll
 
+## 0.7 – 24.10.2026
+- Neu (Branch `vorschau-cache`): Vorschau-Cache nach Dateiinhalt. Analyse und Vorschaubilder liegen
+  unter der SHA-256-Prüfsumme in `%LOCALAPPDATA%\montro\cache\<Prüfsumme>` statt je
+  Playlist-Eintrag. Show öffnen, Entfernen und wieder Hinzufügen, Verschieben, „Fehlende Dateien
+  suchen“ oder eine gleiche Kopie aus dem Verbund rendern nicht mehr neu. Nur geänderte Zeit ohne
+  geänderten Inhalt (Kopie, Cloud-Abgleich) ebenfalls nicht.
+- Vorhandene Vorschaubilder werden nach dem Update einmalig in den Cache übernommen, ohne Rendern.
+- Aufräumen: Einträge, die keine Playlist benutzt, nach 60 Tagen bzw. ab 5 GB (älteste zuerst).
+- „Neu analysieren & Vorschaubilder erzeugen“ verwirft den Cache-Eintrag und rendert wirklich neu.
+- Behoben: Der Zustand merkte sich die aktuelle Änderungszeit der Datei statt der beim Erzeugen der
+  Vorschauen. Eine während des Betriebs geänderte Datei galt nach dem Neustart als aktuell.
+
 ## 0.6 – 22.10.2026
 - Neu (Branch `meilenstein-7`): Verbund mehrerer Rechner wie am Mac und mit montro für macOS
   mischbar – Master/Slave, Finden per DNS-SD, Befehle und Abgleich, Datei-Abgleich mit Sicherung,

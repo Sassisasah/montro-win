@@ -13,10 +13,11 @@ wenn die Ende-Sperre greift).
 - **Hinzufügen:** „+ Hinzufügen“, Dateien ins Fenster ziehen oder `montro.exe datei.pptx …`.
   Nur `.pptx .pptm .ppsx .ppsm`; eine alte `.ppt` wird mit Hinweis abgelehnt. montro liest jede
   Datei (Folien, ausgeblendet, Videos) und erzeugt Vorschaubilder. Der grüne Haken heißt
-  „bereit“.
+  „bereit“. Eine Datei, die montro schon kennt (gleicher Inhalt, auch unter anderem Namen oder
+  aus einer anderen Show), ist sofort bereit – montro merkt sich Vorschauen nach dem Inhalt.
 - **Playlist:** Doppelklick = live schalten. Reihenfolge per Ziehen. Rechtsklick: Live
   schalten, In PowerPoint bearbeiten, Im Explorer zeigen, Neu analysieren & Vorschaubilder
-  erzeugen, Referent*innenansicht (Preset zuweisen), Aus Playlist entfernen (auch Entf). Die
+  erzeugen (rendert wirklich neu, auch wenn die Datei bekannt ist), Referent*innenansicht (Preset zuweisen), Aus Playlist entfernen (auch Entf). Die
   Playlist bleibt nach einem Neustart erhalten (`%APPDATA%\montro\state.json`).
 - **Bearbeiten (Stift in der Zeile):** öffnet die Datei in PowerPoint auf dem Laptop-Bildschirm.
   Nach dem Speichern (Strg+S) erneuert montro Analyse und Vorschaubilder von selbst. Während

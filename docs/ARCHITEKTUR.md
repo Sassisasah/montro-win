@@ -16,9 +16,10 @@ Der Vertrag dafür steht in [KOMPATIBILITAET.md](KOMPATIBILITAET.md).
 | `src/montro/App.xaml(.cs)` | Start, globale Fehlerbehandlung, Farben laden |
 | `src/montro/app.manifest` | DPI-Modus **PerMonitorV2**, Windows 10/11 |
 | `src/montro/Themes/Brand.xaml` | Alle Farben (movidal-CD) und Grund-Stile. Keine Systemfarben |
-| `src/montro/Core/AppPaths.cs` | `%APPDATA%\montro` (Zustand), `%LOCALAPPDATA%\montro` (Vorschaubilder, Log) |
+| `src/montro/Core/AppPaths.cs` | `%APPDATA%\montro` (Zustand), `%LOCALAPPDATA%\montro` (Vorschau-Cache, Log) |
 | `src/montro/Core/DebugLog.cs` | Log-Datei `montro.log`, letzte Zeilen im Speicher (später für `/api/diag`) |
 | `src/montro/Core/AppState.cs` | Zentraler Zustand wie am Mac: Playlist, Vorbereitung, Live, Blackscreen, Ende-Sperre, Ausgabe, Timer, Speichern |
+| `src/montro/Core/PreviewCache.cs` | Analyse und Vorschaubilder nach Dateiinhalt (SHA-256), Aufräumen |
 | `src/montro/Core/PresentationItem.cs` | Playlist-Eintrag (Pfad, Meta, Vorschaubilder, Status, LIVE) |
 | `src/montro/Core/TalkTimer.cs` | Redezeit-Timer, portiert aus `TalkTimer.swift` |
 | `src/montro/Core/StateStore.cs` | `%APPDATA%\montro\state.json` lesen und schreiben |
@@ -194,8 +195,16 @@ Fremdbibliothek. Zählweise absichtlich wie am Mac:
   Für das spätere Publikumsfenster (Meilenstein 4) gilt dasselbe.
 - **Vorschaubilder für die Playlist:** `ExportFileThumbnailsAsync` öffnet eine eigene
   schreibgeschützte Kopie (oder benutzt die schon offene, ohne sie zu schließen), exportiert nach
-  `%TEMP%` und verschiebt dann nach `%LOCALAPPDATA%\montro\thumbs\<ID>`. Laufende Shows bleiben
-  unberührt. Verwaiste Vorschau-Ordner löscht montro beim Start.
+  `%TEMP%` und verschiebt dann in den Vorschau-Cache. Laufende Shows bleiben unberührt.
+- **Vorschau-Cache (`Core/PreviewCache.cs`, ab 0.7):** Analyse und Vorschaubilder liegen nach
+  Dateiinhalt unter `%LOCALAPPDATA%\montro\cache\<SHA-256>\` (`analyse.json` + `slide-<n>.png`),
+  nicht mehr je Playlist-Eintrag. `Prepare` prüft erst die Prüfsumme (dieselbe wie im Verbund) und
+  rendert nur bei unbekanntem Inhalt. Beim Start gilt ein Eintrag ohne Prüfung als bereit, wenn
+  Größe und Änderungszeit denen beim Erzeugen entsprechen (`SavedItem.FileSize/FileTime`).
+  Aufräumen nach `PrepareAll`: unbenutzte Einträge nach 60 Tagen bzw. über 5 GB (Ordner-Zeit =
+  zuletzt benutzt). Alte Ordner `thumbs\<ID>` übernimmt `MoveToCache` einmalig; verwaiste löscht
+  montro beim Start. `analyse.json` ist die Vorstufe der gemeinsamen Analysedatei für Mac und
+  Windows (Konzept „Weitere Präsentationsformate“).
 - **Oberfläche testen ohne Maus:** WPF stellt alle Knöpfe und Listen über UI Automation bereit.
   Damit lässt sich das Hauptfenster aus einem Skript bedienen (Eintrag wählen, „Ausgewählte live
   schalten“, „Weiter“, Statuszeile lesen), so geprüft am 21.10.2026.

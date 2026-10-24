@@ -188,6 +188,15 @@
 
 ## Offen
 
+- **24.10.2026** – Vorschau-Cache (0.7, Branch `vorschau-cache`), ohne Gerät gebaut, nur Prüf-Build
+  unter Linux. Am Laptop testen:
+  1. Nach dem Update: Playlist bleibt bereit, Log zeigt „Vorschau-Cache: … übernommen“, kein Rendern.
+  2. Eintrag entfernen und dieselbe Datei wieder hinzufügen → sofort bereit („aus dem Vorschau-Cache“).
+  3. Zwischen zwei Shows hin und her wechseln → kein Rendern.
+  4. Datei kopieren und die Kopie hinzufügen → sofort bereit.
+  5. Datei in PowerPoint ändern und speichern → wird neu gerendert.
+  6. „Neu analysieren & Vorschaubilder erzeugen“ → rendert neu.
+  7. Im Verbund eine unveränderte Datei vom Master → kein Rendern.
 - PowerPoint ohne Lizenz: lässt sich auf dem Test-PC nicht nachstellen.
 - **22.10.2026** – Meilenstein 4, Etappe 3: Referent*innenansicht auf dem zweiten Verbatim mit
   Timer-Blinken und Ende auf Schwarz prüfen; Popup-Modus (links

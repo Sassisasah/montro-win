@@ -452,6 +452,7 @@ public sealed partial class AppState : Observable
     {
         if (item == LiveItem) return;
         Items.Remove(item);
+        // Vorschaubilder bleiben im Vorschau-Cache (Wieder-Hinzufügen ohne Neu-Rendern), nur den alten Ablageort löschen
         try { Directory.Delete(Path.Combine(AppPaths.ThumbsDir, item.Id.ToString()), recursive: true); } catch { }
         if (Selected == item) Selected = Items.FirstOrDefault();
         Renumber();
@@ -472,22 +473,42 @@ public sealed partial class AppState : Observable
         RefreshPresetNames();
     }
 
-    public void Regenerate(PresentationItem item)
+    /// <summary>
+    /// Neu analysieren. <paramref name="force"/> verwirft auch den Vorschau-Cache dieser Datei
+    /// (Kontextmenü); sonst entscheidet die Prüfsumme, ob wirklich neu gerendert werden muss.
+    /// </summary>
+    public void Regenerate(PresentationItem item, bool force = false)
     {
+        if (force) forceRender.Add(item.Id);
         item.State = PrepState.Pending;
         item.Thumbnails = new();
         _ = PrepareAll();
     }
 
-    /// <summary>Alle ausstehenden Einträge nacheinander analysieren und Vorschaubilder erzeugen.</summary>
+    private readonly HashSet<Guid> forceRender = new();
+
+    /// <summary>
+    /// Alle ausstehenden Einträge nacheinander analysieren und Vorschaubilder erzeugen; danach
+    /// Vorschaubilder aus dem alten Ablageort (thumbs\&lt;ID&gt;) in den Vorschau-Cache übernehmen.
+    /// </summary>
     public async Task PrepareAll()
     {
         if (preparing || headless) return;
         preparing = true;
         try
         {
-            while (Items.FirstOrDefault(i => i.State == PrepState.Pending) is { } item)
-                await Prepare(item);
+            while (true)
+            {
+                if (Items.FirstOrDefault(i => i.State == PrepState.Pending) is { } item)
+                    await Prepare(item);
+                else if (Items.FirstOrDefault(i => i.State == PrepState.Ready && i.ContentHash == null) is { } old)
+                    await MoveToCache(old);
+                else
+                    break;
+            }
+            // erst jetzt sind alle Prüfsummen bekannt
+            var inUse = Items.Select(i => i.ContentHash).ToList();
+            await Task.Run(() => PreviewCache.Clean(inUse));
         }
         finally
         {
@@ -503,17 +524,42 @@ public sealed partial class AppState : Observable
             item.StateText = "Datei nicht gefunden";
             return;
         }
+        string path = item.Path;
         try
         {
             item.State = PrepState.Preparing;
-            item.StateText = "Analysiere Folien …";
-            item.Meta = await Task.Run(() => PptxParser.Parse(item.Path));
-            item.StateText = "Erzeuge Vorschaubilder …";
-            var progress = new Progress<(int done, int total)>(p => item.StateText = $"Vorschau {p.done}/{p.total}");
-            item.Thumbnails = await ppt.ExportFileThumbnailsAsync(item.Path, AppPaths.ThumbsFor(item.Id.ToString()), progress);
+            item.StateText = "Prüfe Datei …";
+            var before = Stamp(path) ?? throw new IOException("Datei nicht lesbar");
+            string hash = await Montro.Cluster.FileSync.Sha256(path) ?? throw new IOException("Datei nicht lesbar");
+            if (forceRender.Remove(item.Id)) PreviewCache.Remove(hash);
+            if (PreviewCache.TryLoad(hash) is { } cached)
+            {
+                item.Meta = cached.Meta;
+                item.Thumbnails = cached.Thumbnails;
+                DebugLog.Write($"Vorbereitet aus dem Vorschau-Cache: „{item.Title}“ – {item.Subtitle}, {item.Thumbnails.Count} Vorschaubilder");
+            }
+            else
+            {
+                item.StateText = "Analysiere Folien …";
+                item.Meta = await Task.Run(() => PptxParser.Parse(path));
+                item.StateText = "Erzeuge Vorschaubilder …";
+                var progress = new Progress<(int done, int total)>(p => item.StateText = $"Vorschau {p.done}/{p.total}");
+                item.Thumbnails = await ppt.ExportFileThumbnailsAsync(path, PreviewCache.DirFor(hash), progress);
+                PreviewCache.Save(hash, before.Size, path, item.Meta, item.Thumbnails);
+                DebugLog.Write($"Vorbereitet: „{item.Title}“ – {item.Subtitle}, {item.Thumbnails.Count} Vorschaubilder");
+            }
+            if (Stamp(path) != before || item.Path != path)
+            {
+                // während der Vorbereitung gespeichert: Cache-Eintrag passt evtl. nicht, nochmal
+                PreviewCache.Remove(hash);
+                item.State = PrepState.Pending;
+                return;
+            }
+            item.ContentHash = hash;
+            item.PreparedSize = before.Size;
+            item.PreparedTime = before.Modified;
             item.State = PrepState.Ready;
             item.StateText = "";
-            DebugLog.Write($"Vorbereitet: „{item.Title}“ – {item.Subtitle}, {item.Thumbnails.Count} Vorschaubilder");
         }
         catch (Exception e)
         {
@@ -524,6 +570,29 @@ public sealed partial class AppState : Observable
             DebugLog.Write($"Vorbereitung „{item.Title}“ fehlgeschlagen – {msg}");
         }
         RaiseDerived();
+        QueueSave();
+    }
+
+    /// <summary>Einmalig nach dem Update: fertige Vorschaubilder in den Vorschau-Cache übernehmen.</summary>
+    private async Task MoveToCache(PresentationItem item)
+    {
+        string path = item.Path;
+        var meta = item.Meta;
+        var oldThumbs = item.Thumbnails;
+        if (Stamp(path) is not { } stamp || meta == null
+            || await Montro.Cluster.FileSync.Sha256(path) is not { } hash
+            || await Task.Run(() => PreviewCache.Adopt(hash, stamp.Size, path, meta, oldThumbs)) is not { } adopted
+            || Stamp(path) != stamp || item.Path != path)
+        {
+            Regenerate(item);
+            return;
+        }
+        item.Thumbnails = adopted;
+        item.ContentHash = hash;
+        item.PreparedSize = stamp.Size;
+        item.PreparedTime = stamp.Modified;
+        try { Directory.Delete(Path.Combine(AppPaths.ThumbsDir, item.Id.ToString()), recursive: true); } catch { }
+        DebugLog.Write($"Vorschau-Cache: „{item.Title}“ übernommen ({adopted.Count} Vorschaubilder)");
         QueueSave();
     }
 
@@ -958,7 +1027,13 @@ public sealed partial class AppState : Observable
             var item = new PresentationItem { Id = si.Id, Path = si.Path, Title = si.Title, PresetId = si.PresetId };
             item.Meta = si.Meta;
             item.Thumbnails = si.Thumbnails;
-            bool fresh = File.Exists(si.Path) && File.GetLastWriteTimeUtc(si.Path) == si.FileTime
+            item.ContentHash = si.ContentHash;
+            item.PreparedSize = si.FileSize;
+            item.PreparedTime = si.FileTime;
+            // unverändert (Größe/Zeit wie beim Erzeugen) → sofort bereit; sonst prüft Prepare die
+            // Prüfsumme und holt bei gleichem Inhalt alles aus dem Vorschau-Cache
+            bool fresh = Stamp(si.Path) is { } stamp && stamp.Modified == si.FileTime
+                         && (si.FileSize == 0 || stamp.Size == si.FileSize)
                          && si.Meta != null && si.Thumbnails.Values.All(File.Exists) && si.Thumbnails.Count > 0;
             item.State = !File.Exists(si.Path) ? PrepState.Failed : fresh ? PrepState.Ready : PrepState.Pending;
             if (item.State == PrepState.Failed) item.StateText = "Datei nicht gefunden";
@@ -1034,7 +1109,9 @@ public sealed partial class AppState : Observable
                 Title = i.Title,
                 Meta = i.Meta,
                 Thumbnails = i.Thumbnails,
-                FileTime = File.Exists(i.Path) ? File.GetLastWriteTimeUtc(i.Path) : default,
+                FileTime = i.State == PrepState.Ready ? i.PreparedTime : default,
+                FileSize = i.State == PrepState.Ready ? i.PreparedSize : 0,
+                ContentHash = i.ContentHash,
                 PresetId = i.PresetId,
             }).ToList(),
             Selection = Selected?.Id,

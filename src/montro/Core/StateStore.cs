@@ -45,7 +45,11 @@ public sealed class SavedItem
     public string Title { get; set; } = "";
     public PresentationMeta? Meta { get; set; }
     public Dictionary<int, string> Thumbnails { get; set; } = new();
+    /// <summary>Änderungszeit und Größe der Datei beim Erzeugen von Analyse und Vorschaubildern.</summary>
     public DateTime FileTime { get; set; }
+    public long FileSize { get; set; }
+    /// <summary>SHA-256 des Inhalts (Schlüssel im Vorschau-Cache).</summary>
+    public string? ContentHash { get; set; }
     public Guid? PresetId { get; set; }
 }
 
