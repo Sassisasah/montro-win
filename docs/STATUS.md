@@ -188,7 +188,7 @@
 
 ## Offen
 
-- **24.10.2026** – Vorschau-Cache (0.7, Branch `vorschau-cache`), ohne Gerät gebaut, nur Prüf-Build
+- **24.10.2026** – Vorschau-Cache (Branch `vorschau-cache`), ohne Gerät gebaut, nur Prüf-Build
   unter Linux. Am Laptop testen:
   1. Nach dem Update: Playlist bleibt bereit, Log zeigt „Vorschau-Cache: … übernommen“, kein Rendern.
   2. Eintrag entfernen und dieselbe Datei wieder hinzufügen → sofort bereit („aus dem Vorschau-Cache“).

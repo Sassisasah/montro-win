@@ -1,7 +1,7 @@
 # Änderungsprotokoll
 
-## 0.7 – 24.10.2026
-- Neu (Branch `vorschau-cache`): Vorschau-Cache nach Dateiinhalt. Analyse und Vorschaubilder liegen
+## Unveröffentlicht – Branch `vorschau-cache` (24.10.2026, Versionsnummer beim Zusammenführen)
+- Neu: Vorschau-Cache nach Dateiinhalt. Analyse und Vorschaubilder liegen
   unter der SHA-256-Prüfsumme in `%LOCALAPPDATA%\montro\cache\<Prüfsumme>` statt je
   Playlist-Eintrag. Show öffnen, Entfernen und wieder Hinzufügen, Verschieben, „Fehlende Dateien
   suchen“ oder eine gleiche Kopie aus dem Verbund rendern nicht mehr neu. Nur geänderte Zeit ohne

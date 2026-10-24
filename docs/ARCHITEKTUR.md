@@ -196,7 +196,7 @@ Fremdbibliothek. Zählweise absichtlich wie am Mac:
 - **Vorschaubilder für die Playlist:** `ExportFileThumbnailsAsync` öffnet eine eigene
   schreibgeschützte Kopie (oder benutzt die schon offene, ohne sie zu schließen), exportiert nach
   `%TEMP%` und verschiebt dann in den Vorschau-Cache. Laufende Shows bleiben unberührt.
-- **Vorschau-Cache (`Core/PreviewCache.cs`, ab 0.7):** Analyse und Vorschaubilder liegen nach
+- **Vorschau-Cache (`Core/PreviewCache.cs`, Branch `vorschau-cache`):** Analyse und Vorschaubilder liegen nach
   Dateiinhalt unter `%LOCALAPPDATA%\montro\cache\<SHA-256>\` (`analyse.json` + `slide-<n>.png`),
   nicht mehr je Playlist-Eintrag. `Prepare` prüft erst die Prüfsumme (dieselbe wie im Verbund) und
   rendert nur bei unbekanntem Inhalt. Beim Start gilt ein Eintrag ohne Prüfung als bereit, wenn
