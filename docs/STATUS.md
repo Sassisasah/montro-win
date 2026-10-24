@@ -193,6 +193,11 @@
 
 ## Offen
 
+- **24.10.2026** – Branch `companion-verbund` (auf `meilenstein-7`): Fernsteuerung für den Verbund
+  wie am Mac (`/api/refresh`, `/api/cluster/detach|rejoin|toggle`, `/api/slaves/<n>/…`, Status
+  `refresh` und `cluster.slaves`). „Aktualisieren“ übernimmt jetzt Folie **und** Klickstand des
+  Slaves und springt dafür nur lokal – vorher ging der Sprung an die Slaves und setzte deren
+  Animationen zurück. Am Gerät ungetestet.
 - PowerPoint ohne Lizenz: lässt sich auf dem Test-PC nicht nachstellen.
 - **22.10.2026** – Meilenstein 4, Etappe 3: Referent*innenansicht auf dem zweiten Verbatim mit
   Timer-Blinken und Ende auf Schwarz prüfen; Popup-Modus (links

@@ -230,9 +230,47 @@ public sealed class RemoteApi
                         return (200, c.Receive(syncIn, req.RemoteHost));
                     case "manifest":
                         return (200, state.FileSync.Manifest());
+                    case "detach" or "rejoin" or "toggle":
+                    {
+                        // Fernsteuerung (Companion oder Master): diesen Slave abkoppeln / wieder einklinken
+                        if (c.Role != Cluster.ClusterRole.Slave) return Bad("dieser Rechner ist kein Slave");
+                        var fs = state.FileSync;
+                        bool detach = Arg(1) == "toggle" ? !fs.Detached : Arg(1) == "detach";
+                        if (detach) fs.Detach(); else fs.Rejoin();
+                        return Ok();
+                    }
                     default:
                         return Bad("unbekannter Verbund-Befehl");
                 }
+            }
+            case "slaves" or "slave":
+            {
+                // Am Master: Slave n (1 = erster, wie in cluster.slaves) oder alle abkoppeln/einklinken
+                var c = state.Cluster;
+                if (c.Role != Cluster.ClusterRole.Master) return Bad("dieser Rechner ist kein Master");
+                var slaves = c.Slaves;
+                List<Cluster.ClusterPeer> targets;
+                if (Arg(1) == "all") targets = slaves.Where(p => p.Reachable).ToList();
+                else if (int.TryParse(Arg(1), out int n) && n >= 1 && n <= slaves.Count) targets = new() { slaves[n - 1] };
+                else return Bad($"Slave {Arg(1)} gibt es nicht (1–{slaves.Count})");
+                string action = Arg(2);
+                if (action is not ("detach" or "rejoin" or "toggle")) return Bad("detach, rejoin oder toggle");
+                if (!targets.Any(p => p.Reachable)) return Bad("Slave nicht erreichbar");
+                foreach (var peer in targets)
+                {
+                    bool detach = action == "toggle" ? !peer.Detached : action == "detach";
+                    _ = c.RemoteDetach(peer, detach);
+                }
+                return Ok();
+            }
+            case "refresh" or "aktualisieren":
+            {
+                // „Aktualisieren“: neue Version der laufenden Präsentation an gleicher Stelle laden
+                if (state.ReloadingInPlace) return Ok();
+                if (state.LiveItem is not { } live || !state.IsShowRunning) return Bad("keine Präsentation live");
+                if (state.FileSync.StagedVersion(live) == null) return Bad("keine neue Version bereit");
+                state.ReloadLiveWithNewVersion();
+                return Ok();
             }
             case "next":
                 state.Next(); return Ok();
@@ -244,6 +282,7 @@ public sealed class RemoteApi
                 state.Unlock(); return Ok();
             case "golive" or "live":
             {
+                if (state.ReloadingInPlace) return Bad("Aktualisieren läuft – bitte kurz warten");
                 var items = state.Items;
                 string a = Arg(1);
                 PresentationItem target;
@@ -288,6 +327,7 @@ public sealed class RemoteApi
             case "goto" or "slide":
             {
                 // Position unter den sichtbaren Folien (so wie „Folie n von m“)
+                if (state.ReloadingInPlace) return Bad("Aktualisieren läuft – bitte kurz warten");
                 if (state.LiveItem is not { } item) return Bad("keine Präsentation live");
                 var visible = item.Slides.Where(x => !x.Hidden).ToList();
                 if (!int.TryParse(Arg(1), out int n) || n < 1 || n > visible.Count) return Bad("ungültige Foliennummer");
@@ -378,6 +418,40 @@ public sealed class RemoteApi
 
     // MARK: - Status (Mac: snapshot)
 
+    /// <summary>Verbund-Teil des Status: Rolle, Abkoppeln (Slave), je Slave Erreichbarkeit/Live/Folie (Master).</summary>
+    private Dictionary<string, object> ClusterSnapshot()
+    {
+        var c = state.Cluster;
+        var fs = state.FileSync;
+        bool master = c.Role == Cluster.ClusterRole.Master, slave = c.Role == Cluster.ClusterRole.Slave;
+        var slaves = master ? c.Slaves.Select((p, i) => (object)new Dictionary<string, object?>
+        {
+            ["index"] = i + 1,
+            ["name"] = p.Name,
+            ["host"] = p.Host ?? "",
+            ["reachable"] = p.Reachable,
+            ["live"] = p.Live,
+            ["file"] = p.File,
+            ["slide"] = p.Slide,
+            ["blackout"] = p.Blackout,
+            ["inSync"] = p.InSync,
+            ["detached"] = p.Detached,
+            ["issue"] = p.Issue ?? "",
+        }).ToList() : new List<object>();
+        return new Dictionary<string, object>
+        {
+            ["role"] = Cluster.ClusterRoles.Key(c.Role),
+            ["group"] = c.Group,
+            ["name"] = c.DeviceName,
+            ["summary"] = c.Summary,
+            ["warning"] = c.SummaryIsWarning,
+            ["detached"] = slave && fs.Detached,
+            ["pendingHandovers"] = slave ? fs.PendingHandovers : 0,
+            ["masterReachable"] = slave && c.MasterReachable,
+            ["slaves"] = slaves,
+        };
+    }
+
     private Dictionary<string, object> Snapshot()
     {
         var s = state;
@@ -389,6 +463,7 @@ public sealed class RemoteApi
         int nextPos = live != null && live.NextVisible(s.CurrentSlide) is int n ? live.VisiblePosition(n) ?? 0 : 0;
         var t = s.Timer;
         var v = s.Video;
+        var staged = live != null ? s.FileSync.StagedVersion(live) : null;
         int baseIdx = items.IndexOf(s.LiveItem ?? s.Selected!);
         string nextPresentation = baseIdx + 1 < items.Count && baseIdx + 1 >= 0 ? items[baseIdx + 1].Title : "";
         return new Dictionary<string, object>
@@ -403,13 +478,13 @@ public sealed class RemoteApi
             ["status"] = s.StatusMessage,
             ["presentation"] = live?.Title ?? "",
             ["presentationFile"] = live != null ? Path.GetFileName(live.Path).ToLowerInvariant() : "",
-            ["cluster"] = new Dictionary<string, object>
+            ["cluster"] = ClusterSnapshot(),
+            ["refresh"] = new Dictionary<string, object>
             {
-                ["role"] = Cluster.ClusterRoles.Key(s.Cluster.Role),
-                ["group"] = s.Cluster.Group,
-                ["name"] = s.Cluster.DeviceName,
-                ["summary"] = s.Cluster.Summary,
-                ["warning"] = s.Cluster.SummaryIsWarning,
+                ["available"] = staged != null,
+                ["running"] = s.ReloadingInPlace,
+                ["name"] = staged?.Name ?? "",
+                ["source"] = staged?.Source ?? "",
             },
             ["presentationIndex"] = liveIndex,
             ["selected"] = s.Selected?.Title ?? "",

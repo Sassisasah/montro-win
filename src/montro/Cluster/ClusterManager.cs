@@ -434,6 +434,7 @@ public sealed class ClusterManager : Observable
             p.Slide = info.Slide;
             p.Blackout = info.Blackout;
             p.Issue = info.Issue;
+            p.Detached = info.Detached ?? false;
             if (info.Accepted == false && p.Issue == null)
                 p.Issue = info.Role == "slave" ? "anderer Verbund" : "ist kein Slave";
             // abgekoppelter Slave bietet bearbeitete Präsentationen an → holen und übernehmen
@@ -449,6 +450,25 @@ public sealed class ClusterManager : Observable
             p.Reachable = false;
             p.InSync = null;
         }
+    }
+
+    /// <summary>
+    /// Fernsteuerung (Companion) am Master: einen Slave abkoppeln oder wieder einklinken. Der Master
+    /// ruft dafür <c>/api/cluster/detach|rejoin</c> am Slave auf (Mac: remoteDetach).
+    /// </summary>
+    public async Task<bool> RemoteDetach(ClusterPeer peer, bool detach)
+    {
+        if (peer.Host is not { } host) return false;
+        var data = await Post(host, peer.Port, detach ? "cluster/detach" : "cluster/rejoin", Array.Empty<byte>());
+        bool ok = false;
+        try
+        {
+            if (data != null && System.Text.Json.JsonDocument.Parse(data).RootElement.TryGetProperty("ok", out var v))
+                ok = v.ValueKind == System.Text.Json.JsonValueKind.True;
+        }
+        catch (System.Text.Json.JsonException) { }
+        DebugLog.Write($"Fernsteuerung: Slave „{peer.Name}“ {(detach ? "abkoppeln" : "wieder in den Verbund")} – {(ok ? "erledigt" : "abgelehnt")}");
+        return ok;
     }
 
     private async Task<byte[]?> Post(string host, int port, string path, byte[] body)
