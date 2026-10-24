@@ -226,7 +226,7 @@ public sealed partial class AppState : Observable
                     presenterDevice = null;
                     Raise(nameof(PresenterDevice), nameof(PresenterCaption), nameof(PresenterIsPopup));
                 }
-                Raise(nameof(AudienceCaption), nameof(AudienceIsPopup));
+                Raise(nameof(AudienceCaption), nameof(AudienceIsPopup), nameof(AudienceColorWarning));
                 QueueSave();
                 blackKey = "?";
                 UpdateOutputs();
@@ -243,6 +243,14 @@ public sealed partial class AppState : Observable
 
     public string AudienceCaption => AudienceScreen is { } m ? $"Ausgabe: {m.FriendlyName} ({m.Number})" : "Ausgabe: Popup-Fenster";
 
+    /// <summary>Farb-Check des Publikumsbildschirms (Mac: DisplayColor.warning), null = in Ordnung oder Popup.</summary>
+    public string? AudienceColorWarning => ColorWarning(AudienceScreen);
+
+    public string? PresenterColorWarning => ColorWarning(PresenterScreen);
+
+    private static string? ColorWarning(MonitorInfo? m) =>
+        m != null && DisplayColor.All().TryGetValue(m.DeviceName, out var c) ? c.Warning : null;
+
     public string ExternalScreensText => $"{ExternalScreens.Count} externe(r) Bildschirm(e)";
 
     /// <summary>Gerätename des Bildschirms für die Referent*innenansicht, null = Popup-Fenster.</summary>
@@ -252,7 +260,7 @@ public sealed partial class AppState : Observable
         set
         {
             if (!Set(ref presenterDevice, value)) return;
-            Raise(nameof(PresenterCaption), nameof(PresenterIsPopup));
+            Raise(nameof(PresenterCaption), nameof(PresenterIsPopup), nameof(PresenterColorWarning));
             QueueSave();
             if (value != null && audienceDevice == value)
             {
@@ -295,7 +303,7 @@ public sealed partial class AppState : Observable
     public void RefreshScreens()
     {
         Raise(nameof(ExternalScreens), nameof(ExternalScreensText), nameof(AudienceCaption), nameof(AudienceIsPopup),
-            nameof(PresenterCaption), nameof(PresenterIsPopup));
+            nameof(PresenterCaption), nameof(PresenterIsPopup), nameof(AudienceColorWarning), nameof(PresenterColorWarning));
         blackKey = "?";
         UpdateOutputs();
     }
@@ -378,7 +386,7 @@ public sealed partial class AppState : Observable
         Raise(nameof(CanControl), nameof(CanGoLive), nameof(CanStop), nameof(CurrentSlideMeta),
             nameof(NavigatorItem), nameof(SlidePositionText), nameof(LiveStatusLine), nameof(CurrentSlideImage),
             nameof(NextSlideImage), nameof(LiveOverlayText), nameof(BlackoutButtonText), nameof(CurrentNotes),
-            nameof(CurrentSlideSource), nameof(CanEdit), nameof(EditHint));
+            nameof(CurrentSlideSource), nameof(CanEdit), nameof(EditHint), nameof(CanTestPattern));
         UpdateLiveSource();
         UpdateOutputs();
     }
@@ -472,6 +480,13 @@ public sealed partial class AppState : Observable
         RefreshPresetNames();
     }
 
+    /// <summary>Installierte Schriften neu einlesen, z. B. nachdem eine fehlende Schrift installiert wurde (Mac: recheckFonts).</summary>
+    public void RecheckFonts()
+    {
+        FontCheck.Reload();
+        foreach (var item in Items) item.RefreshFonts();
+    }
+
     public void Regenerate(PresentationItem item)
     {
         item.State = PrepState.Pending;
@@ -542,6 +557,11 @@ public sealed partial class AppState : Observable
     public Task GoLive(PresentationItem item, int? startAt = null)
     {
         if (!LocalControlAllowed()) return Task.CompletedTask;
+        if (IsTestPattern)
+        {
+            IsTestPattern = false;
+            outputs.ShowTestPattern(Array.Empty<MonitorInfo>(), _ => new System.Windows.Controls.Grid());
+        }
         if (item == LiveItem && IsShowRunning && startAt == null && !Cluster.ApplyingRemote && FileSync.StagedVersion(item) != null)
         {
             ReloadLiveWithNewVersion();
@@ -833,6 +853,41 @@ public sealed partial class AppState : Observable
         lastLoopRestart = DateTime.Now;
         DebugLog.Write($"Video „{b.Name}“: Ende erreicht, Schleife → von vorn");
         Send(() => ppt.VideoAsync(b.Name, PowerPointHost.VideoCommand.Restart));
+    }
+
+    // MARK: - Testbild (Mac: setTestPattern)
+
+    private bool isTestPattern;
+
+    /// <summary>Testbild auf den Show-Bildschirmen (Farb-Vergleich Mac/Windows am Mischer). Nur ohne laufende Show.</summary>
+    public bool IsTestPattern
+    {
+        get => isTestPattern;
+        private set => Set(ref isTestPattern, value);
+    }
+
+    public bool CanTestPattern => !IsShowRunning && !IsStarting;
+
+    /// <summary>Zugewiesene externe Bildschirme, sonst alle externen (Mac: testPatternDisplays).</summary>
+    private IReadOnlyList<MonitorInfo> TestPatternScreens => AssignedScreens.Length > 0 ? AssignedScreens : ExternalScreens;
+
+    public void SetTestPattern(bool on)
+    {
+        if (!LocalControlAllowed()) return;
+        if (on && (IsShowRunning || IsStarting))
+        {
+            StatusMessage = "Testbild nur ohne laufende Präsentation";
+            return;
+        }
+        Cluster.Forward("testpattern", on: on);
+        IsTestPattern = on;
+        var colors = DisplayColor.All();
+        outputs.ShowTestPattern(on ? TestPatternScreens : Array.Empty<MonitorInfo>(), m =>
+        {
+            string color = colors.TryGetValue(m.DeviceName, out var c) ? c.Summary : "Farbangaben unbekannt";
+            return Views.TestPattern.Create($"{Cluster.DeviceName} · {m.FriendlyName} – {m.Bounds.Width}×{m.Bounds.Height} · {color}");
+        });
+        StatusMessage = on ? "Testbild auf den Ausgaben" : "Bereit";
     }
 
     public void SetBlackout(bool on)

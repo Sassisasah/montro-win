@@ -102,6 +102,28 @@ curl -X POST "http://127.0.0.1:8765/api/message?text=Noch%202%20Minuten"
 Keine Anmeldung: Ohne „nur von diesem Rechner“ kann jeder im selben Netz steuern. Beim ersten Start
 fragt die Windows-Firewall – Zugriff erlauben (der Installer trägt später eine Regel ein).
 
+## Schriften prüfen
+
+Wie am Mac: Die Karte **Schriften** im Inspector zeigt für die ausgewählte bzw. laufende
+Präsentation, welche Schriften auf diesem Rechner fehlen (mit Foliennummern) und welche nur in der
+Datei eingebettet sind. In der Playlist steht bei fehlender Schrift ein gelbes Schrift-Symbol.
+PowerPoint ersetzt eine fehlende Schrift, dann laufen Zeilen anders um. Schrift installieren (nicht
+während einer Show; Rechtsklick › „Für alle Benutzer installieren“ oder nur für dich), PowerPoint
+neu starten und in der Karte auf ↻ klicken. Ältere Analysen: „Neu analysieren“. Schriften nur
+weitergeben, wenn die Lizenz das erlaubt.
+
+## Farben und Testbild
+
+Damit Windows und Mac am Mischer dieselben Farben liefern: auf den Show-Bildschirmen HDR und
+„Farbe automatisch verwalten“ aus (Einstellungen › System › Bildschirm), im Grafiktreiber RGB mit
+vollem Bereich, Nachtmodus aus. Stimmt etwas nicht, steht neben „Ausgabe: …“ ein gelbes
+Paletten-Symbol mit Hinweis.
+
+Der **Paletten-Knopf** oben rechts (nur ohne laufende Präsentation) zeigt auf allen
+Show-Bildschirmen das Testbild, im Verbund auf allen Rechnern. Am Mischer vergleichen: Farbbalken
+und movidal-Farben müssen gleich aussehen, die Felder 16 und 235 müssen sich vom Rand abheben (sonst
+ist der Signalbereich begrenzt und Schwarz wird grau). Live schalten blendet das Testbild aus.
+
 ## Verbund mit anderen montro-Rechnern (Meilenstein 7)
 
 Einstellungen (Zahnrad) › **Verbund (mehrere Rechner)**, gleich wie am Mac und mit montro für macOS

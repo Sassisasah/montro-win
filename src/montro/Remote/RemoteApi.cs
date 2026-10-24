@@ -314,6 +314,14 @@ public sealed class RemoteApi
                     default: state.ToggleBlackout(); break;
                 }
                 return Ok();
+            case "testpattern" or "testbild":
+                switch (Arg(1))
+                {
+                    case "on": state.SetTestPattern(true); break;
+                    case "off": state.SetTestPattern(false); break;
+                    default: state.SetTestPattern(!state.IsTestPattern); break;
+                }
+                return Ok();
             case "timer":
             {
                 var t = state.Timer;
@@ -399,6 +407,7 @@ public sealed class RemoteApi
             ["starting"] = s.IsStarting,
             ["locked"] = s.IsLocked,
             ["blackout"] = s.IsBlackout,
+            ["testPattern"] = s.IsTestPattern,
             ["endBlack"] = s.IsEndBlack,
             ["status"] = s.StatusMessage,
             ["presentation"] = live?.Title ?? "",
@@ -434,6 +443,7 @@ public sealed class RemoteApi
                 ["live"] = it == live,
                 ["selected"] = it == s.Selected,
                 ["ready"] = it.State == PrepState.Ready,
+                ["missingFonts"] = FontCheck.Missing(it.Meta?.Fonts).Select(f => f.Name).ToList(),
             }).ToList(),
             ["timer"] = new Dictionary<string, object>
             {

@@ -544,6 +544,7 @@ public sealed class ClusterManager : Observable
                 case "stop": _ = state.Stop(); break;
                 case "unlock": state.Unlock(); break;
                 case "blackout": state.SetBlackout(c.On ?? !state.IsBlackout); break;
+                case "testpattern": state.SetTestPattern(c.On ?? !state.IsTestPattern); break;
                 case "goto":
                     if (c.Slide is int slide) state.Jump(slide);
                     break;

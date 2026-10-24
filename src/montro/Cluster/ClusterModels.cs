@@ -61,7 +61,7 @@ public sealed class ClusterCommand
     public string Group { get; set; } = "";
     public string From { get; set; } = "";
     public string FromName { get; set; } = "";
-    /// <summary>next · previous · golive · stop · goto · blackout · unlock</summary>
+    /// <summary>next · previous · golive · stop · goto · blackout · unlock · testpattern</summary>
     public string Cmd { get; set; } = "";
     /// <summary>Dateiname der Präsentation (klein, ohne Pfad)</summary>
     public string? File { get; set; }

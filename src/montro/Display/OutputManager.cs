@@ -91,15 +91,37 @@ public sealed class OutputManager
         if (black)
             foreach (var w in blackWindows.Values) Raise(w);
         if (transitionWindow != null) Raise(transitionWindow);
+        foreach (var w in testPatternWindows) Raise(w);
     }
 
     public void CloseAll()
     {
+        ShowTestPattern(Array.Empty<MonitorInfo>(), _ => new Grid());
         foreach (var w in blackWindows.Values) w.Close();
         blackWindows.Clear();
         transitionWindow?.Close();
         transitionWindow = null;
         ClosePresenter();
+    }
+
+    // MARK: - Testbild (Mac: showTestPattern)
+
+    private readonly List<Window> testPatternWindows = new();
+
+    /// <summary>Testbild auf genau diesen Bildschirmen, leer = ausblenden. Liegt über Schwarzbild und Übergang.</summary>
+    public void ShowTestPattern(IEnumerable<MonitorInfo> screens, Func<MonitorInfo, FrameworkElement> content)
+    {
+        foreach (var w in testPatternWindows) w.Close();
+        testPatternWindows.Clear();
+        foreach (var m in screens)
+        {
+            // „layered“ wie das Schwarzbild: volle Höhe, ohne das Verbatim-Problem
+            var w = CreateCover(m, null);
+            w.Content = content(m);
+            w.Show();
+            Place(w, m);
+            testPatternWindows.Add(w);
+        }
     }
 
     // MARK: - Ausgabe Referent*innenansicht (Mac: ensurePresenterWindow)

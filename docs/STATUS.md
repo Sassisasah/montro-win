@@ -188,6 +188,12 @@
 
 ## Offen
 
+- **24.10.2026** – Branch `schriften-farben` (Schrift-Check, Farb-Check, Testbild) ist nur
+  über GitHub Actions gebaut, nicht am Test-PC geprüft. Zu prüfen: Karte „Schriften“ mit einer
+  Mac-Präsentation (z. B. Helvetica Neue), ↻ nach Installation einer Schrift, Farb-Hinweis mit HDR
+  an, Testbild auf beiden Verbatims (volle Höhe, keine schwarze Fläche), Testbild im Verbund mit dem
+  Mac gleichzeitig.
+
 - PowerPoint ohne Lizenz: lässt sich auf dem Test-PC nicht nachstellen.
 - **22.10.2026** – Meilenstein 4, Etappe 3: Referent*innenansicht auf dem zweiten Verbatim mit
   Timer-Blinken und Ende auf Schwarz prüfen; Popup-Modus (links
