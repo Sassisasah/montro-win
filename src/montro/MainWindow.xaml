@@ -618,6 +618,14 @@
         <Border Grid.Row="2" Background="{StaticResource Brand.Panel}" BorderBrush="{StaticResource Brand.Line}" BorderThickness="0,1,0,0" Padding="12,5">
             <DockPanel>
                 <TextBlock DockPanel.Dock="Right" Text="{Binding ExternalScreensText}" FontSize="11" Foreground="{StaticResource Brand.SecondaryText}" Margin="12,0,0,0" />
+                <!-- Verbund: Status und am Slave Abkoppeln / Wieder in den Verbund (Inhalt in UpdateClusterStatus) -->
+                <Button x:Name="ClusterStatusButton" DockPanel.Dock="Right" Style="{StaticResource Brand.Small}" Margin="8,0,0,0" FontSize="10"
+                        Visibility="Collapsed" Click="OnClusterStatusButton" />
+                <StackPanel x:Name="ClusterStatus" DockPanel.Dock="Right" Orientation="Horizontal" Margin="12,0,0,0" Visibility="Collapsed"
+                            ToolTip="Verbund – Einstellungen › Verbund">
+                    <TextBlock x:Name="ClusterStatusIcon" Style="{StaticResource Brand.Icon}" FontSize="11" Margin="0,0,4,0" />
+                    <TextBlock x:Name="ClusterStatusText" FontSize="11" />
+                </StackPanel>
                 <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Visibility="{Binding IsLocked, Converter={StaticResource Vis}}" Margin="12,0,0,0">
                     <TextBlock Style="{StaticResource Brand.Icon}" Text="&#xE72E;" FontSize="11" Foreground="{StaticResource Brand.Warning}" Margin="0,0,4,0" />
                     <TextBlock Text="Gesperrt" FontSize="11" Foreground="{StaticResource Brand.Warning}" />

@@ -53,9 +53,10 @@ public partial class MainWindow : Window
         UpdateBlackoutButton();
         PresenterPreviewHost.Child = new PresenterOutputView(state) { PreviewWhenIdle = true };
         UpdateTitle();
-        state.FileSync.PropertyChanged += (_, _) => UpdateSyncBanner();
-        state.Cluster.Changed += () => Dispatcher.InvokeAsync(UpdateSyncBanner);
+        state.FileSync.PropertyChanged += (_, _) => { UpdateSyncBanner(); UpdateClusterStatus(); };
+        state.Cluster.Changed += () => Dispatcher.InvokeAsync(() => { UpdateSyncBanner(); UpdateClusterStatus(); });
         UpdateSyncBanner();
+        UpdateClusterStatus();
         state.ShowLoaded += () =>
         {
             (state.EndBehavior == EndBehavior.HoldLastSlide ? EndHold : EndBlack).IsChecked = true;
@@ -95,6 +96,33 @@ public partial class MainWindow : Window
         SyncBannerButton.Visibility = button != null ? Visibility.Visible : Visibility.Collapsed;
         SyncBannerButton.Content = button ?? "";
         SyncBannerButton.IsEnabled = !state.ReloadingInPlace;
+    }
+
+    /// <summary>Statusleiste: Verbund-Status und am Slave Abkoppeln/Wieder in den Verbund (Mac: StatusBar).</summary>
+    private void UpdateClusterStatus()
+    {
+        var c = state.Cluster;
+        ClusterStatus.Visibility = c.IsActive ? Visibility.Visible : Visibility.Collapsed;
+        ClusterStatusButton.Visibility = c.Role == Cluster.ClusterRole.Slave ? Visibility.Visible : Visibility.Collapsed;
+        if (!c.IsActive) return;
+        var brush = (Brush)FindResource(c.SummaryIsWarning ? "Brand.Warning" : "Brand.SecondaryText");
+        ClusterStatusIcon.Text = c.Role == Cluster.ClusterRole.Master ? "" : "";   // Netzwerk / Verknüpfung
+        ClusterStatusIcon.Foreground = brush;
+        ClusterStatusText.Text = c.Summary;
+        ClusterStatusText.Foreground = brush;
+        ClusterStatus.ToolTip = $"Verbund „{c.Group}“ – Einstellungen › Verbund";
+        bool detached = state.FileSync.Detached;
+        ClusterStatusButton.Content = detached ? "Wieder in den Verbund" : "Abkoppeln";
+        ClusterStatusButton.ToolTip = detached
+            ? "Folgt danach wieder dem Master; geänderte Präsentationen gehen an den Master."
+            : "Zeitweise aus dem Verbund nehmen – zum Bearbeiten und selbst live schalten.";
+    }
+
+    private void OnClusterStatusButton(object sender, RoutedEventArgs e)
+    {
+        if (state.FileSync.Detached) state.FileSync.Rejoin(); else state.FileSync.Detach();
+        UpdateClusterStatus();
+        UpdateSyncBanner();
     }
 
     private void OnSyncBanner(object sender, RoutedEventArgs e)
@@ -920,7 +948,8 @@ public partial class MainWindow : Window
 
     private void OnKey(object sender, KeyEventArgs e)
     {
-        if (Keyboard.FocusedElement is TextBox) return;
+        // In Eingabefeldern nur Strg-Kürzel (Text tippen, Pfeiltasten im Feld)
+        if (Keyboard.FocusedElement is TextBox && !Keyboard.Modifiers.HasFlag(ModifierKeys.Control)) return;
         var mods = Keyboard.Modifiers;
         bool ctrl = mods.HasFlag(ModifierKeys.Control);
         bool shift = mods.HasFlag(ModifierKeys.Shift);
@@ -930,7 +959,13 @@ public partial class MainWindow : Window
             case Key.OemPeriod when ctrl: _ = state.Stop(); break;
             case Key.T when ctrl: state.Timer.Toggle(); break;
             case Key.O when ctrl: OpenShowDialog(); break;
+            case Key.OemComma when ctrl && shift: OnBuilder(this, new RoutedEventArgs()); break;
             case Key.OemComma when ctrl: OpenSettings(); break;
+            // wie am Mac (Menü „Wiedergabe“): mit Strg auch, wenn ein Eingabefeld den Fokus hat
+            case Key.Right when ctrl && state.IsShowRunning: state.Next(); break;
+            case Key.Left when ctrl && state.IsShowRunning: state.Previous(); break;
+            case Key.B when ctrl: state.ToggleBlackout(); break;
+            case Key.R when ctrl && shift: state.Timer.Reset(); break;
             case Key.S when ctrl && shift: SaveShowAs(); break;
             case Key.S when ctrl: SaveShow(); break;
             case Key.G when ctrl: ShowGoto(); break;
