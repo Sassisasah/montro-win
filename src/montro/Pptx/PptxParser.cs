@@ -8,11 +8,12 @@ public sealed class PptxException(string message) : Exception(message);
 
 /// <summary>
 /// Liest aus der .pptx (OOXML-ZIP) selbst, ohne PowerPoint: Folienreihenfolge, ausgeblendete
-/// Folien, Notizen, Anzahl der Klick-Animationen und Videos mit Länge und Startklick.
+/// Folien, Notizen, Anzahl der Klick-Animationen, Videos mit Länge und Startklick und die Schriften
+/// (<c>PptxParser.Fonts.cs</c>).
 /// Portiert aus der Mac-Version (<c>Sources/montro/Services/PPTXParser.swift</c>); Logik und
 /// Zählweise sind absichtlich gleich.
 /// </summary>
-public static class PptxParser
+public static partial class PptxParser
 {
     public static readonly string[] FileExtensions = [".pptx", ".pptm", ".ppsx", ".ppsm"];
 
@@ -36,6 +37,7 @@ public static class PptxParser
             var order = SlideListParser.Parse(presXml);
 
             var slides = new List<SlideMeta>();
+            var slideParts = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
             var tempFiles = new List<string>();
             try
             {
@@ -43,6 +45,7 @@ public static class PptxParser
                 {
                     if (!presRels.TryGetValue(order[i], out var rel)) continue;
                     string slidePart = Package.Resolve(rel.Target, "ppt");
+                    slideParts[slidePart] = i + 1;
                     var data = package.Read(slidePart);
                     if (data == null) continue;
                     string slideDir = Package.Dir(slidePart);
@@ -98,7 +101,7 @@ public static class PptxParser
                     try { File.Delete(f); } catch { }
                 }
             }
-            return new PresentationMeta(slides);
+            return new PresentationMeta(slides, FontScanner.Scan(package, presXml, slideParts));
         }
     }
 
@@ -110,6 +113,9 @@ public static class PptxParser
         private readonly Dictionary<string, ZipArchiveEntry> entries =
             zip.Entries.GroupBy(e => e.FullName.Replace('\\', '/').TrimStart('/'), StringComparer.OrdinalIgnoreCase)
                        .ToDictionary(g => g.Key, g => g.First(), StringComparer.OrdinalIgnoreCase);
+
+        /// <summary>Alle Teile (normalisierte Pfade).</summary>
+        public IEnumerable<string> Parts => entries.Keys;
 
         public byte[]? Read(string part)
         {

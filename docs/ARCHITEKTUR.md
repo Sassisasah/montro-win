@@ -52,6 +52,10 @@ Der Vertrag dafür steht in [KOMPATIBILITAET.md](KOMPATIBILITAET.md).
 | `src/montro/Views/Converters.cs` | Bindungshilfen (Sichtbarkeit, Bilder ohne Dateisperre) |
 | `src/montro/Core/PresentationMeta.cs` | Ergebnis des Parsers: Folien mit Ausblendung, Notizen, Klicks, Videos (wie `SlideMeta` am Mac) |
 | `src/montro/Pptx/PptxParser.cs` | PPTX-Parser, portiert aus `PPTXParser.swift`: liest das ZIP direkt, ohne PowerPoint |
+| `src/montro/Pptx/PptxParser.Fonts.cs` | Schriften der Präsentation (Folien, Master, Layouts, Designs der Master, Diagramme, eingebettete), portiert aus `FontScanner` in `Services/FontCheck.swift` |
+| `src/montro/Core/FontCheck.cs` | Schrift-Check: Vergleich mit der GDI-Schriftliste und den Office-Cloud-Schriften (Mac: `FontCheck`) |
+| `src/montro/Display/DisplayColor.cs` | Farb-Check einer Ausgabe: HDR/Farbverwaltung, RGB oder YCbCr, Bittiefe über `DisplayConfigGetDeviceInfo` (Mac: `DisplayColor.swift`) |
+| `src/montro/Views/TestPattern.cs` | Testbild für die Ausgaben, gleich aufgebaut wie `Views/TestPatternView.swift` am Mac |
 | `src/montro/Pptx/MediaDuration.cs` | Videolänge aus dem MP4/MOV-Kopf (`moov/mvhd`), ohne Fremdbibliothek |
 | `src/montro/Core/SlideMap.cs` | **Einzige Stelle** für die Umrechnung PowerPoint-Index ↔ sichtbare Folie |
 | `src/montro/PowerPoint/StaWorker.cs` | Eigener STA-Thread mit Nachrichtenschleife. Alle COM-Aufrufe laufen nacheinander dort, mit Timeout |

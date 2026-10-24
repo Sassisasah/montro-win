@@ -27,7 +27,7 @@ public sealed class PresentationItem : Observable
         get => meta;
         set
         {
-            if (Set(ref meta, value)) Raise(nameof(Subtitle), nameof(Slides));
+            if (Set(ref meta, value)) Raise(nameof(Subtitle), nameof(Slides), nameof(MissingFontsText));
         }
     }
 
@@ -71,6 +71,20 @@ public sealed class PresentationItem : Observable
 
     /// <summary>Name des zugewiesenen Presets der Referent*innenansicht (Abzeichen in der Playlist), null = Standard.</summary>
     public string? PresetName { get => presetName; set => Set(ref presetName, value); }
+
+    /// <summary>Hinweis für das Schrift-Symbol in der Playlist, null = keine Schrift fehlt (Mac: missingFonts).</summary>
+    public string? MissingFontsText
+    {
+        get
+        {
+            var missing = FontCheck.Missing(Meta?.Fonts);
+            return missing.Count == 0 ? null
+                : $"Schrift fehlt auf diesem Rechner: {string.Join(", ", missing.Select(f => f.Name))}. PowerPoint ersetzt sie.";
+        }
+    }
+
+    /// <summary>Nach FontCheck.Reload: Schrift-Symbol neu bewerten.</summary>
+    public void RefreshFonts() => Raise(nameof(MissingFontsText));
 
     public bool IsReady => State == PrepState.Ready;
     public bool IsFailed => State == PrepState.Failed;

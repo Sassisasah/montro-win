@@ -36,7 +36,7 @@ eingearbeitet: Verbund-Dateiabgleich (`GET /api/cluster/manifest`, `GET /api/clu
   `app, api, live, starting, locked, blackout, endBlack, status, presentation, presentationFile,
   presentationIndex, selected, selectedIndex, slide, slideCount, nextSlide, animation,
   animationCount, playlistCount, nextPresentation, transition{style,duration}, playlist[{index,
-  title, slides, live, selected, ready}], timer{text, remaining, elapsed, duration, state, running,
+  title, slides, live, selected, ready, missingFonts[]}], testPattern, timer{text, remaining, elapsed, duration, state, running,
   phase, blink, color}, message{visible, text, blink, presets[]}, video{playing, name, duration,
   remaining, remainingText}, cluster{role, group, name, summary, warning}`.
 - `slide`, `slideCount`, `nextSlide`, `playlist[].slides` zählen **nur sichtbare Folien**.
@@ -55,6 +55,7 @@ eingearbeitet: Verbund-Dateiabgleich (`GET /api/cluster/manifest`, `GET /api/clu
   - `golive/next|previous|prev|<n>`
   - `select/next|previous|prev|<n>`
   - `blackout[/on|/off|/toggle]`
+  - `testpattern[/on|/off|/toggle]` (auch `testbild`)
   - `timer/blink[/on|/off]`
   - `message/blink[/on|/off]`
 - `/api/message` nimmt den Text aus `?text=…`, aus dem JSON-Body `{"text":"…"}` oder aus dem
@@ -84,7 +85,7 @@ von 1,5 s.
 
 | Pfad | Richtung | Inhalt |
 |---|---|---|
-| `POST /api/cluster/command` | Master → Slave, sofort bei Bedienung | `{group, from, fromName, cmd, file?, slide?, on?}`, wobei `cmd` einer der Werte `next, previous, golive, stop, goto, blackout, unlock` ist |
+| `POST /api/cluster/command` | Master → Slave, sofort bei Bedienung | `{group, from, fromName, cmd, file?, slide?, on?}`, wobei `cmd` einer der Werte `next, previous, golive, stop, goto, blackout, unlock, testpattern` ist (`testpattern` mit `on`, Branch `schriften-farben`) |
 | `POST /api/cluster/sync` | Master → Slave, alle 250 ms bei Änderung, sonst jede Sekunde | `{group, from, fromName, live, starting, file?, slide, click, blackout, locked, timer{total, elapsed, state, blink}, message{visible, text, blink}}` |
 | Antwort und `GET /api/cluster` | Slave → Master | `{id, name, role, group, live, file?, slide, blackout, issue?, accepted?}` |
 

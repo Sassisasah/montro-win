@@ -22,6 +22,20 @@
     nächste in der Playlist.
   - Vorschaubilder machen Pause, solange eine Präsentation live geschaltet wird.
 
+## Unveröffentlicht – Branch `schriften-farben` (24.10.2026, Versionsnummer beim Zusammenführen)
+- **Schrift-Check** wie am Mac: Die Analyse liest alle Schriften der Präsentation (Folien, Master,
+  Layouts, Design, Diagramme) und die eingebetteten. Karte **Schriften** im Inspector mit fehlenden
+  Schriften (Foliennummern) und nur eingebetteten, gelbes Schrift-Symbol in der Playlist. Geprüft
+  wird gegen die GDI-Schriftliste (auch nur für die Person installierte Schriften) und die
+  Office-Cloud-Schriften. ↻ liest nach einer Installation neu ein. Remote-API: `missingFonts`.
+- **Farb-Check je Ausgabe:** Ist auf einem Show-Bildschirm HDR bzw. die automatische
+  Farbverwaltung an oder sendet der Ausgang YCbCr statt RGB, steht neben „Ausgabe: …“ ein gelbes
+  Paletten-Symbol mit Hinweis.
+- **Testbild auf Ausgaben** (Paletten-Knopf oben rechts, nur ohne laufende Präsentation): gleiches
+  Bild wie am Mac auf allen Show-Bildschirmen, im Verbund auf allen Rechnern. Unten stehen Rechner,
+  Bildschirm, Signalformat und Bittiefe. Verbund-Befehl `testpattern`, Remote-API
+  `/api/testpattern[/on|/off]`, Stand `testPattern`.
+
 ## 0.6 – 22.10.2026
 - Neu (Branch `meilenstein-7`): Verbund mehrerer Rechner wie am Mac und mit montro für macOS
   mischbar – Master/Slave, Finden per DNS-SD, Befehle und Abgleich, Datei-Abgleich mit Sicherung,

@@ -132,6 +132,7 @@ public partial class MainWindow : Window
             case nameof(AppState.NavigatorItem):
             case nameof(AppState.IsLocked):
                 UpdateNavigatorHint();
+                UpdateFontCard();
                 break;
             case nameof(AppState.CurrentSlide):
                 ScrollNavigatorToCurrent();
@@ -168,6 +169,95 @@ public partial class MainWindow : Window
         NavigatorHint.Text = isLive ? (state.IsLocked ? "gesperrt" : "Klick = springen") : "Doppelklick = ab hier live";
         NavigatorHint.Foreground = (Brush)FindResource(isLive && state.IsLocked ? "Brand.Warning" : "Brand.SecondaryText");
     }
+
+    // MARK: - Schriften-Karte (Mac: FontSection)
+
+    private PresentationItem? fontCardItem;
+
+    /// <summary>
+    /// Schrift-Check der ausgewählten bzw. laufenden Präsentation: fehlende Schriften mit Foliennummern,
+    /// nur eingebettete, darunter die vorhandenen. Fehlt eine Schrift, ersetzt PowerPoint sie still.
+    /// </summary>
+    private void UpdateFontCard()
+    {
+        var item = state.NavigatorItem;
+        if (!ReferenceEquals(item, fontCardItem))
+        {
+            if (fontCardItem != null) fontCardItem.PropertyChanged -= OnFontCardItemChanged;
+            fontCardItem = item;
+            if (item != null) item.PropertyChanged += OnFontCardItemChanged;
+        }
+        FontCardBody.Children.Clear();
+        if (item?.Meta == null)
+        {
+            FontCard.Visibility = Visibility.Collapsed;
+            return;
+        }
+        FontCard.Visibility = Visibility.Visible;
+        if (item.Meta.Fonts is not { } fonts)
+        {
+            FontCardBody.Children.Add(new TextBlock { Text = "Diese Präsentation wurde vor dem Schrift-Check analysiert.", Style = (Style)FindResource("Brand.Caption"), TextWrapping = TextWrapping.Wrap });
+            var again = new Button { Content = "Neu analysieren", Style = (Style)FindResource("Brand.Compact"), HorizontalAlignment = HorizontalAlignment.Left, Margin = new Thickness(0, 6, 0, 0), IsEnabled = item != state.LiveItem };
+            again.Click += (_, _) => state.Regenerate(item);
+            FontCardBody.Children.Add(again);
+            return;
+        }
+        var rows = fonts.Select(f => (Font: f, Availability: FontCheck.Availability(f))).ToList();
+        var problems = rows.Where(r => r.Availability is FontAvailability.Missing or FontAvailability.Embedded).ToList();
+        if (problems.Count == 0)
+        {
+            var ok = new StackPanel { Orientation = Orientation.Horizontal };
+            ok.Children.Add(new TextBlock { Text = "\uE930", Style = (Style)FindResource("Brand.Icon"), Foreground = (Brush)FindResource("Brand.Ok"), Margin = new Thickness(0, 0, 6, 0), VerticalAlignment = VerticalAlignment.Center });
+            ok.Children.Add(new TextBlock { Text = fonts.Count == 0 ? "Keine Schriften angegeben" : $"Alle {fonts.Count} Schriften vorhanden", Foreground = (Brush)FindResource("Brand.Ok") });
+            FontCardBody.Children.Add(ok);
+        }
+        foreach (var (font, availability) in problems)
+        {
+            bool missing = availability == FontAvailability.Missing;
+            var row = new DockPanel { Margin = new Thickness(0, 0, 0, 6) };
+            var icon = new TextBlock
+            {
+                Text = missing ? "\uE7BA" : "\uE7B8",
+                Style = (Style)FindResource("Brand.Icon"),
+                Foreground = (Brush)FindResource(missing ? "Brand.Warning" : "Brand.SecondaryText"),
+                Margin = new Thickness(0, 2, 6, 0),
+                VerticalAlignment = VerticalAlignment.Top,
+            };
+            DockPanel.SetDock(icon, Dock.Left);
+            row.Children.Add(icon);
+            var text = new StackPanel();
+            text.Children.Add(new TextBlock { Text = font.Name, TextTrimming = TextTrimming.CharacterEllipsis });
+            text.Children.Add(new TextBlock { Text = FontDetail(font, missing), Style = (Style)FindResource("Brand.Caption") });
+            row.Children.Add(text);
+            FontCardBody.Children.Add(row);
+        }
+        var present = rows.Where(r => r.Availability is FontAvailability.Installed or FontAvailability.Office).Select(r => r.Font.Name).ToList();
+        if (problems.Count > 0 && present.Count > 0)
+            FontCardBody.Children.Add(new TextBlock { Text = $"Vorhanden: {string.Join(", ", present)}", Style = (Style)FindResource("Brand.Caption"), TextWrapping = TextWrapping.Wrap, Opacity = 0.7 });
+        if (rows.Any(r => r.Availability == FontAvailability.Missing))
+            FontCardBody.Children.Add(new TextBlock { Text = "PowerPoint ersetzt fehlende Schriften. Zeilenumbrüche und Abstände können sich ändern. Schrift installieren, dann ↻.", Style = (Style)FindResource("Brand.Caption"), TextWrapping = TextWrapping.Wrap, Opacity = 0.7, Margin = new Thickness(0, 4, 0, 0) });
+    }
+
+    private static string FontDetail(FontUse font, bool missing)
+    {
+        string place = font.Slides.Count switch
+        {
+            0 => "Master/Layout",
+            <= 6 => "Folie " + string.Join(", ", font.Slides),
+            _ => $"{font.Slides.Count} Folien",
+        };
+        return missing ? $"fehlt · {place}" : $"nur eingebettet · {place}";
+    }
+
+    private void OnFontCardItemChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName is nameof(PresentationItem.Meta) or nameof(PresentationItem.MissingFontsText))
+            Dispatcher.BeginInvoke(new Action(UpdateFontCard));
+    }
+
+    private void OnRecheckFonts(object sender, RoutedEventArgs e) => state.RecheckFonts();
+
+    private void OnTestPattern(object sender, RoutedEventArgs e) => state.SetTestPattern(!state.IsTestPattern);
 
     // MARK: - Video-Karte (Mac: VideoSection)
 

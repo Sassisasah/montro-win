@@ -14,8 +14,15 @@ public sealed record SlideMeta(
     int ClickCount,    // Klick-Animationen der Hauptsequenz
     IReadOnlyList<VideoMeta> Videos);
 
+/// <summary>Eine Schrift, die die Präsentation braucht (Mac: FontUse).</summary>
+public sealed record FontUse(
+    string Name,
+    IReadOnlyList<int> Slides,  // Folien, auf denen sie direkt gesetzt ist; leer = nur Master/Layout/Design/Diagramm
+    bool Embedded);             // in der .pptx eingebettet
+
 /// <summary>Ergebnis des PPTX-Parsers (Mac: PresentationMeta).</summary>
-public sealed record PresentationMeta(IReadOnlyList<SlideMeta> Slides)
+/// <param name="Fonts">Gebrauchte Schriften, null = vor dem Schrift-Check analysiert („Neu analysieren“).</param>
+public sealed record PresentationMeta(IReadOnlyList<SlideMeta> Slides, IReadOnlyList<FontUse>? Fonts = null)
 {
     public SlideMap ToSlideMap() => new(Slides.Select(s => s.Hidden).ToArray());
 
