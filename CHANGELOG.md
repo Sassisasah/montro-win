@@ -1,5 +1,14 @@
 # Änderungsprotokoll
 
+## Unveröffentlicht – Branch companion-verbund
+- Fernsteuerung für den Verbund wie am Mac (für das Companion-Modul): `/api/refresh`
+  („Aktualisieren“), `/api/cluster/detach|rejoin|toggle` am Slave, `/api/slaves/<n>/…` am Master;
+  Status `refresh` und `cluster.slaves`. Während „Aktualisieren“ lehnt die Fernsteuerung Live
+  schalten und Folien-Sprünge ab.
+- Fix „Aktualisieren“: Der Master übernimmt Folie **und** Klickstand des Slaves und springt dabei
+  nur in der eigenen PowerPoint. Vorher bekamen auch die Slaves den Sprung und verloren die schon
+  gelaufenen Animationen der Folie.
+
 ## 0.6 – 22.10.2026
 - Neu (Branch `meilenstein-7`): Verbund mehrerer Rechner wie am Mac und mit montro für macOS
   mischbar – Master/Slave, Finden per DNS-SD, Befehle und Abgleich, Datei-Abgleich mit Sicherung,

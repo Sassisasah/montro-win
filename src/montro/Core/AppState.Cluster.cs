@@ -58,12 +58,30 @@ public sealed partial class AppState
         try
         {
             await StartShow(item, slide);
-            // Slaves haben inzwischen evtl. weitergeklickt → deren Position übernehmen
-            if (await Cluster.SlavePosition(file) is var (s, _) && IsShowRunning && s != CurrentSlide)
+            // Slaves haben inzwischen evtl. weitergeklickt → Folie und Klickstand übernehmen. Nur hier in
+            // PowerPoint, nicht an den Verbund: ein weitergegebener Sprung würde die Slaves an den
+            // Folienanfang setzen und ihre schon gelaufenen Animationen zurücknehmen (Mac: genauso).
+            if (await Cluster.SlavePosition(file) is (int s, int c) && IsShowRunning && (s != CurrentSlide || c != ClickInSlide))
             {
-                DebugLog.Write($"Aktualisieren: Slave steht auf Folie {s} – übernehme");
-                Jump(s);
+                DebugLog.Write($"Aktualisieren: übernehme Position des Slaves – Folie {s}, Klick {c}");
+                if (s != CurrentSlide && LiveItem?.Slide(s) != null)
+                {
+                    await ppt.GotoAsync(s);
+                    CurrentSlide = s;
+                    ClickInSlide = 0;
+                }
+                int clicks = Math.Min(c, LiveItem?.Slide(CurrentSlide)?.ClickCount ?? 0);
+                while (ClickInSlide < clicks)
+                {
+                    await ppt.NextAsync();
+                    ClickInSlide++;
+                }
             }
+        }
+        catch (Exception e)
+        {
+            // async void: ein Fehler beim Nachklicken darf die App nicht beenden
+            DebugLog.Write($"Aktualisieren: Position übernehmen fehlgeschlagen – {e.Message}");
         }
         finally
         {
