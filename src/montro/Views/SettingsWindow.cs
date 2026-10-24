@@ -58,7 +58,14 @@ public sealed class SettingsWindow : Window
         var root = new StackPanel { Margin = new Thickness(16) };
         root.Children.Add(new Border { Style = (Style)FindResource("Brand.Card"), Child = card });
         root.Children.Add(new ClusterSection(state));
-        root.Children.Add(close);
+        var about = new Button { Content = "Über montro …", Style = (Style)FindResource("Brand.Compact"), Margin = new Thickness(0, 12, 0, 0) };
+        about.Click += (_, _) => new AboutWindow { Owner = this }.ShowDialog();
+        var bottom = new DockPanel();
+        DockPanel.SetDock(close, Dock.Right);
+        bottom.Children.Add(close);
+        about.HorizontalAlignment = HorizontalAlignment.Left;
+        bottom.Children.Add(about);
+        root.Children.Add(bottom);
         Content = new ScrollViewer { VerticalScrollBarVisibility = ScrollBarVisibility.Auto, Content = root };
         Width = 600;
         MaxHeight = SystemParameters.WorkArea.Height - 40;

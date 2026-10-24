@@ -475,6 +475,8 @@ public partial class MainWindow : Window
         menu.Items.Add(Entry("Show mit Präsentationen sichern …", null, SaveShowWithPresentations, free));
         menu.Items.Add(new Separator());
         menu.Items.Add(Entry("Fehlende Dateien suchen …", null, LocateMissing, state.Items.Any(i => !File.Exists(i.Path))));
+        menu.Items.Add(new Separator());
+        menu.Items.Add(Entry("Über montro …", null, () => new AboutWindow { Owner = this }.ShowDialog()));
         menu.IsOpen = true;
     }
 

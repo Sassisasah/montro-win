@@ -1,0 +1,20 @@
+<Project Sdk="WixToolset.Sdk/5.0.2">
+  <!--
+    Installer (MSI) für montro: nimmt das eigenständige Ergebnis von
+    `dotnet publish … -o publish` aus dem Repo-Stamm. Bauen:
+      dotnet build installer/montro.wixproj -c Release -p:ProductVersion=0.7.0
+    Ergebnis: installer/bin/Release/montro-<version>-win-x64.msi
+  -->
+  <PropertyGroup>
+    <OutputName>montro-$(ProductVersion)-win-x64</OutputName>
+    <ProductVersion Condition="'$(ProductVersion)' == ''">0.0.0</ProductVersion>
+    <PublishDir Condition="'$(PublishDir)' == ''">$(MSBuildThisFileDirectory)..\publish\</PublishDir>
+    <DefineConstants>ProductVersion=$(ProductVersion);PublishDir=$(PublishDir)</DefineConstants>
+    <InstallerPlatform>x64</InstallerPlatform>
+    <SuppressValidation>false</SuppressValidation>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="WixToolset.Firewall.wixext" Version="5.0.2" />
+    <PackageReference Include="WixToolset.UI.wixext" Version="5.0.2" />
+  </ItemGroup>
+</Project>

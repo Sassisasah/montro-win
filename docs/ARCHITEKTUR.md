@@ -36,7 +36,9 @@ Der Vertrag dafür steht in [KOMPATIBILITAET.md](KOMPATIBILITAET.md).
 | `src/montro/Cluster/FileSync.cs` | Datei-Abgleich: Prüfsummen, Laden, Ersetzen mit Sicherung, Bereitlegen, Abkoppeln (Mac: `FileSync.swift`) |
 | `src/montro/Core/AppState.Cluster.cs` | Anbindung: Bediensperre, Weitergabe, „Aktualisieren“ |
 | `src/montro/Views/ClusterSection.cs` | Einstellungen › Verbund (Mac: `ClusterSection`) |
-| `src/montro/Remote/RemoteApi.cs` | Fernsteuerung per HTTP/JSON auf `TcpListener` (Mac: `RemoteAPI.swift`, `docs/REMOTE-API.md` im Mac-Repo), ohne Verbund-Teil |
+| `src/montro/Remote/RemoteApi.cs` | Fernsteuerung per HTTP/JSON auf `TcpListener` (Mac: `RemoteAPI.swift`, `docs/REMOTE-API.md` im Mac-Repo), mit Verbund-Pfaden `/api/cluster…` |
+| `installer/Package.wxs`, `installer/montro.wixproj` | Installer (WiX 5, MSI): Dateien aus `publish`, Startmenü, Firewall-Regel, `.montro`-Zuordnung, „Öffnen mit“ |
+| `src/montro/Views/AboutWindow.cs` | Info-Fenster „Über montro“ (Mac: `AboutPanel`) |
 | `src/montro/Core/AppState.Remote.cs` | Einstellungen der Fernsteuerung (an/aus, Port, nur lokal) |
 | `src/montro/Views/SettingsWindow.cs` | Einstellungen › Fernsteuerung (Mac: `RemoteAPISection`) |
 | `src/montro/Core/ShowFile.cs` | Show-Datei `.montro` (JSON, Format wie `docs/SHOW-FORMAT.md` im Mac-Repo), Umwandlung der Farben `#RRGGBBAA` ↔ WPF `#AARRGGBB` |
@@ -248,5 +250,5 @@ Fremdbibliothek. Zählweise absichtlich wie am Mac:
    Video-Karte, „In PowerPoint bearbeiten“, Show-Dateien ✓ (22.10.2026, Branch `meilenstein-4`)
 5. Remote-API 1:1, Test mit dem Companion-Modul ✓ (22.10.2026)
 6. *(in 4 enthalten)*
-7. Verbund (DNS-SD und Sync, „Aktualisieren“), gemischter Test mit dem Mac ← **in Arbeit** (Branch `meilenstein-7`)
-8. Installer mit Firewall-Regel, Info-Fenster, Version aus CHANGELOG
+7. Verbund (DNS-SD und Sync, „Aktualisieren“), gemischter Test mit dem Mac ✓ (22.–24.10.2026, „Aktualisieren“ erneut zu prüfen)
+8. Installer (WiX, MSI) mit Firewall-Regel, Info-Fenster, Version aus `montro.csproj` ← **in Arbeit** (Branch `meilenstein-8`)

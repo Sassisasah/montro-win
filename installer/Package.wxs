@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  montro für Windows – Installer (WiX 5).
+  - Installiert nach „C:\Programme\montro“ (für alle Benutzer), Eintrag im Startmenü.
+  - Firewall-Regel für montro.exe (Fernsteuerung/Companion und Verbund, Port 8765, alle Netzprofile).
+  - Show-Dateien .montro öffnen sich mit montro (Doppelklick), PowerPoint-Dateien bekommen
+    „Öffnen mit › montro“.
+  - Neuere Versionen ersetzen ältere (MajorUpgrade); Einstellungen und Playlist bleiben erhalten
+    (liegen in %APPDATA%\montro bzw. %LOCALAPPDATA%\montro).
+-->
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
+     xmlns:fw="http://wixtoolset.org/schemas/v4/wxs/firewall"
+     xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui">
+  <Package Name="montro"
+           Manufacturer="movidal"
+           Version="$(var.ProductVersion)"
+           UpgradeCode="6B7E2C41-9D3A-4F58-A1C2-5E0F8D7B3A90"
+           Scope="perMachine"
+           Language="1031"
+           Codepage="1252">
+    <SummaryInformation Description="montro – Präsentations-Player für Bühne und Regie" Manufacturer="movidal" />
+    <MajorUpgrade DowngradeErrorMessage="Eine neuere Version von montro ist bereits installiert." />
+    <MediaTemplate EmbedCab="yes" />
+
+    <Icon Id="montro.ico" SourceFile="..\src\montro\Resources\montro.ico" />
+    <Property Id="ARPPRODUCTICON" Value="montro.ico" />
+    <Property Id="ARPURLINFOABOUT" Value="https://github.com/Sassisasah/montro-win" />
+
+    <StandardDirectory Id="ProgramFiles64Folder">
+      <Directory Id="INSTALLFOLDER" Name="montro" />
+    </StandardDirectory>
+    <StandardDirectory Id="ProgramMenuFolder" />
+
+    <Feature Id="Main" Title="montro" Level="1">
+      <!-- alle Dateien aus dem eigenständigen Publish-Ordner -->
+      <Files Directory="INSTALLFOLDER" Include="$(var.PublishDir)**">
+        <Exclude Files="$(var.PublishDir)montro.exe" />
+        <Exclude Files="$(var.PublishDir)**\*.pdb" />
+      </Files>
+      <ComponentRef Id="MainExe" />
+    </Feature>
+
+    <DirectoryRef Id="INSTALLFOLDER">
+      <Component Id="MainExe" Guid="8E2B6A4C-3F1D-4B7E-9C05-2A6D1E8F4B13">
+        <File Id="montroExe" Source="$(var.PublishDir)montro.exe" KeyPath="yes">
+          <!-- Fernsteuerung und Verbund: eingehend erlauben (sonst fragt Windows bzw. blockiert im öffentlichen Netz) -->
+          <fw:FirewallException Id="montroFirewall" Name="montro (Fernsteuerung und Verbund)" Scope="any" Profile="all" />
+          <!-- Startmenü-Eintrag für alle Benutzer -->
+          <Shortcut Id="StartMenuShortcut" Directory="ProgramMenuFolder" Name="montro" Advertise="yes"
+                    Description="Präsentations-Player für Bühne und Regie" WorkingDirectory="INSTALLFOLDER" Icon="montro.ico" />
+        </File>
+
+        <!-- Show-Dateien .montro -->
+        <ProgId Id="movidal.montro.show" Description="montro-Show" Icon="montroExe" IconIndex="0">
+          <Extension Id="montro" ContentType="application/vnd.movidal.montro+json">
+            <Verb Id="open" Command="Öffnen" TargetFile="montroExe" Argument="&quot;%1&quot;" />
+          </Extension>
+        </ProgId>
+
+        <!-- „Öffnen mit › montro“ für PowerPoint-Dateien (ohne PowerPoint als Standard zu ersetzen) -->
+        <RegistryValue Root="HKLM" Key="SOFTWARE\Classes\Applications\montro.exe\shell\open\command" Value="&quot;[INSTALLFOLDER]montro.exe&quot; &quot;%1&quot;" Type="string" />
+        <RegistryValue Root="HKLM" Key="SOFTWARE\Classes\Applications\montro.exe\SupportedTypes" Name=".pptx" Value="" Type="string" />
+        <RegistryValue Root="HKLM" Key="SOFTWARE\Classes\Applications\montro.exe\SupportedTypes" Name=".pptm" Value="" Type="string" />
+        <RegistryValue Root="HKLM" Key="SOFTWARE\Classes\Applications\montro.exe\SupportedTypes" Name=".ppsx" Value="" Type="string" />
+        <RegistryValue Root="HKLM" Key="SOFTWARE\Classes\Applications\montro.exe\SupportedTypes" Name=".ppsm" Value="" Type="string" />
+        <RegistryValue Root="HKLM" Key="SOFTWARE\Classes\Applications\montro.exe\SupportedTypes" Name=".montro" Value="" Type="string" />
+        <RegistryValue Root="HKLM" Key="SOFTWARE\Classes\.pptx\OpenWithList\montro.exe" Value="" Type="string" />
+        <RegistryValue Root="HKLM" Key="SOFTWARE\Classes\.pptm\OpenWithList\montro.exe" Value="" Type="string" />
+        <RegistryValue Root="HKLM" Key="SOFTWARE\Classes\.ppsx\OpenWithList\montro.exe" Value="" Type="string" />
+        <RegistryValue Root="HKLM" Key="SOFTWARE\Classes\.ppsm\OpenWithList\montro.exe" Value="" Type="string" />
+      </Component>
+    </DirectoryRef>
+
+
+    <!-- einfache Oberfläche: Willkommen, Zielordner, Installieren -->
+    <ui:WixUI Id="WixUI_InstallDir" InstallDirectory="INSTALLFOLDER" />
+    <WixVariable Id="WixUILicenseRtf" Value="Lizenz.rtf" />
+  </Package>
+</Wix>

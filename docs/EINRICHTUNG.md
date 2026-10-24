@@ -37,9 +37,19 @@ Getestet wird mit dem Laptop und zwei externen Bildschirmen (Publikum, Referent*
 
 ## Show-Rechner
 
-Der Installer folgt mit Meilenstein 8. Er legt auch die Firewall-Regel für Port 8765 an
-(Privat/Domäne). Bis dahin genügt das Artefakt `montro-win-x64` aus GitHub Actions: entpacken
-und `montro.exe` starten.
+**Installer:** `montro-<version>-win-x64.msi` aus den
+[Releases](https://github.com/Sassisasah/montro-win/releases) (oder als Artefakt `montro-msi` aus
+GitHub Actions) per Doppelklick installieren – braucht einmal Admin-Rechte. Er installiert nach
+„Programme\montro“ mit Startmenü-Eintrag, legt die Firewall-Freigabe für montro an (Fernsteuerung
+und Verbund, alle Netzprofile – auch „Öffentlich“, das Windows oft für unbekannte Netze wählt),
+öffnet `.montro`-Shows per Doppelklick und ergänzt „Öffnen mit › montro“ für PowerPoint-Dateien.
+Ein Update installiert man genauso; Einstellungen und Playlist bleiben erhalten. Ohne Installation
+geht weiterhin das Artefakt `montro-win-x64`: entpacken und `montro.exe` starten (dann fragt die
+Firewall beim ersten Start).
+
+Selbst bauen: `dotnet publish src/montro/montro.csproj -c Release -r win-x64 --self-contained true
+-o publish`, danach `dotnet build installer/montro.wixproj -c Release -p:ProductVersion=0.7.0`
+(holt WiX 5 über NuGet) → `installer/bin/Release/montro-0.7.0-win-x64.msi`.
 
 - SmartScreen warnt vorerst („Unbekannter Herausgeber“), weil es noch kein
   Code-Signing-Zertifikat gibt. Dann „Weitere Informationen“ › „Trotzdem ausführen“.

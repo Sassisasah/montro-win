@@ -1,5 +1,14 @@
 # Änderungsprotokoll
 
+## 0.7 – 24.10.2026
+- Neu (Branch `meilenstein-8`): Installer (MSI) – installiert nach „Programme\montro“ mit
+  Startmenü-Eintrag, richtet die Firewall-Freigabe für Fernsteuerung und Verbund ein, öffnet
+  .montro-Shows per Doppelklick und ergänzt „Öffnen mit › montro“ für PowerPoint-Dateien. Updates
+  ersetzen die alte Version, Einstellungen bleiben erhalten.
+- Neu: Info-Fenster „Über montro“ (Menü „Show“ und Einstellungen).
+- GitHub baut bei jedem Push App und Installer; ein Tag `v<version>` erzeugt ein Release.
+- Behoben: „Aktualisieren“ im Verbund legte die neue Version nur erneut bereit, statt sie zu laden.
+
 ## 0.6 – 22.10.2026
 - Neu (Branch `meilenstein-7`): Verbund mehrerer Rechner wie am Mac und mit montro für macOS
   mischbar – Master/Slave, Finden per DNS-SD, Befehle und Abgleich, Datei-Abgleich mit Sicherung,
