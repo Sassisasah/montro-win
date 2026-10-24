@@ -423,12 +423,13 @@ public sealed class FileSync : Observable
     // MARK: - Einspielen
 
     /// <summary>Neue Version einspielen – oder bereitlegen, wenn die Datei gerade live bzw. ungesichert offen ist.</summary>
-    public async Task Install(string key, string name, string file, string sha256, long size, string source)
+    /// <param name="force">„Aktualisieren“: auch die gerade laufende Datei ersetzen (die Show wird dafür geschlossen und gleich neu gestartet)</param>
+    public async Task Install(string key, string name, string file, string sha256, long size, string source, bool force = false)
     {
         var version = new StagedVersion(file, name, sha256, size, source);
         if (ItemForKey(key) is { } item)
         {
-            if (IsLive(item))
+            if (IsLive(item) && !force)
             {
                 Stage(key, version, "läuft gerade");
                 return;
@@ -439,7 +440,7 @@ public sealed class FileSync : Observable
                 Stage(key, version, "in PowerPoint mit ungesicherten Änderungen geöffnet");
                 return;
             }
-            if (IsLive(item))
+            if (IsLive(item) && !force)
             {
                 Stage(key, version, "läuft gerade");
                 return;
@@ -504,11 +505,11 @@ public sealed class FileSync : Observable
     }
 
     /// <summary>Bereitliegende Version einer Präsentation einspielen (vor dem Live-Schalten). true = übernommen.</summary>
-    public async Task<bool> ApplyStaged(PresentationItem item)
+    public async Task<bool> ApplyStaged(PresentationItem item, bool force = false)
     {
         string key = Key(item);
         if (!staged.Remove(key, out var v)) return false;
-        await Install(key, v.Name, v.File, v.Sha256, v.Size, v.Source);
+        await Install(key, v.Name, v.File, v.Sha256, v.Size, v.Source, force);
         return !staged.ContainsKey(key);
     }
 

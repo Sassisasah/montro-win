@@ -555,8 +555,12 @@ public sealed partial class AppState : Observable
     private async Task StartShow(PresentationItem item, int? startAt = null)
     {
         if (IsStarting) return;
-        // bereitliegende neue Version (Verbund) einspielen, frisch gespeicherte Änderungen analysieren
-        await FileSync.ApplyStaged(item);
+        // bereitliegende neue Version (Verbund) einspielen, frisch gespeicherte Änderungen analysieren.
+        // Läuft genau diese Präsentation („Aktualisieren“), wird ihre Show dafür geschlossen – das
+        // Show-Ende soll dann nicht als „in PowerPoint beendet“ gelten, sie startet gleich neu.
+        replacingLive = item == LiveItem && FileSync.StagedVersion(item) != null;
+        try { await FileSync.ApplyStaged(item, force: true); }
+        finally { replacingLive = false; }
         if (!File.Exists(item.Path))
         {
             ErrorRaised?.Invoke($"Die Datei „{Path.GetFileName(item.Path)}“ wurde nicht gefunden.");
@@ -923,9 +927,12 @@ public sealed partial class AppState : Observable
         if (!IsEndBlack) IsBlackout = s.IsBlack;
     }
 
+    private bool replacingLive;
+
     private void OnShowEnded()
     {
-        if (IsShowRunning) MarkStopped("Präsentation wurde in PowerPoint beendet");
+        // nicht beim „Aktualisieren“: dort wird die Show absichtlich geschlossen und gleich neu gestartet
+        if (IsShowRunning && !replacingLive && !IsStarting) MarkStopped("Präsentation wurde in PowerPoint beendet");
     }
 
     // MARK: - Takt, Laden, Speichern

@@ -87,6 +87,9 @@ public sealed partial class AppState
     /// <summary>Nach dem Ersetzen durch eine neue Version: Ausgangsstand merken, neu analysieren.</summary>
     public void AdoptNewVersion(PresentationItem item)
     {
+        // Beim „Aktualisieren“ der laufenden Präsentation keine Vorschaubilder jetzt (PowerPoint öffnet
+        // die Datei gleich für die Show) – RefreshIfChanged analysiert sie vor dem Start, Bilder nach dem Stopp.
+        if (item == LiveItem) return;
         if (Stamp(item.Path) is { } s) baselines[item.Id] = s;
         candidates.Remove(item.Id);
         Regenerate(item);
