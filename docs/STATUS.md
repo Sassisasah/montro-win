@@ -21,8 +21,13 @@
     verbunden“, PC „Master · 1/1 Slave(s) synchron“. Über die Fernsteuerung des PCs: live, Gehe zu
     Folie 3 + weiter, Blackscreen, Regie-Nachricht, Timer (beide „06:58“), nächste Präsentation,
     Stopp – der Mac folgt jedes Mal.
-  - Noch offen: Abkoppeln/Wiederverbinden mit Übergabe einer geänderten Datei, „Aktualisieren“
-    (neue Version während der Show).
+  - Abkoppeln am Mac (Slave), Testdeck bearbeiten, live, „Wieder in den Verbund“: Der PC (Master)
+    holt die angebotene neue Version und legt sie bereit, weil sie dort live ist (Log 22.10.,
+    17:10). Von der Nutzerin bestätigt: „Verbund, abkoppeln und wieder reinschalten haben
+    funktioniert“.
+  - „Aktualisieren“ am PC legte die Version nur erneut bereit (Datei war noch live) – behoben:
+    Show wird dafür geschlossen, Datei ersetzt, an gleicher Folie neu gestartet. Erneuter Test mit
+    dem Mac steht aus.
 
 - **22.10.2026** – Meilenstein 5, Remote-API am Test-PC mit `curl` (nur lokal, 127.0.0.1:8765):
   `/api/state` vollständig wie am Mac; `select/2`, `message?text=…` (sichtbar), `timer/duration/20`
