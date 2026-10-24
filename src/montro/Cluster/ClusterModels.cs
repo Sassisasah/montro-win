@@ -46,6 +46,8 @@ public sealed class ClusterPeer
     public int Slide { get; set; }
     public bool Blackout { get; set; }
     public string? Issue { get; set; }
+    /// <summary>Slave ist zeitweise abgekoppelt (zum Bearbeiten)</summary>
+    public bool Detached { get; set; }
     /// <summary>null = unbekannt / nicht relevant</summary>
     public bool? InSync { get; set; }
 

@@ -38,7 +38,15 @@ eingearbeitet: Verbund-Dateiabgleich (`GET /api/cluster/manifest`, `GET /api/clu
   animationCount, playlistCount, nextPresentation, transition{style,duration}, playlist[{index,
   title, slides, live, selected, ready, missingFonts[]}], testPattern, timer{text, remaining, elapsed, duration, state, running,
   phase, blink, color}, message{visible, text, blink, presets[]}, video{playing, name, duration,
-  remaining, remainingText}, cluster{role, group, name, summary, warning}`.
+  remaining, remainingText}, cluster{role, group, name, summary, warning, detached,
+  pendingHandovers, masterReachable, slaves[{index, name, host, reachable, live, file, slide,
+  blackout, inSync, detached, issue}]}, refresh{available, running, name, source}`.
+- **Verbund per Fernsteuerung** (Branch `companion-verbund`, beide Plattformen gleich):
+  `/api/refresh` (Alias `aktualisieren`) – „Aktualisieren“, Fehler „keine neue Version bereit“ bzw.
+  „keine Präsentation live“; `/api/cluster/detach|rejoin|toggle` nur am Slave („dieser Rechner ist
+  kein Slave“); `/api/slaves/<n|all>/detach|rejoin|toggle` (Alias `slave`) nur am Master, ruft
+  `/api/cluster/…` am Slave auf. Während „Aktualisieren“ lehnen `golive` und `goto` mit „Aktualisieren
+  läuft – bitte kurz warten“ ab.
 - `slide`, `slideCount`, `nextSlide`, `playlist[].slides` zählen **nur sichtbare Folien**.
   Die Indizes sind 1-basiert, und 0 bedeutet „keine“.
 - Die Werte für `timer.state` sind `stopped|running|paused`, für `timer.phase`

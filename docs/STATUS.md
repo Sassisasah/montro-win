@@ -194,8 +194,8 @@
 ## Offen
 
 - **24.10.2026** – Updatepaket 0.8 (Branch `updatepaket`): `meilenstein-8` (Installer, enthält
-  `meilenstein-7`) mit `schneller-umschalten`, `schriften-farben` und `vorschau-cache`
-  zusammengeführt. Konflikte gab es nur im CHANGELOG, in dieser Datei und in `AppState.cs`
+  `meilenstein-7`) mit `schneller-umschalten`, `schriften-farben`, `vorschau-cache` und
+  `companion-verbund` zusammengeführt. Konflikte gab es nur im CHANGELOG, in dieser Datei und in `AppState.cs`
   (Zeitmessung + „Aktualisieren“ beim Start, Schrift-Check + Vorschau-Cache beim Vorbereiten). Am
   Test-PC prüfen: MSI 0.8 über eine installierte 0.7 installieren, danach die Punkte der drei
   Branches unten und einmal den Verbund mit dem Mac (Aktualisieren, Abkoppeln). Mit dem Mac
@@ -228,6 +228,12 @@
      öffnen → sofort bereit.
   9. Show auf schreibgeschütztem USB-Stick öffnen → läuft, Vorschauen landen lokal.
   10. Vorschaubilder (JPEG) in Playlist und Referent*innenansicht scharf genug?
+
+- **24.10.2026** – Branch `companion-verbund` (auf `meilenstein-7`): Fernsteuerung für den Verbund
+  wie am Mac (`/api/refresh`, `/api/cluster/detach|rejoin|toggle`, `/api/slaves/<n>/…`, Status
+  `refresh` und `cluster.slaves`). „Aktualisieren“ übernimmt jetzt Folie **und** Klickstand des
+  Slaves und springt dafür nur lokal – vorher ging der Sprung an die Slaves und setzte deren
+  Animationen zurück. Am Gerät ungetestet.
 - PowerPoint ohne Lizenz: lässt sich auf dem Test-PC nicht nachstellen.
 - **22.10.2026** – Meilenstein 4, Etappe 3: Referent*innenansicht auf dem zweiten Verbatim mit
   Timer-Blinken und Ende auf Schwarz prüfen; Popup-Modus (links

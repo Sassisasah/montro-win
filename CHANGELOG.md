@@ -2,8 +2,8 @@
 
 ## 0.8 – 24.10.2026
 Updatepaket: Installer und Verbund (0.7) mit den Branches `schneller-umschalten`,
-`schriften-farben` und `vorschau-cache` zusammengeführt (Branch `updatepaket`). Die drei neuen Teile
-sind am Gerät noch ungetestet. Ersetzt eine installierte 0.7.
+`schriften-farben`, `vorschau-cache` und `companion-verbund` zusammengeführt (Branch
+`updatepaket`). Die neuen Teile sind am Gerät noch ungetestet. Ersetzt eine installierte 0.7.
 
 **Schneller umschalten**
 - Neu (am Gerät noch ungetestet): schneller live schalten.
@@ -51,6 +51,15 @@ sind am Gerät noch ungetestet. Ersetzt eine installierte 0.7.
   Vorschauen. Eine während des Betriebs geänderte Datei galt nach dem Neustart als aktuell.
 - Cache-Einträge von vor dem Schrift-Check (auch die nach dem Update übernommenen) bekommen einmal
   eine neue Analyse mit Schriften; die Vorschaubilder bleiben, PowerPoint wird dafür nicht gebraucht.
+
+**Verbund fernsteuern (Companion)**
+- Fernsteuerung für den Verbund wie am Mac (für das Companion-Modul): `/api/refresh`
+  („Aktualisieren“), `/api/cluster/detach|rejoin|toggle` am Slave, `/api/slaves/<n>/…` am Master;
+  Status `refresh` und `cluster.slaves`. Während „Aktualisieren“ lehnt die Fernsteuerung Live
+  schalten und Folien-Sprünge ab.
+- Fix „Aktualisieren“: Der Master übernimmt Folie **und** Klickstand des Slaves und springt dabei
+  nur in der eigenen PowerPoint. Vorher bekamen auch die Slaves den Sprung und verloren die schon
+  gelaufenen Animationen der Folie.
 
 ## 0.7 – 24.10.2026
 - Neu (Branch `meilenstein-8`): Installer (MSI) – installiert nach „Programme\montro“ mit
