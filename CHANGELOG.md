@@ -1,14 +1,20 @@
 # Änderungsprotokoll
 
 ## Unveröffentlicht – Branch `vorschau-cache` (24.10.2026, Versionsnummer beim Zusammenführen)
-- Neu: Vorschau-Cache nach Dateiinhalt. Analyse und Vorschaubilder liegen
-  unter der SHA-256-Prüfsumme in `%LOCALAPPDATA%\montro\cache\<Prüfsumme>` statt je
-  Playlist-Eintrag. Show öffnen, Entfernen und wieder Hinzufügen, Verschieben, „Fehlende Dateien
-  suchen“ oder eine gleiche Kopie aus dem Verbund rendern nicht mehr neu. Nur geänderte Zeit ohne
-  geänderten Inhalt (Kopie, Cloud-Abgleich) ebenfalls nicht.
-- Vorhandene Vorschaubilder werden nach dem Update einmalig in den Cache übernommen, ohne Rendern.
-- Aufräumen: Einträge, die keine Playlist benutzt, nach 60 Tagen bzw. ab 5 GB (älteste zuerst).
-- „Neu analysieren & Vorschaubilder erzeugen“ verwirft den Cache-Eintrag und rendert wirklich neu.
+- Neu: Vorschau-Cache nach Dateiinhalt. Analyse und Vorschaubilder liegen unter der
+  SHA-256-Prüfsumme statt je Playlist-Eintrag: bei einer gesicherten Show im Ordner
+  `montro-Analyse` neben der `.montro`-Datei (reist mit der Show, verschwindet mit ihr), sonst und
+  bei schreibgeschütztem Show-Ordner lokal in `%LOCALAPPDATA%\montro\cache`. Show öffnen, Entfernen
+  und wieder Hinzufügen, Verschieben, „Fehlende Dateien suchen“ oder eine gleiche Kopie aus dem
+  Verbund rendern nicht mehr neu. Nur geänderte Zeit ohne geänderten Inhalt (Kopie,
+  Cloud-Abgleich) ebenfalls nicht.
+- Vorschaubilder als JPEG statt PNG (etwa ein Fünftel des Platzes).
+- Show-Dateien enthalten die Prüfsumme je Präsentation (`sha256`). Beim Sichern holt montro die
+  Einträge der Playlist zur Show und löscht dort, was keine Show im selben Ordner mehr braucht.
+- Vorhandene Vorschaubilder werden nach dem Update einmalig übernommen, ohne Rendern.
+- Lokale Ausweiche: höchstens 1 GB; Einträge, die keine Playlist benutzt, nach 60 Tagen bzw.
+  darüber (älteste zuerst) gelöscht.
+- „Neu analysieren & Vorschaubilder erzeugen“ verwirft den Eintrag und rendert wirklich neu.
 - Behoben: Der Zustand merkte sich die aktuelle Änderungszeit der Datei statt der beim Erzeugen der
   Vorschauen. Eine während des Betriebs geänderte Datei galt nach dem Neustart als aktuell.
 

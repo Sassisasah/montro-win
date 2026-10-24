@@ -14,7 +14,9 @@ wenn die Ende-Sperre greift).
   Nur `.pptx .pptm .ppsx .ppsm`; eine alte `.ppt` wird mit Hinweis abgelehnt. montro liest jede
   Datei (Folien, ausgeblendet, Videos) und erzeugt Vorschaubilder. Der grüne Haken heißt
   „bereit“. Eine Datei, die montro schon kennt (gleicher Inhalt, auch unter anderem Namen oder
-  aus einer anderen Show), ist sofort bereit – montro merkt sich Vorschauen nach dem Inhalt.
+  aus einer anderen Show), ist sofort bereit – montro merkt sich Vorschauen nach dem Inhalt. Bei
+  einer gesicherten Show liegen sie im Ordner `montro-Analyse` neben der Show-Datei und reisen mit
+  ihr auf andere Rechner; den Ordner nicht löschen, sonst rendert montro neu.
 - **Playlist:** Doppelklick = live schalten. Reihenfolge per Ziehen. Rechtsklick: Live
   schalten, In PowerPoint bearbeiten, Im Explorer zeigen, Neu analysieren & Vorschaubilder
   erzeugen (rendert wirklich neu, auch wenn die Datei bekannt ist), Referent*innenansicht (Preset zuweisen), Aus Playlist entfernen (auch Entf). Die

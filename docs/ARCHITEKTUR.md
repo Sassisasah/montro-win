@@ -196,15 +196,22 @@ Fremdbibliothek. Zählweise absichtlich wie am Mac:
 - **Vorschaubilder für die Playlist:** `ExportFileThumbnailsAsync` öffnet eine eigene
   schreibgeschützte Kopie (oder benutzt die schon offene, ohne sie zu schließen), exportiert nach
   `%TEMP%` und verschiebt dann in den Vorschau-Cache. Laufende Shows bleiben unberührt.
-- **Vorschau-Cache (`Core/PreviewCache.cs`, Branch `vorschau-cache`):** Analyse und Vorschaubilder liegen nach
-  Dateiinhalt unter `%LOCALAPPDATA%\montro\cache\<SHA-256>\` (`analyse.json` + `slide-<n>.png`),
-  nicht mehr je Playlist-Eintrag. `Prepare` prüft erst die Prüfsumme (dieselbe wie im Verbund) und
-  rendert nur bei unbekanntem Inhalt. Beim Start gilt ein Eintrag ohne Prüfung als bereit, wenn
-  Größe und Änderungszeit denen beim Erzeugen entsprechen (`SavedItem.FileSize/FileTime`).
-  Aufräumen nach `PrepareAll`: unbenutzte Einträge nach 60 Tagen bzw. über 5 GB (Ordner-Zeit =
-  zuletzt benutzt). Alte Ordner `thumbs\<ID>` übernimmt `MoveToCache` einmalig; verwaiste löscht
-  montro beim Start. `analyse.json` ist die Vorstufe der gemeinsamen Analysedatei für Mac und
-  Windows (Konzept „Weitere Präsentationsformate“).
+- **Vorschau-Cache (`Core/PreviewCache.cs`, Branch `vorschau-cache`):** Analyse und Vorschaubilder
+  liegen nach Dateiinhalt in `<Lager>\<SHA-256>\windows\` (`analyse.json` + `slide-<n>.jpg`;
+  der Mac legt `…/<SHA-256>/mac/` daneben, weil beide Schriften anders rendern). Lager = Ordner
+  `montro-Analyse` neben der aktuellen Show-Datei, wenn beschreibbar (Probe-Datei), sonst die
+  lokale Ausweiche `%LOCALAPPDATA%\montro\cache`. `TryLoad` sucht erst bei der Show, dann lokal;
+  ein lokaler Treffer wird zur Show kopiert und lokal gelöscht. `Prepare` prüft erst die
+  Prüfsumme (dieselbe wie im Verbund) und rendert nur bei unbekanntem Inhalt. Beim Start gilt ein
+  Eintrag ohne Prüfung als bereit, wenn Größe und Änderungszeit denen beim Erzeugen entsprechen
+  (`SavedItem.FileSize/FileTime`).
+- **Aufräumen:** Beim Sichern einer Show schreibt `MakeShow` die Prüfsumme je Präsentation
+  (`sha256`), `SyncShowStore` holt die Einträge der Playlist in `montro-Analyse` und löscht dort
+  alles, was keine `.montro`-Datei im selben Ordner mehr nennt (mehrere Shows dürfen sich den
+  Ordner teilen). Die lokale Ausweiche räumt `PreviewCache.Clean` nach `PrepareAll` auf:
+  unbenutzte Einträge nach 60 Tagen bzw. über 1 GB, älteste zuerst. Alte Ordner `thumbs\<ID>`
+  übernimmt `MoveToCache` einmalig; verwaiste löscht montro beim Start. `analyse.json` ist die
+  Vorstufe der gemeinsamen Analysedatei (Konzept „Weitere Präsentationsformate“).
 - **Oberfläche testen ohne Maus:** WPF stellt alle Knöpfe und Listen über UI Automation bereit.
   Damit lässt sich das Hauptfenster aus einem Skript bedienen (Eintrag wählen, „Ausgewählte live
   schalten“, „Weiter“, Statuszeile lesen), so geprüft am 21.10.2026.

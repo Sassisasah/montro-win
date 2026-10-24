@@ -530,9 +530,10 @@ public sealed partial class AppState : Observable
             item.State = PrepState.Preparing;
             item.StateText = "Prüfe Datei …";
             var before = Stamp(path) ?? throw new IOException("Datei nicht lesbar");
+            string? store = PreviewCache.ShowStore(CurrentShowPath);
             string hash = await Montro.Cluster.FileSync.Sha256(path) ?? throw new IOException("Datei nicht lesbar");
-            if (forceRender.Remove(item.Id)) PreviewCache.Remove(hash);
-            if (PreviewCache.TryLoad(hash) is { } cached)
+            if (forceRender.Remove(item.Id)) PreviewCache.Remove(hash, store);
+            if (await Task.Run(() => PreviewCache.TryLoad(hash, store)) is { } cached)
             {
                 item.Meta = cached.Meta;
                 item.Thumbnails = cached.Thumbnails;
@@ -544,14 +545,15 @@ public sealed partial class AppState : Observable
                 item.Meta = await Task.Run(() => PptxParser.Parse(path));
                 item.StateText = "Erzeuge Vorschaubilder …";
                 var progress = new Progress<(int done, int total)>(p => item.StateText = $"Vorschau {p.done}/{p.total}");
-                item.Thumbnails = await ppt.ExportFileThumbnailsAsync(path, PreviewCache.DirFor(hash), progress);
-                PreviewCache.Save(hash, before.Size, path, item.Meta, item.Thumbnails);
+                string dir = PreviewCache.DirFor(hash, store);
+                item.Thumbnails = await ppt.ExportFileThumbnailsAsync(path, dir, progress);
+                PreviewCache.Save(dir, hash, before.Size, path, item.Meta, item.Thumbnails);
                 DebugLog.Write($"Vorbereitet: „{item.Title}“ – {item.Subtitle}, {item.Thumbnails.Count} Vorschaubilder");
             }
             if (Stamp(path) != before || item.Path != path)
             {
                 // während der Vorbereitung gespeichert: Cache-Eintrag passt evtl. nicht, nochmal
-                PreviewCache.Remove(hash);
+                PreviewCache.Remove(hash, store);
                 item.State = PrepState.Pending;
                 return;
             }
@@ -581,7 +583,7 @@ public sealed partial class AppState : Observable
         var oldThumbs = item.Thumbnails;
         if (Stamp(path) is not { } stamp || meta == null
             || await Montro.Cluster.FileSync.Sha256(path) is not { } hash
-            || await Task.Run(() => PreviewCache.Adopt(hash, stamp.Size, path, meta, oldThumbs)) is not { } adopted
+            || await Task.Run(() => PreviewCache.Adopt(hash, PreviewCache.ShowStore(CurrentShowPath), stamp.Size, path, meta, oldThumbs)) is not { } adopted
             || Stamp(path) != stamp || item.Path != path)
         {
             Regenerate(item);

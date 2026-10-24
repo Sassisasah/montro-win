@@ -447,8 +447,8 @@ public sealed class PowerPointHost
 
     /// <summary>
     /// Vorschaubilder einer beliebigen Datei für die Playlist, ohne laufende Shows oder die
-    /// geöffnete Präsentation anzufassen: eigene schreibgeschützte Kopie öffnen, je Folie ein PNG
-    /// (1280 px) nach <c>%TEMP%</c>, schließen, dann nach <paramref name="dir"/> verschieben.
+    /// geöffnete Präsentation anzufassen: eigene schreibgeschützte Kopie öffnen, je Folie ein JPEG
+    /// (1280 px, etwa ein Fünftel eines PNG) nach <c>%TEMP%</c>, schließen, dann nach <paramref name="dir"/> verschieben.
     /// Über %TEMP%, weil PowerPoint als eigener Prozess nicht überall hinschreiben darf, wo montro es kann.
     /// </summary>
     public async Task<Dictionary<int, string>> ExportFileThumbnailsAsync(string path, string dir, IProgress<(int done, int total)>? progress = null)
@@ -490,7 +490,7 @@ public sealed class PowerPointHost
                 await sta.Run(() =>
                 {
                     dynamic p = handle!;
-                    p.Slides.Item(index).Export(Path.Combine(temp, $"slide-{index}.png"), "PNG", 1280, height);
+                    p.Slides.Item(index).Export(Path.Combine(temp, $"slide-{index}.jpg"), "JPG", 1280, height);
                 }, 20000, $"Vorschau Folie {index}");
                 progress?.Report((index, count));
             }
@@ -499,9 +499,9 @@ public sealed class PowerPointHost
             var result = new Dictionary<int, string>();
             for (int i = 1; i <= count; i++)
             {
-                string src = Path.Combine(temp, $"slide-{i}.png");
+                string src = Path.Combine(temp, $"slide-{i}.jpg");
                 if (!File.Exists(src)) continue;
-                string dst = Path.Combine(dir, $"slide-{i}.png");
+                string dst = Path.Combine(dir, $"slide-{i}.jpg");
                 File.Move(src, dst, overwrite: true);
                 result[i] = dst;
             }
