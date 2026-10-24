@@ -69,6 +69,11 @@ wenn die Ende-Sperre greift).
   „Wiedergabe bis zum Beenden wiederholen“ einstellen.
 - **Übergang zwischen Präsentationen:** Hart / Über Schwarz / Überblenden (Standbild der
   letzten Folie), Dauer 0,3–3 s. Gilt nur mit externem Publikumsbildschirm.
+- **Vorab öffnen:** Ist nichts live, öffnet montro die ausgewählte Präsentation
+  schon im Hintergrund, „Live“ geht dann schneller. Mit „Nächste Präsentation während der Show
+  vorab öffnen“ (Übergang-Karte) auch während einer Show: die ausgewählte oder sonst die nächste
+  in der Playlist. Noch in Erprobung und deshalb aus: Während montro eine große Datei öffnet,
+  kann ein Klick in der laufenden Show kurz verzögert sein. PowerPoint startet gleich mit montro.
 - **Schwarze Ausgänge:** Ist ein externer Publikumsbildschirm gewählt, zeigt er Schwarz, solange
   nichts live ist, während des Starts, bei Blackscreen und bei „Überall auf Schwarz gehen“.
 - **Am Ende der Präsentation:** „Auf letzter Folie stehen bleiben“ oder „Überall auf Schwarz

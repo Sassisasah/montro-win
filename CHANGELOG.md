@@ -9,6 +9,19 @@
 - GitHub baut bei jedem Push App und Installer; ein Tag `v<version>` erzeugt ein Release.
 - Behoben: „Aktualisieren“ im Verbund legte die neue Version nur erneut bereit, statt sie zu laden.
 
+## Unveröffentlicht – Branch `schneller-umschalten` (24.10.2026, Versionsnummer beim Zusammenführen)
+- Neu (am Gerät noch ungetestet): schneller live schalten.
+  - Das Log misst jedes Umschalten: `Umschalten „…“: … ms (Vorbereiten, Abdecken, Öffnen,
+    Show starten, Platzieren, Aufblenden)`; Öffnen und Vorab-Öffnen stehen mit Dauer im Log.
+  - Unter der Übergangsabdeckung wartet das Platzieren nicht mehr 1,5 s auf die Taskleiste
+    (das Nach-oben-Holen war dort ohnehin pausiert).
+  - PowerPoint startet gleich mit montro im Hintergrund, nicht erst beim ersten Live-Schalten.
+  - Ohne laufende Show öffnet montro die ausgewählte Präsentation vorab; „Live“ übernimmt sie nur
+    noch. Mit der neuen Einstellung „Nächste Präsentation während der Show vorab öffnen“
+    (Übergang-Karte, standardmäßig aus) auch während einer Show: die ausgewählte oder die
+    nächste in der Playlist.
+  - Vorschaubilder machen Pause, solange eine Präsentation live geschaltet wird.
+
 ## 0.6 – 22.10.2026
 - Neu (Branch `meilenstein-7`): Verbund mehrerer Rechner wie am Mac und mit montro für macOS
   mischbar – Master/Slave, Finden per DNS-SD, Befehle und Abgleich, Datei-Abgleich mit Sicherung,

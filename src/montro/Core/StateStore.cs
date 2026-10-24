@@ -21,6 +21,8 @@ public sealed class SavedState
     public double NotesFontScale { get; set; } = 1.0;
     public ShowTransition Transition { get; set; } = ShowTransition.Black;
     public double TransitionDuration { get; set; } = 1.0;
+    /// <summary>Nächste Präsentation auch während einer Show vorab öffnen</summary>
+    public bool PreloadNext { get; set; }
     public List<string>? MessagePresets { get; set; }
     public string? MessageBackground { get; set; }
     public string? MessageForeground { get; set; }

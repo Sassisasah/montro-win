@@ -113,8 +113,30 @@ Mac-App (Screenshots vom 20.10.2026).
      Präsentationsnamen enthält.
   4. Das Show-Fenster **topmost** legen und wieder nach oben holen: nach jedem Befehl, direkt
      nach dem Platzieren 1,5 s lang alle 100 ms und danach bei jeder Statusabfrage (200 ms).
+     Liegt die Übergangsabdeckung darüber, ist das Nach-oben-Holen pausiert; dann entfallen die
+     1,5 s, die Statusabfrage übernimmt nach dem Aufblenden.
      Sonst schiebt sich auf Nebenbildschirmen die Taskleiste über die Show, denn Windows blendet
      sie nur für das *aktive* Vollbildfenster aus, und PowerPoint läuft im Hintergrund.
+
+## Schnell umschalten
+
+Ablauf beim Live-Schalten: Vorbereiten (neue Version einspielen, geänderte Datei analysieren) →
+Abdecken (Übergang) → Öffnen (alte Show beenden, alte Präsentation schließen, neue öffnen) →
+Show starten → Platzieren → Aufblenden. Jeder Schritt steht mit Dauer im Log
+(`Umschalten „…“: …`), damit Mac und Windows vergleichbar sind.
+
+- **PowerPoint vorwärmen:** `ConnectAsync` beim Start von montro (Leerlauf-Priorität).
+- **Vorab öffnen:** `PowerPointHost.PreloadAsync` öffnet höchstens eine Präsentation fensterlos
+  und schreibgeschützt. `OpenAsync` übernimmt sie (dann gehört sie montro und wird beim nächsten
+  Wechsel geschlossen), wenn Pfad, Änderungszeit und Größe noch stimmen; sonst wird sie
+  geschlossen und frisch geöffnet. Bearbeiten und neue Versionen schließen alle Kopien einer
+  Datei, also auch die Vorab-Kopie. Kandidat: die ausgewählte Präsentation, wenn sie nicht live
+  ist, sonst die nächste in der Playlist (`AppState.Speed.cs`, 0,8 s verzögert).
+- **Während einer Show nur mit Einstellung:** Alle COM-Aufrufe laufen nacheinander auf einem
+  STA-Thread. Während `Presentations.Open` warten Weiter/Zurück, bis das Öffnen fertig ist.
+  Deshalb ist „Nächste Präsentation während der Show vorab öffnen“ aus, bis am Gerät gemessen
+  ist, wie lange das bei großen Dateien dauert.
+- **Vorschaubilder** warten zwischen zwei Folien, solange `IsStarting` gilt.
 
 ## PPTX-Parser
 
