@@ -40,6 +40,9 @@ public sealed class PowerPointHost
     private string? presPath;
     private bool presWithWindow;
     private IntPtr onTopHwnd;   // platziertes Show-Fenster, das über der Taskleiste bleiben soll
+    private dynamic? preloaded;       // vorab geöffnete nächste Präsentation (fensterlos, schreibgeschützt)
+    private string? preloadedPath;
+    private (DateTime Time, long Size) preloadedStamp;
 
     /// <summary>Fenster der laufenden Show (für das Live-Bild per DWM-Miniatur), Zero = keins.</summary>
     public volatile IntPtr ShowHwnd;
@@ -105,11 +108,19 @@ public sealed class PowerPointHost
     /// <summary>Datei schreibgeschützt öffnen (keine Sperrdatei, keine Speichern-Frage).</summary>
     public Task<OpenResult> OpenAsync(string path, bool withWindow) => sta.Run(() =>
     {
+        var clock = System.Diagnostics.Stopwatch.StartNew();
         dynamic a = App();
         ExitAllShowsInternal();
         CloseInternal();
 
         string full = Path.GetFullPath(path);
+        // Vorab geöffnete Kopie nur nehmen, wenn die Datei seitdem nicht ersetzt wurde
+        bool preloadHit = false;
+        if (preloaded != null && string.Equals(preloadedPath, full, StringComparison.OrdinalIgnoreCase))
+        {
+            if (Alive((object)preloaded) && withWindow == false && FileStamp(full) == preloadedStamp) preloadHit = true;
+            else DropPreloadInternal();
+        }
         dynamic? existing = null;
         int count = Safe(() => (int)a.Presentations.Count, 0);
         for (int i = 1; i <= count; i++)
@@ -126,7 +137,16 @@ public sealed class PowerPointHost
             catch { }
         }
 
-        if (existing != null)
+        if (existing != null && preloadHit)
+        {
+            // montros eigene Vorab-Kopie: gehört ab jetzt zur Show und wird wie sonst geschlossen
+            pres = existing;
+            ownsPres = true;
+            preloaded = null;
+            preloadedPath = null;
+            DebugLog.Write("PowerPoint: vorab geöffnete Präsentation übernommen");
+        }
+        else if (existing != null)
         {
             pres = existing;
             ownsPres = false;
@@ -165,7 +185,7 @@ public sealed class PowerPointHost
         string title = Safe(() => (string)pr.Name, Path.GetFileName(full));
         double w = Safe(() => (double)pr.PageSetup.SlideWidth, 960.0);
         double h = Safe(() => (double)pr.PageSetup.SlideHeight, 540.0);
-        DebugLog.Write($"PowerPoint: geöffnet „{title}“ – {map}, {w:0}×{h:0} pt{(withWindow ? ", mit Dokumentfenster" : "")}");
+        DebugLog.Write($"PowerPoint: geöffnet „{title}“ – {map}, {w:0}×{h:0} pt{(withWindow ? ", mit Dokumentfenster" : "")} in {clock.ElapsedMilliseconds} ms{(preloadHit ? " (vorab geöffnet)" : "")}");
         return new OpenResult(map, title, w, h);
     }, 60000, "Öffnen");
 
@@ -268,8 +288,10 @@ public sealed class PowerPointHost
         bool topmost = topmostWanted && hwnd != IntPtr.Zero && Monitors.MoveWindow(hwnd, target, topmost: true, insertAfter: PlaceBelow);
         onTopHwnd = topmost ? hwnd : IntPtr.Zero;
         ShowHwnd = hwnd;
-        // Die Taskleiste kommt kurz nach dem Platzieren gern noch einmal hoch – 1,5 s lang dagegenhalten
-        for (int i = 0; topmost && i < 15; i++)
+        // Die Taskleiste kommt kurz nach dem Platzieren gern noch einmal hoch – 1,5 s lang dagegenhalten.
+        // Liegt montros Übergangsabdeckung darüber, täte KeepOnTop nichts (pausiert): dann nicht warten,
+        // die Abfrage-Schleife (alle 200 ms) holt das Fenster nach dem Aufblenden nach oben.
+        for (int i = 0; topmost && !KeepOnTopPaused && i < 15; i++)
         {
             Thread.Sleep(100);
             KeepOnTop();
@@ -451,7 +473,8 @@ public sealed class PowerPointHost
     /// (1280 px) nach <c>%TEMP%</c>, schließen, dann nach <paramref name="dir"/> verschieben.
     /// Über %TEMP%, weil PowerPoint als eigener Prozess nicht überall hinschreiben darf, wo montro es kann.
     /// </summary>
-    public async Task<Dictionary<int, string>> ExportFileThumbnailsAsync(string path, string dir, IProgress<(int done, int total)>? progress = null)
+    public async Task<Dictionary<int, string>> ExportFileThumbnailsAsync(string path, string dir, IProgress<(int done, int total)>? progress = null,
+        Func<Task>? waitTurn = null)
     {
         string temp = Path.Combine(Path.GetTempPath(), $"montro-thumbs-{Guid.NewGuid():N}");
         Directory.CreateDirectory(temp);
@@ -487,6 +510,8 @@ public sealed class PowerPointHost
             for (int i = 1; i <= count; i++)
             {
                 int index = i;
+                // Live-Schalten hat Vorrang: zwischen zwei Folien warten, bis die Show steht
+                if (waitTurn != null) await waitTurn();
                 await sta.Run(() =>
                 {
                     dynamic p = handle!;
@@ -517,6 +542,76 @@ public sealed class PowerPointHost
         }
     }
 
+    // MARK: - Vorab öffnen
+
+    /// <summary>
+    /// Nächste Präsentation schon einmal fensterlos und schreibgeschützt öffnen, damit
+    /// <see cref="OpenAsync"/> sie beim Live-Schalten nur noch übernehmen muss. Es liegt immer
+    /// höchstens eine Präsentation bereit; eine andere wird dafür geschlossen. Startet PowerPoint
+    /// nicht. Rückgabe: Dauer in ms, -1 = nichts zu tun.
+    /// </summary>
+    public Task<long> PreloadAsync(string path) => sta.Run(() =>
+    {
+        if (app == null) return -1L;
+        dynamic a = app;
+        string full = Path.GetFullPath(path);
+        if (preloaded != null && string.Equals(preloadedPath, full, StringComparison.OrdinalIgnoreCase)
+            && Alive((object)preloaded) && FileStamp(full) == preloadedStamp) return -1L;
+        DropPreloadInternal();
+        // schon offen (läuft gerade, Bearbeitung, Vorschau)? Dann gibt es nichts vorzubereiten
+        if (presPath != null && string.Equals(presPath, full, StringComparison.OrdinalIgnoreCase)) return -1L;
+        int count = Safe(() => (int)a.Presentations.Count, 0);
+        for (int i = 1; i <= count; i++)
+        {
+            int k = i;
+            if (string.Equals(Safe(() => (string)a.Presentations.Item(k).FullName, ""), full, StringComparison.OrdinalIgnoreCase)) return -1L;
+        }
+        var clock = System.Diagnostics.Stopwatch.StartNew();
+        var stamp = FileStamp(full);
+        // Open(FileName, ReadOnly, Untitled, WithWindow)
+        preloaded = a.Presentations.Open(full, MsoTrue, MsoFalse, MsoFalse);
+        preloadedPath = full;
+        preloadedStamp = stamp;
+        DebugLog.Write($"PowerPoint: „{Path.GetFileName(full)}“ vorab geöffnet in {clock.ElapsedMilliseconds} ms");
+        return clock.ElapsedMilliseconds;
+    }, 60000, "Vorab öffnen");
+
+    /// <summary>Vorab geöffnete Präsentation wieder schließen (z. B. Einstellung aus).</summary>
+    public Task DropPreloadAsync() => sta.Run(DropPreloadInternal, 10000, "Vorab-Kopie schließen");
+
+    private void DropPreloadInternal()
+    {
+        if (preloaded == null) return;
+        dynamic p = preloaded;
+        preloaded = null;
+        string name = Path.GetFileName(preloadedPath ?? "");
+        preloadedPath = null;
+        if (!Alive((object)p)) return;   // inzwischen geschlossen (Bearbeiten, neue Version)
+        TrySet("Als gespeichert markieren", () => { p.Saved = MsoTrue; });
+        TrySet("Vorab-Kopie schließen", () => { p.Close(); });
+        DebugLog.Write($"PowerPoint: Vorab-Kopie „{name}“ geschlossen");
+    }
+
+    private static (DateTime, long) FileStamp(string path)
+    {
+        try
+        {
+            var f = new FileInfo(path);
+            return (f.LastWriteTimeUtc, f.Length);
+        }
+        catch { return (default, -1); }
+    }
+
+    private static bool Alive(object p)
+    {
+        try
+        {
+            _ = (string)((dynamic)p).FullName;
+            return true;
+        }
+        catch { return false; }
+    }
+
     // MARK: - Beenden der App
 
     public async Task ShutdownAsync()
@@ -528,6 +623,7 @@ public sealed class PowerPointHost
             {
                 ExitAllShowsInternal();
                 CloseInternal();
+                DropPreloadInternal();
                 app = null;
             }, 5000, "Aufräumen");
         }

@@ -140,6 +140,7 @@ public sealed partial class AppState : Observable
             if (!Set(ref selected, value)) return;
             Raise(nameof(NavigatorItem), nameof(CanGoLive));
             FollowSelection();
+            SchedulePreload();
         }
     }
 
@@ -510,7 +511,7 @@ public sealed partial class AppState : Observable
             item.Meta = await Task.Run(() => PptxParser.Parse(item.Path));
             item.StateText = "Erzeuge Vorschaubilder …";
             var progress = new Progress<(int done, int total)>(p => item.StateText = $"Vorschau {p.done}/{p.total}");
-            item.Thumbnails = await ppt.ExportFileThumbnailsAsync(item.Path, AppPaths.ThumbsFor(item.Id.ToString()), progress);
+            item.Thumbnails = await ppt.ExportFileThumbnailsAsync(item.Path, AppPaths.ThumbsFor(item.Id.ToString()), progress, WaitWhileStarting);
             item.State = PrepState.Ready;
             item.StateText = "";
             DebugLog.Write($"Vorbereitet: „{item.Title}“ – {item.Subtitle}, {item.Thumbnails.Count} Vorschaubilder");
@@ -555,6 +556,15 @@ public sealed partial class AppState : Observable
     private async Task StartShow(PresentationItem item, int? startAt = null)
     {
         if (IsStarting) return;
+        // Zeiten der Schritte fürs Log (Umschalten messen und vergleichen)
+        var clock = System.Diagnostics.Stopwatch.StartNew();
+        var steps = new List<string>();
+        long mark = 0;
+        void Step(string name)
+        {
+            steps.Add($"{name} {clock.ElapsedMilliseconds - mark} ms");
+            mark = clock.ElapsedMilliseconds;
+        }
         // bereitliegende neue Version (Verbund) einspielen, frisch gespeicherte Änderungen analysieren
         await FileSync.ApplyStaged(item);
         if (!File.Exists(item.Path))
@@ -563,6 +573,7 @@ public sealed partial class AppState : Observable
             return;
         }
         await RefreshIfChanged(item);
+        Step("Vorbereiten");
         if (startAt is int s && item.Meta != null && item.Slide(s) == null) startAt = item.LastVisible;
         // Übergang: Publikumsbildschirm abdecken (Standbild bzw. Schwarz), darunter umschalten
         var style = AudienceScreen == null ? ShowTransition.Cut : Transition;
@@ -584,6 +595,7 @@ public sealed partial class AppState : Observable
             await outputs.BeginTransition(still, coverScreen, fadeIn);
             ppt.PlaceBelow = outputs.TransitionHandle;
             covered = true;
+            Step("Abdecken");
         }
 
         // Referent*innenansicht der Präsentation (Vorlage oder Standard) mitstarten
@@ -598,10 +610,12 @@ public sealed partial class AppState : Observable
         {
             var open = await ppt.OpenAsync(item.Path, withWindow: false);
             if (item.Meta == null) item.Meta = await Task.Run(() => PptxParser.Parse(item.Path));
+            Step("Öffnen");
             int start = startAt ?? item.FirstVisible;
             var screen = AudienceScreen;
             await ppt.StartShowAsync(new ShowOptions(Kiosk: false, Target: screen, PreselectMonitorInRegistry: false,
                 StartIndex: start));
+            Step("Show starten");
             // Referent*innenansicht: eigener Bildschirm ist schon da, sonst Popup öffnen
             if (PresenterIsPopup) ShowPresenterWindow();
             if (screen != null)
@@ -612,6 +626,7 @@ public sealed partial class AppState : Observable
                 if (PresenterIsPopup) outputs.PlacePresenterPopup(PresenterPopupRect());
                 await ppt.PlaceAsync(PopupRect(open.SlideWidthPt, open.SlideHeightPt), topmostWanted: false);
             }
+            Step("Platzieren");
             LiveItem = item;
             Selected = item;
             CurrentSlide = start;
@@ -647,7 +662,10 @@ public sealed partial class AppState : Observable
             ppt.KeepOnTopPaused = false;
             blackKey = "?";
             UpdateOutputs();
+            Step("Aufblenden");
         }
+        DebugLog.Write($"Umschalten „{item.Title}“: {clock.ElapsedMilliseconds} ms ({string.Join(", ", steps)})");
+        SchedulePreload();
     }
 
     private const double PresenterShare = 0.42;
@@ -713,6 +731,7 @@ public sealed partial class AppState : Observable
         RefreshAfterShow();
         _ = FileSync.ApplyAllStaged();
         FollowSelection();
+        SchedulePreload();
     }
 
     public void Next()
@@ -990,6 +1009,9 @@ public sealed partial class AppState : Observable
         };
         CleanOrphanThumbs();
         TaskbarHider.RestoreAll();   // falls montro vorher abgestürzt ist
+        preloadNext = s.PreloadNext;
+        // PowerPoint gleich hochfahren (das erste Live-Schalten wartete sonst auf den Start)
+        _ = ui.InvokeAsync(() => _ = WarmUpPowerPoint(), DispatcherPriority.ApplicationIdle);
         _ = ui.InvokeAsync(() => _ = PrepareAll(), DispatcherPriority.ApplicationIdle);
         _ = ui.InvokeAsync(UpdateOutputs, DispatcherPriority.Loaded);
     }
@@ -1046,6 +1068,7 @@ public sealed partial class AppState : Observable
             EndBehavior = EndBehavior,
             Transition = Transition,
             TransitionDuration = TransitionDuration,
+            PreloadNext = PreloadNext,
             MessagePresets = Message.Presets.ToList(),
             MessageBackground = Message.Background,
             MessageForeground = Message.Foreground,
