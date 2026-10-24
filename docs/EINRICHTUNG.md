@@ -48,8 +48,8 @@ geht weiterhin das Artefakt `montro-win-x64`: entpacken und `montro.exe` starten
 Firewall beim ersten Start).
 
 Selbst bauen: `dotnet publish src/montro/montro.csproj -c Release -r win-x64 --self-contained true
--o publish`, danach `dotnet build installer/montro.wixproj -c Release -p:ProductVersion=0.7.0`
-(holt WiX 5 über NuGet) → `installer/bin/Release/montro-0.7.0-win-x64.msi`.
+-o publish`, danach `dotnet build installer/montro.wixproj -c Release -p:ProductVersion=0.8.0`
+(holt WiX 5 über NuGet) → `installer/bin/Release/montro-0.8.0-win-x64.msi`.
 
 - SmartScreen warnt vorerst („Unbekannter Herausgeber“), weil es noch kein
   Code-Signing-Zertifikat gibt. Dann „Weitere Informationen“ › „Trotzdem ausführen“.

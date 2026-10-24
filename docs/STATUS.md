@@ -193,6 +193,14 @@
 
 ## Offen
 
+- **24.10.2026** – Updatepaket 0.8 (Branch `updatepaket`): `meilenstein-8` (Installer, enthält
+  `meilenstein-7`) mit `schneller-umschalten`, `schriften-farben` und `vorschau-cache`
+  zusammengeführt. Konflikte gab es nur im CHANGELOG, in dieser Datei und in `AppState.cs`
+  (Zeitmessung + „Aktualisieren“ beim Start, Schrift-Check + Vorschau-Cache beim Vorbereiten). Am
+  Test-PC prüfen: MSI 0.8 über eine installierte 0.7 installieren, danach die Punkte der drei
+  Branches unten und einmal den Verbund mit dem Mac (Aktualisieren, Abkoppeln). Mit dem Mac
+  zusammen erst, wenn dort das passende Updatepaket (0.37) läuft.
+
 - **24.10.2026** – „Schneller umschalten“ (Branch `schneller-umschalten`) ist am Gerät
   ungetestet. Prüfen: Umschalt-Zeiten im Log vorher (0.6) und nachher (Branch) vergleichen, je mit
   kleiner und großer Präsentation (800 MB), Übergang „Über Schwarz“ und „Hart“. Taskleiste auf

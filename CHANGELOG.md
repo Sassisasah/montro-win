@@ -1,15 +1,11 @@
 # Änderungsprotokoll
 
-## 0.7 – 24.10.2026
-- Neu (Branch `meilenstein-8`): Installer (MSI) – installiert nach „Programme\montro“ mit
-  Startmenü-Eintrag, richtet die Firewall-Freigabe für Fernsteuerung und Verbund ein, öffnet
-  .montro-Shows per Doppelklick und ergänzt „Öffnen mit › montro“ für PowerPoint-Dateien. Updates
-  ersetzen die alte Version, Einstellungen bleiben erhalten.
-- Neu: Info-Fenster „Über montro“ (Menü „Show“ und Einstellungen).
-- GitHub baut bei jedem Push App und Installer; ein Tag `v<version>` erzeugt ein Release.
-- Behoben: „Aktualisieren“ im Verbund legte die neue Version nur erneut bereit, statt sie zu laden.
+## 0.8 – 24.10.2026
+Updatepaket: Installer und Verbund (0.7) mit den Branches `schneller-umschalten`,
+`schriften-farben` und `vorschau-cache` zusammengeführt (Branch `updatepaket`). Die drei neuen Teile
+sind am Gerät noch ungetestet. Ersetzt eine installierte 0.7.
 
-## Unveröffentlicht – Branch `schneller-umschalten` (24.10.2026, Versionsnummer beim Zusammenführen)
+**Schneller umschalten**
 - Neu (am Gerät noch ungetestet): schneller live schalten.
   - Das Log misst jedes Umschalten: `Umschalten „…“: … ms (Vorbereiten, Abdecken, Öffnen,
     Show starten, Platzieren, Aufblenden)`; Öffnen und Vorab-Öffnen stehen mit Dauer im Log.
@@ -22,7 +18,7 @@
     nächste in der Playlist.
   - Vorschaubilder machen Pause, solange eine Präsentation live geschaltet wird.
 
-## Unveröffentlicht – Branch `schriften-farben` (24.10.2026, Versionsnummer beim Zusammenführen)
+**Schriften und Farben**
 - **Schrift-Check** wie am Mac: Die Analyse liest alle Schriften der Präsentation (Folien, Master,
   Layouts, Design, Diagramme) und die eingebetteten. Karte **Schriften** im Inspector mit fehlenden
   Schriften (Foliennummern) und nur eingebetteten, gelbes Schrift-Symbol in der Playlist. Geprüft
@@ -36,7 +32,7 @@
   Bildschirm, Signalformat und Bittiefe. Verbund-Befehl `testpattern`, Remote-API
   `/api/testpattern[/on|/off]`, Stand `testPattern`.
 
-## Unveröffentlicht – Branch `vorschau-cache` (24.10.2026, Versionsnummer beim Zusammenführen)
+**Vorschau-Cache**
 - Neu: Vorschau-Cache nach Dateiinhalt. Analyse und Vorschaubilder liegen unter der
   SHA-256-Prüfsumme statt je Playlist-Eintrag: bei einer gesicherten Show im Ordner
   `montro-Analyse` neben der `.montro`-Datei (reist mit der Show, verschwindet mit ihr), sonst und
@@ -53,6 +49,17 @@
 - „Neu analysieren & Vorschaubilder erzeugen“ verwirft den Eintrag und rendert wirklich neu.
 - Behoben: Der Zustand merkte sich die aktuelle Änderungszeit der Datei statt der beim Erzeugen der
   Vorschauen. Eine während des Betriebs geänderte Datei galt nach dem Neustart als aktuell.
+- Analysen aus dem Cache von vor dem Schrift-Check werden einmal neu erstellt, damit die Karte
+  „Schriften“ stimmt.
+
+## 0.7 – 24.10.2026
+- Neu (Branch `meilenstein-8`): Installer (MSI) – installiert nach „Programme\montro“ mit
+  Startmenü-Eintrag, richtet die Firewall-Freigabe für Fernsteuerung und Verbund ein, öffnet
+  .montro-Shows per Doppelklick und ergänzt „Öffnen mit › montro“ für PowerPoint-Dateien. Updates
+  ersetzen die alte Version, Einstellungen bleiben erhalten.
+- Neu: Info-Fenster „Über montro“ (Menü „Show“ und Einstellungen).
+- GitHub baut bei jedem Push App und Installer; ein Tag `v<version>` erzeugt ein Release.
+- Behoben: „Aktualisieren“ im Verbund legte die neue Version nur erneut bereit, statt sie zu laden.
 
 ## 0.6 – 22.10.2026
 - Neu (Branch `meilenstein-7`): Verbund mehrerer Rechner wie am Mac und mit montro für macOS
