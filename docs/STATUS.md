@@ -206,6 +206,20 @@
   an, Testbild auf beiden Verbatims (volle Höhe, keine schwarze Fläche), Testbild im Verbund mit dem
   Mac gleichzeitig.
 
+- **24.10.2026** – Vorschau-Cache (Branch `vorschau-cache`), ohne Gerät gebaut, nur Prüf-Build
+  unter Linux. Am Laptop testen:
+  1. Nach dem Update: Playlist bleibt bereit, Log zeigt „Vorschau-Cache: … übernommen“, kein Rendern.
+  2. Eintrag entfernen und dieselbe Datei wieder hinzufügen → sofort bereit („aus dem Vorschau-Cache“).
+  3. Zwischen zwei Shows hin und her wechseln → kein Rendern.
+  4. Datei kopieren und die Kopie hinzufügen → sofort bereit.
+  5. Datei in PowerPoint ändern und speichern → wird neu gerendert.
+  6. „Neu analysieren & Vorschaubilder erzeugen“ → rendert neu.
+  7. Im Verbund eine unveränderte Datei vom Master → kein Rendern.
+  8. Show sichern → Ordner `montro-Analyse` neben der Show mit einem Ordner je Präsentation,
+     `%LOCALAPPDATA%\montro\cache` danach (fast) leer. Show auf einen anderen Rechner kopieren und
+     öffnen → sofort bereit.
+  9. Show auf schreibgeschütztem USB-Stick öffnen → läuft, Vorschauen landen lokal.
+  10. Vorschaubilder (JPEG) in Playlist und Referent*innenansicht scharf genug?
 - PowerPoint ohne Lizenz: lässt sich auf dem Test-PC nicht nachstellen.
 - **22.10.2026** – Meilenstein 4, Etappe 3: Referent*innenansicht auf dem zweiten Verbatim mit
   Timer-Blinken und Ende auf Schwarz prüfen; Popup-Modus (links

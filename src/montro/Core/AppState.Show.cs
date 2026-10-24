@@ -49,6 +49,8 @@ public sealed partial class AppState
                     AbsolutePath = file.Replace('\\', '/'),   // Pfade mit „/“ (SHOW-FORMAT.md)
                     Title = i.Title,
                     Preset = Preset(i.PresetId) != null ? i.PresetId.ToString()!.ToUpperInvariant() : null,
+                    // Schlüssel für das Lager „montro-Analyse“ neben der Show (nur wenn sicher aktuell)
+                    Sha256 = i.State == PrepState.Ready && size == i.PreparedSize ? i.ContentHash : null,
                     Size = size,
                 };
             }).ToList(),
@@ -80,6 +82,7 @@ public sealed partial class AppState
         {
             WriteShow(MakeShow(name, path), path);
             CurrentShowPath = path;
+            _ = SyncShowStore(path);
             StatusMessage = $"Show „{name}“ gesichert ({Items.Count} Präsentationen)";
             DebugLog.Write($"Show gesichert: {path}");
         }
@@ -132,6 +135,7 @@ public sealed partial class AppState
             string showPath = Path.Combine(folder, name + ShowFile.Extension);
             WriteShow(MakeShow(name, showPath, paths), showPath);
             CurrentShowPath = showPath;
+            _ = SyncShowStore(showPath);
             StatusMessage = missing.Count == 0
                 ? $"Show „{name}“ mit {paths.Count} Präsentationen gesichert"
                 : $"Show „{name}“ gesichert – {missing.Count} Datei(en) fehlten: {string.Join(", ", missing)}";
@@ -142,6 +146,23 @@ public sealed partial class AppState
         {
             ErrorRaised?.Invoke($"Show konnte nicht gesichert werden: {e.Message}");
             return null;
+        }
+    }
+
+    /// <summary>
+    /// Nach dem Sichern: Analyse und Vorschaubilder der Playlist in „montro-Analyse“ neben die Show
+    /// holen (lokal nur Ausweiche) und dort aufräumen, was keine Show im Ordner mehr braucht.
+    /// </summary>
+    private async Task SyncShowStore(string showPath)
+    {
+        var hashes = Items.Select(i => i.ContentHash).OfType<string>().ToList();
+        var moved = await Task.Run(() => PreviewCache.SyncShowStore(showPath, hashes));
+        foreach (var item in Items)
+            if (item.ContentHash is { } h && moved.TryGetValue(h, out var thumbs)) item.Thumbnails = thumbs;
+        if (moved.Count > 0)
+        {
+            DebugLog.Write($"Vorschau-Cache: {moved.Count} Einträge zur Show „{Path.GetFileNameWithoutExtension(showPath)}“ verschoben");
+            QueueSave();
         }
     }
 

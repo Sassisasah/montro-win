@@ -16,9 +16,10 @@ Der Vertrag dafür steht in [KOMPATIBILITAET.md](KOMPATIBILITAET.md).
 | `src/montro/App.xaml(.cs)` | Start, globale Fehlerbehandlung, Farben laden |
 | `src/montro/app.manifest` | DPI-Modus **PerMonitorV2**, Windows 10/11 |
 | `src/montro/Themes/Brand.xaml` | Alle Farben (movidal-CD) und Grund-Stile. Keine Systemfarben |
-| `src/montro/Core/AppPaths.cs` | `%APPDATA%\montro` (Zustand), `%LOCALAPPDATA%\montro` (Vorschaubilder, Log) |
+| `src/montro/Core/AppPaths.cs` | `%APPDATA%\montro` (Zustand), `%LOCALAPPDATA%\montro` (Vorschau-Cache, Log) |
 | `src/montro/Core/DebugLog.cs` | Log-Datei `montro.log`, letzte Zeilen im Speicher (später für `/api/diag`) |
 | `src/montro/Core/AppState.cs` | Zentraler Zustand wie am Mac: Playlist, Vorbereitung, Live, Blackscreen, Ende-Sperre, Ausgabe, Timer, Speichern |
+| `src/montro/Core/PreviewCache.cs` | Analyse und Vorschaubilder nach Dateiinhalt (SHA-256), Aufräumen |
 | `src/montro/Core/PresentationItem.cs` | Playlist-Eintrag (Pfad, Meta, Vorschaubilder, Status, LIVE) |
 | `src/montro/Core/TalkTimer.cs` | Redezeit-Timer, portiert aus `TalkTimer.swift` |
 | `src/montro/Core/StateStore.cs` | `%APPDATA%\montro\state.json` lesen und schreiben |
@@ -222,8 +223,23 @@ Fremdbibliothek. Zählweise absichtlich wie am Mac:
   Für das spätere Publikumsfenster (Meilenstein 4) gilt dasselbe.
 - **Vorschaubilder für die Playlist:** `ExportFileThumbnailsAsync` öffnet eine eigene
   schreibgeschützte Kopie (oder benutzt die schon offene, ohne sie zu schließen), exportiert nach
-  `%TEMP%` und verschiebt dann nach `%LOCALAPPDATA%\montro\thumbs\<ID>`. Laufende Shows bleiben
-  unberührt. Verwaiste Vorschau-Ordner löscht montro beim Start.
+  `%TEMP%` und verschiebt dann in den Vorschau-Cache. Laufende Shows bleiben unberührt.
+- **Vorschau-Cache (`Core/PreviewCache.cs`, Branch `vorschau-cache`):** Analyse und Vorschaubilder
+  liegen nach Dateiinhalt in `<Lager>\<SHA-256>\windows\` (`analyse.json` + `slide-<n>.jpg`;
+  der Mac legt `…/<SHA-256>/mac/` daneben, weil beide Schriften anders rendern). Lager = Ordner
+  `montro-Analyse` neben der aktuellen Show-Datei, wenn beschreibbar (Probe-Datei), sonst die
+  lokale Ausweiche `%LOCALAPPDATA%\montro\cache`. `TryLoad` sucht erst bei der Show, dann lokal;
+  ein lokaler Treffer wird zur Show kopiert und lokal gelöscht. `Prepare` prüft erst die
+  Prüfsumme (dieselbe wie im Verbund) und rendert nur bei unbekanntem Inhalt. Beim Start gilt ein
+  Eintrag ohne Prüfung als bereit, wenn Größe und Änderungszeit denen beim Erzeugen entsprechen
+  (`SavedItem.FileSize/FileTime`).
+- **Aufräumen:** Beim Sichern einer Show schreibt `MakeShow` die Prüfsumme je Präsentation
+  (`sha256`), `SyncShowStore` holt die Einträge der Playlist in `montro-Analyse` und löscht dort
+  alles, was keine `.montro`-Datei im selben Ordner mehr nennt (mehrere Shows dürfen sich den
+  Ordner teilen). Die lokale Ausweiche räumt `PreviewCache.Clean` nach `PrepareAll` auf:
+  unbenutzte Einträge nach 60 Tagen bzw. über 1 GB, älteste zuerst. Alte Ordner `thumbs\<ID>`
+  übernimmt `MoveToCache` einmalig; verwaiste löscht montro beim Start. `analyse.json` ist die
+  Vorstufe der gemeinsamen Analysedatei (Konzept „Weitere Präsentationsformate“).
 - **Oberfläche testen ohne Maus:** WPF stellt alle Knöpfe und Listen über UI Automation bereit.
   Damit lässt sich das Hauptfenster aus einem Skript bedienen (Eintrag wählen, „Ausgewählte live
   schalten“, „Weiter“, Statuszeile lesen), so geprüft am 21.10.2026.

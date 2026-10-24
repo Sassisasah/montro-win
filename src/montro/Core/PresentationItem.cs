@@ -59,6 +59,14 @@ public sealed class PresentationItem : Observable
 
     public bool IsLive { get => isLive; set => Set(ref isLive, value); }
 
+    /// <summary>SHA-256 des Inhalts, unter dem Analyse und Vorschaubilder im <see cref="PreviewCache"/> liegen.</summary>
+    public string? ContentHash { get; set; }
+
+    /// <summary>Größe und Änderungszeit der Datei, als Analyse und Vorschaubilder entstanden.</summary>
+    public long PreparedSize { get; set; }
+
+    public DateTime PreparedTime { get; set; }
+
     /// <summary>Zugewiesene Vorlage der Referent*innenansicht, null = Standard (Mac: presetID).</summary>
     public Guid? PresetId { get; set; }
 

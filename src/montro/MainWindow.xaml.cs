@@ -693,7 +693,7 @@ public partial class MainWindow : Window
         }
         menu.Items.Add(Entry("Im Explorer zeigen", () =>
             Process.Start(new ProcessStartInfo("explorer.exe", $"/select,\"{item.Path}\"") { UseShellExecute = true })));
-        menu.Items.Add(Entry("Neu analysieren & Vorschaubilder erzeugen", () => state.Regenerate(item), item != state.LiveItem));
+        menu.Items.Add(Entry("Neu analysieren & Vorschaubilder erzeugen", () => state.Regenerate(item, force: true), item != state.LiveItem));
         menu.Items.Add(presets);
         menu.Items.Add(new Separator());
         menu.Items.Add(Entry("Aus Playlist entfernen", () => state.Remove(item), item != state.LiveItem));
