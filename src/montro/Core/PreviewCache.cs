@@ -22,6 +22,8 @@ public static class PreviewCache
     private static readonly JsonSerializerOptions Options = new()
     {
         WriteIndented = true,
+        // gleiche Schlüssel wie analyse.json am Mac (sha256, size, format …)
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
         Converters = { new JsonStringEnumConverter() },
     };
 
