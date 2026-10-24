@@ -549,10 +549,19 @@ public sealed partial class AppState : Observable
             string? store = PreviewCache.ShowStore(CurrentShowPath);
             string hash = await Montro.Cluster.FileSync.Sha256(path) ?? throw new IOException("Datei nicht lesbar");
             if (forceRender.Remove(item.Id)) PreviewCache.Remove(hash, store);
-            // Einträge von vor dem Schrift-Check (Fonts == null) neu analysieren, damit die Schrift-Karte stimmt
-            if (await Task.Run(() => PreviewCache.TryLoad(hash, store)) is { } cached && cached.Meta.Fonts != null)
+            if (await Task.Run(() => PreviewCache.TryLoad(hash, store)) is { } cached)
             {
-                item.Meta = cached.Meta;
+                var meta = cached.Meta;
+                if (meta.Fonts == null && cached.Thumbnails.Count > 0)
+                {
+                    // Eintrag von vor dem Schrift-Check: nur die Analyse erneuern (ohne PowerPoint), Bilder bleiben
+                    item.StateText = "Analysiere Folien …";
+                    meta = await Task.Run(() => PptxParser.Parse(path));
+                    string cachedDir = Path.GetDirectoryName(cached.Thumbnails.Values.First())!;
+                    try { PreviewCache.Save(cachedDir, hash, before.Size, path, meta, cached.Thumbnails); }
+                    catch (Exception e) { DebugLog.Write($"Vorschau-Cache: Analyse nicht gesichert – {e.Message}"); }
+                }
+                item.Meta = meta;
                 item.Thumbnails = cached.Thumbnails;
                 DebugLog.Write($"Vorbereitet aus dem Vorschau-Cache: „{item.Title}“ – {item.Subtitle}, {item.Thumbnails.Count} Vorschaubilder");
             }

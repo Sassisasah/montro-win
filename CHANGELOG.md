@@ -49,8 +49,8 @@ sind am Gerät noch ungetestet. Ersetzt eine installierte 0.7.
 - „Neu analysieren & Vorschaubilder erzeugen“ verwirft den Eintrag und rendert wirklich neu.
 - Behoben: Der Zustand merkte sich die aktuelle Änderungszeit der Datei statt der beim Erzeugen der
   Vorschauen. Eine während des Betriebs geänderte Datei galt nach dem Neustart als aktuell.
-- Analysen aus dem Cache von vor dem Schrift-Check werden einmal neu erstellt, damit die Karte
-  „Schriften“ stimmt.
+- Cache-Einträge von vor dem Schrift-Check (auch die nach dem Update übernommenen) bekommen einmal
+  eine neue Analyse mit Schriften; die Vorschaubilder bleiben, PowerPoint wird dafür nicht gebraucht.
 
 ## 0.7 – 24.10.2026
 - Neu (Branch `meilenstein-8`): Installer (MSI) – installiert nach „Programme\montro“ mit
