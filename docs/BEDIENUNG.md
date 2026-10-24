@@ -90,7 +90,11 @@ wenn die Ende-Sperre greift).
   Presets werden ergänzt. Nicht während einer Präsentation. Doppelklick auf eine `.montro`-Datei
   bzw. `montro.exe show.montro` öffnet sie. Format: `docs/SHOW-FORMAT.md` im Repo `Sassisasah/montro`.
 - **Tasten:** → Bild↓ Leertaste Return N = weiter · ← Bild↑ P = zurück · B . = Blackscreen ·
-  Strg+Return live · Strg+. Stopp · Strg+T Timer · Strg+G Gehe zu · Strg+O/S Show.
+  Strg+Return live · Strg+. Stopp · Strg+T Timer · Strg+G Gehe zu · Strg+O/S Show. Wie im
+  Mac-Menü außerdem: Strg+→/← weiter/zurück · Strg+B Blackscreen · Strg+Umschalt+R Timer
+  zurücksetzen · Strg+Umschalt+Komma Baukasten.
+- **Statusleiste:** zeigt im Verbund Rolle und Abgleich; am Slave steht dort der Knopf
+  „Abkoppeln“ bzw. „Wieder in den Verbund“.
 - Werkzeuge: Strg+Umschalt+P öffnet das Testfenster „PowerPoint testen“, Strg+Umschalt+L den
   Log-Ordner.
 

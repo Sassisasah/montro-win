@@ -61,6 +61,12 @@ Updatepaket: Installer und Verbund (0.7) mit den Branches `schneller-umschalten`
   nur in der eigenen PowerPoint. Vorher bekamen auch die Slaves den Sprung und verloren die schon
   gelaufenen Animationen der Folie.
 
+**Bedienung**
+- Statusleiste zeigt den Verbund (Rolle, synchron); am Slave mit Knopf „Abkoppeln“ bzw. „Wieder in
+  den Verbund“.
+- Tastenkürzel wie im Mac-Menü: Strg+→/← weiter/zurück, Strg+B Blackscreen, Strg+Umschalt+R Timer
+  zurücksetzen, Strg+Umschalt+Komma Baukasten.
+
 ## 0.7 – 24.10.2026
 - Neu (Branch `meilenstein-8`): Installer (MSI) – installiert nach „Programme\montro“ mit
   Startmenü-Eintrag, richtet die Firewall-Freigabe für Fernsteuerung und Verbund ein, öffnet
