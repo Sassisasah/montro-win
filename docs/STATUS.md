@@ -2,6 +2,17 @@
 
 ## Getestet
 
+- **24.10.2026** – Updatepaket 0.8 als portable Version (Artefakt `montro-win-x64`, CI-Lauf
+  40076298111) am Test-PC, Einzelplatz ohne externe Bildschirme:
+  - Start ok. PowerPoint vorwärmen 5,3 s (zweiter Start 3,4 s), Vorab-Öffnen 253 ms.
+  - Umschalten: 3229 ms vorab geöffnet (davon Show starten 2554 ms), 3331 ms nicht vorab, zurück
+    1679 ms. Der größte Teil ist das Starten der Show in PowerPoint.
+  - Vorschau-Cache: nach Neustart und Show-Wechsel kein neues Rendern. Übernahme alter
+    Vorschaubilder nicht prüfbar (vorher aufgeräumt).
+  - Karte „Schriften“ ok.
+  - Die portable exe löst die Firewall-Abfrage aus (die MSI richtet die Freigabe selbst ein).
+  - Noch offen: Testbild, Farb-Check, Verbund mit dem Mac, MSI-Update 0.7 → 0.8 (braucht Admin).
+
 - **22.10.2026** – Meilenstein 7, Verbund mit dem Mac (MacBook der Nutzerin, montro für macOS als
   Master, 192.168.1.100; Windows-Laptop als Slave, 192.168.1.11, Version aus `publish`):
   - DNS-SD: Der Mac findet den PC von selbst („Master · 1/1 Slave(s) synchron“), der PC den Mac.
